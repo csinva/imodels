@@ -57,3 +57,23 @@ def test_slim_silent_when_cvxpy_installed(cls, monkeypatch):
     with warnings.catch_warnings():
         warnings.simplefilter('error')
         cls()
+
+
+def test_fast_risk_score_warns_without_numba(monkeypatch):
+    """FastRiskScoreClassifier cannot fit without numba, so it says so when built."""
+    from imodels.algebraic.risk_score import solver
+    from imodels import FastRiskScoreClassifier
+    monkeypatch.setattr(solver, 'HAVE_NUMBA', False)
+    with pytest.warns(UserWarning, match='pip install numba'):
+        m = FastRiskScoreClassifier()
+    with pytest.raises(ImportError, match='pip install numba'):
+        m.fit([[0, 1], [1, 0]], [0, 1])
+
+
+def test_fast_risk_score_silent_with_numba(monkeypatch):
+    from imodels.algebraic.risk_score import solver
+    from imodels import FastRiskScoreClassifier
+    monkeypatch.setattr(solver, 'HAVE_NUMBA', True)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        FastRiskScoreClassifier()

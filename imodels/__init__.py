@@ -4,8 +4,11 @@
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/imodels)
 
+import warnings
+
 from .algebraic.gp_gam import GPGamRegressor
-from .algebraic.slim import SLIMRegressor, SLIMClassifier
+# SLIMClassifier is deprecated: it is reached through __getattr__ below, which warns
+from .algebraic.slim import SLIMRegressor, SLIMClassifier as _SLIMClassifier
 from .algebraic.risk_score.fast_risk_score import FastRiskScoreClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
 from .algebraic.marginal_shrinkage_linear_model import (
@@ -57,7 +60,7 @@ CLASSIFIERS = [
     FastFrugalTreeClassifier,
     SkopeRulesClassifier,
     BoostedRulesClassifier,
-    SLIMClassifier,
+    _SLIMClassifier,
     FastRiskScoreClassifier,
     SlipperClassifier,
     BayesianRuleSetClassifier,
@@ -118,9 +121,20 @@ __all__ = [
     "HSTreeRegressorCV", "MDLPDiscretizer",
     "MarginalShrinkageLinearModelRegressor", "OneRClassifier", "REGRESSORS",
     "RFDiscretizer", "RuleFitClassifier", "RuleFitRegressor",
-    "SLIMClassifier", "SLIMRegressor", "SkopeRulesClassifier",
+    "SLIMRegressor", "SkopeRulesClassifier",
     "SlipperClassifier", "StableClustering", "TaoTreeClassifier",
     "TaoTreeRegressor", "TreeGAMClassifier", "TreeGAMRegressor",
     "explain_classification_errors", "get_clean_dataset", "get_rules",
     "shadow_tree",
 ]
+
+
+def __getattr__(name):
+    if name == "SLIMClassifier":
+        warnings.warn(
+            "SLIMClassifier is deprecated and will be removed in a future release. Use "
+            "FastRiskScoreClassifier, which fits sparse integer risk scores with a calibrated risk "
+            "(https://csinva.io/imodels/fastriskscore.html).",
+            FutureWarning, stacklevel=2)
+        return _SLIMClassifier
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import math
 import time
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -160,6 +161,10 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
 
     def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
                  time_limit: float = 60.0):
+        if not solver.HAVE_NUMBA:
+            # say so when the model is built, as for the other models with optional dependencies;
+            # fit raises the same message, since there is no pure-Python fallback
+            warnings.warn(NUMBA_HINT + " Fitting will raise an ImportError until it is installed.")
         self.k = k
         self.max_points = max_points
         self.n_thresholds = n_thresholds

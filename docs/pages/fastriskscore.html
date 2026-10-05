@@ -3,24 +3,83 @@
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <p align="center">
                     <h1 text-align="center" style="padding-bottom: 0px;"> FastRiskScore: Fitting sparse integer risk scores via Autoresearch</h1>
-                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; September 2026</h3>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; October 2026</h3>
                     </p>
                     <p class="post-links"><a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
                     <hr>
 
-                    <p class="abstract">
-                        A <b>risk score</b> is a short list of conditions, each worth a few integer points. You add the
+                    <div class="abstract">
+                    <p>
+                        A risk score is a short list of conditions, each worth a few integer points. You add the
                         points of the conditions that apply and look up the risk for the total in a table. Clinical
-                        scores such as <a href="https://en.wikipedia.org/wiki/CHA2DS2%E2%80%93VASc_score">CHA<sub>2</sub>DS<sub>2</sub>-VASc</a>
-                        work this way, so a doctor can compute and check them by hand. Choosing the conditions and points
-                        is an integer optimization problem. <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a>
-                        solves it exactly but needs a commercial solver and is slow, and
-                        <a href="https://arxiv.org/abs/2210.05846">FasterRisk</a> solves it approximately in seconds.
-                        We used autoresearch to build <b>FastRiskScore</b>. On held-out datasets it fits scores about
-                        50&times; faster than FasterRisk, with a slightly lower training loss and a slightly higher test AUC.
-                        On small problems where every possible score can be checked, it finds the best one in 49 of 50
-                        cases; FasterRisk finds it in 28.
+                        scores often
+                        work this way, so a doctor can compute and check them by hand. Here is an example that predicts whether a breast tumour is benign:</p>
+                    <!-- CARD:abstract -->
+<style>
+  /* risk-score cards (drawn by fastriskscore_card.py) */
+  .rs-card { max-width: 30rem; margin: 1.2em auto 1.4em; padding: 1.1em 1.3em 1em; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 2px rgba(27,31,35,.04), 0 6px 18px rgba(27,31,35,.06);
+    font-size: 0.92rem; line-height: 1.4; color: var(--ink); text-align: left; hyphens: none; }
+  .rs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; margin-bottom: .7em; }
+  .rs-title { font-weight: 600; letter-spacing: .01em; }
+  .rs-meta { color: var(--muted); font-size: .82em; white-space: nowrap; }
+  .rs-rows { list-style: none; margin: 0; padding: 0; counter-reset: rs; }
+  .rs-rows li { display: flex; align-items: center; gap: .7em; padding: .42em 0; border-top: 1px solid var(--line-soft); }
+  .rs-rows li:first-child { border-top: none; }
+  .rs-rows li::before { counter-increment: rs; content: counter(rs); flex: none; width: 1.5em; height: 1.5em; border-radius: 50%;
+    background: var(--surface-alt); border: 1px solid var(--line); color: var(--muted); font-size: .75em; display: grid; place-items: center; }
+  .rs-cond { flex: 1; min-width: 0; }
+  .rs-cond b { font-weight: 500; }
+  .rs-cond span { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rs-pts { flex: none; min-width: 2.6em; text-align: center; padding: .12em .5em; border-radius: 999px; font-weight: 600;
+    font-variant-numeric: tabular-nums; color: #fff; background: var(--accent); }
+  .rs-pts.neg { background: #c05621; }
+  .rs-sum { display: flex; justify-content: space-between; margin: .5em 0 .9em; padding-top: .5em; border-top: 2px solid var(--ink);
+    font-size: .85em; color: var(--muted); }
+  .rs-sum b { color: var(--ink); font-weight: 600; }
+  .rs-chart { position: relative; display: flex; align-items: flex-end; gap: 3px; height: 5.2em; }
+  .rs-half { position: absolute; left: 0; right: 0; bottom: 50%; border-top: 1px dashed var(--line); pointer-events: none; }
+  .rs-half span { position: absolute; left: 0; bottom: 2px; font-size: .62em; color: var(--muted); }
+  .rs-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; }
+  .rs-col i { display: block; font-style: normal; font-size: .68em; color: var(--ink-soft); text-align: center;
+    font-variant-numeric: tabular-nums; margin-bottom: 2px; white-space: nowrap; }
+  .rs-col s { display: block; text-decoration: none; border-radius: 3px 3px 0 0; min-height: 2px; }
+  .rs-axis { display: flex; gap: 3px; border-top: 1px solid var(--line); padding-top: 3px; }
+  .rs-axis span { flex: 1 1 0; min-width: 0; text-align: center; font-size: .7em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rs-foot { display: flex; justify-content: space-between; gap: 1em; margin-top: .35em; font-size: .75em; color: var(--muted); }
+  .rs-card.dense .rs-col i { display: none; }
+  .rs-card.wide { max-width: 50rem; }
+  .rs-card.wide .rs-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0 2em; align-items: end; }
+  .rs-card.wide { padding: .75em 1.1em .7em; margin: .8em auto 1em; }
+  .rs-card.wide .rs-head { margin-bottom: .3em; }
+  .rs-card.wide .rs-rows li { padding: .22em 0; }
+  .rs-card.wide .rs-pts { padding: .02em .5em; }
+  .rs-card.wide .rs-chart { height: 4.6em; }
+  .rs-card.wide .rs-sum { margin: .35em 0 0; padding-top: .35em; }
+  .rs-card.wide .rs-foot { margin-top: .2em; }
+  @media (max-width: 640px) { .rs-card.wide .rs-body { grid-template-columns: 1fr; } .rs-card.wide .rs-sum { margin-bottom: .9em; }
+    .rs-card { padding: .9em .9em .8em; } .abstract .rs-card { margin-left: -2.4em; margin-right: -2.4em; } }
+</style>
+<div class="rs-card wide" role="img" aria-label="Benign breast tumour score: 3 conditions and the chance the tumour is benign for each total score">
+  <div class="rs-head"><span class="rs-title">Benign breast tumour score</span><span class="rs-meta">test AUC 0.972</span></div>
+  <div class="rs-body"><div class="rs-left">
+  <ol class="rs-rows">
+    <li><span class="rs-cond"><b>worst area</b> <span>&le; 906.6</span></span><span class="rs-pts">+3</span></li>
+    <li><span class="rs-cond"><b>worst concave points</b> <span>&le; 0.1479</span></span><span class="rs-pts">+3</span></li>
+    <li><span class="rs-cond"><b>mean texture</b> <span>&le; 20.99</span></span><span class="rs-pts">+2</span></li>
+  </ol>
+  <div class="rs-sum"><span>Add the points of every condition that applies.</span></div>
+  </div><div class="rs-right">
+  <div class="rs-chart"><div class="rs-half"><span>50%</span></div><div class="rs-col" title="total 0: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 2: 0.1%"><i>0.1%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 3: 0.6%"><i>0.6%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 5: 30.1%"><i>30%</i><s style="height:30.1%;background:color-mix(in srgb, var(--accent) 48%, var(--surface))"></s></div><div class="rs-col" title="total 6: 78.3%"><i>78%</i><s style="height:78.3%;background:color-mix(in srgb, var(--accent) 84%, var(--surface))"></s></div><div class="rs-col" title="total 8: 99.6%"><i>99.6%</i><s style="height:99.6%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div></div>
+  <div class="rs-axis"><span>0</span><span>2</span><span>3</span><span>5</span><span>6</span><span>8</span></div>
+  <div class="rs-foot"><span>&uarr; chance the tumour is benign</span><span>total score &rarr;</span></div>
+  </div></div>
+</div>                    <!-- /CARD:abstract -->
+                    <p>Choosing the conditions and points is a slow integer optimization problem.
+                        We used autoresearch to build <b>FastRiskScore</b>, which builds on prior work in the field like <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a> and <a href="https://arxiv.org/abs/2210.05846">FasterRisk</a>.
+                        On held-out datasets FastRiskScore generally fits much faster than competing baselines, without sacrificing trianing loss or test AUC.
                     </p>
+                    </div>
 
                     <nav class="toc-main">
                       <a href="#quickstart"><span>1</span> Quickstart &amp; example usage</a>
@@ -42,57 +101,67 @@ proba = model.predict_proba(X_test)</code></pre>
 
                     <p><code>k</code> is the maximum number of conditions, and <code>max_points</code> (default 5) is the
                       largest number of points one condition can carry. Numeric columns are split at their deciles and
-                      categorical columns are one-hot encoded, so each condition refers to one of the original columns.
-                      Printing the model shows the whole score:</p>
+                      categorical columns are one-hot encoded, so each condition refers to one of the original columns.</p>
 
-                    <pre><code>FastRiskScoreClassifier: add the points of every line that applies
-  worst area &lt;= 906.6              +5
-  worst texture &lt;= 20.14           +4
-  worst concave points &lt;= 0.1479   +4
-  mean texture &lt;= 20.99            +3
-  worst concave points &lt;= 0.09804  +2
-risk of class 1 for each total score:
-  score       0     +1     +2     +3     +4     +5     +6     +7     +8     +9    +10    +11    +12    +13    +14    +15    +16    +17    +18
-  risk     0.0%   0.0%   0.0%   0.0%   0.1%   0.3%   1.2%   4.8%  17.1%  45.6%  77.4%  93.3%  98.3%  99.6%  99.9% 100.0% 100.0% 100.0% 100.0%</code></pre>
-
-                    <p>Class 1 is a benign tumour. This score has a test AUC of 0.984 and took 0.03 s to fit. The fitted
-                      model also stores the points and the risk curve:</p>
-
-                    <pre><code class="language-python">model.points_           # {"worst area &lt;= 906.6": 5, ...}, the lines of the score
+                    <details class="collapsible" id="reading-the-score">
+                      <summary>The fitted model: points, total score and risk curve</summary>
+                      <p>Here is the fitted model, fit in 0.03 seconds:</p>
+                    <!-- CARD:quickstart -->
+<div class="rs-card dense wide" role="img" aria-label="Benign breast tumour score: 5 conditions and the chance the tumour is benign for each total score">
+  <div class="rs-head"><span class="rs-title">Benign breast tumour score</span><span class="rs-meta">test AUC 0.984</span></div>
+  <div class="rs-body"><div class="rs-left">
+  <ol class="rs-rows">
+    <li><span class="rs-cond"><b>worst area</b> <span>&le; 906.6</span></span><span class="rs-pts">+5</span></li>
+    <li><span class="rs-cond"><b>worst texture</b> <span>&le; 20.14</span></span><span class="rs-pts">+4</span></li>
+    <li><span class="rs-cond"><b>worst concave points</b> <span>&le; 0.1479</span></span><span class="rs-pts">+4</span></li>
+    <li><span class="rs-cond"><b>mean texture</b> <span>&le; 20.99</span></span><span class="rs-pts">+3</span></li>
+    <li><span class="rs-cond"><b>worst concave points</b> <span>&le; 0.09804</span></span><span class="rs-pts">+2</span></li>
+  </ol>
+  <div class="rs-sum"><span>Add the points of every condition that applies.</span></div>
+  </div><div class="rs-right">
+  <div class="rs-chart"><div class="rs-half"><span>50%</span></div><div class="rs-col" title="total 0: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 2: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 3: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 4: 0.1%"><i>0.1%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 5: 0.3%"><i>0.3%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 6: 1.2%"><i>1.2%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 26%, var(--surface))"></s></div><div class="rs-col" title="total 7: 4.8%"><i>4.8%</i><s style="height:4.8%;background:color-mix(in srgb, var(--accent) 29%, var(--surface))"></s></div><div class="rs-col" title="total 8: 17.1%"><i>17%</i><s style="height:17.1%;background:color-mix(in srgb, var(--accent) 38%, var(--surface))"></s></div><div class="rs-col" title="total 9: 45.6%"><i>46%</i><s style="height:45.6%;background:color-mix(in srgb, var(--accent) 59%, var(--surface))"></s></div><div class="rs-col" title="total 10: 77.4%"><i>77%</i><s style="height:77.4%;background:color-mix(in srgb, var(--accent) 83%, var(--surface))"></s></div><div class="rs-col" title="total 11: 93.3%"><i>93%</i><s style="height:93.3%;background:color-mix(in srgb, var(--accent) 95%, var(--surface))"></s></div><div class="rs-col" title="total 12: 98.3%"><i>98%</i><s style="height:98.3%;background:color-mix(in srgb, var(--accent) 99%, var(--surface))"></s></div><div class="rs-col" title="total 13: 99.6%"><i>99.6%</i><s style="height:99.6%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 14: 99.9%"><i>99.9%</i><s style="height:99.9%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 15: 100.0%"><i>100.0%</i><s style="height:100.0%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 16: 100.0%"><i>100.0%</i><s style="height:100.0%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 18: 100.0%"><i>100.0%</i><s style="height:100.0%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div></div>
+  <div class="rs-axis"><span>0</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>18</span></div>
+  <div class="rs-foot"><span>&uarr; chance the tumour is benign</span><span>total score &rarr;</span></div>
+  </div></div>
+</div>                    <!-- /CARD:quickstart -->
+                      <p>The fitted model stores the score and its risk curve:</p>
+                      <pre><code class="language-python">model.points_           # {"worst area &lt;= 906.6": 5, ...}, the lines of the score
 model.total_score(X)    # the total points of each row
 model.risk(score)       # 1 / (1 + exp(-(model.scale_ * score + model.intercept_)))
 model.train_loss_       # the mean training log loss of that risk</code></pre>
-
-                    <details class="collapsible" id="reading-the-score">
-                      <summary>How the risk for a total is chosen</summary>
                       <p>The points determine the total score of each row. The risk for a total comes from a logistic
-                        curve, <code>risk(s) = 1 / (1 + exp(-(a&middot;s + b)))</code>, whose two parameters <i>a</i> and
-                        <i>b</i> are fit to the training data once the points are chosen. The points are chosen to make
-                        the log loss of this fitted curve as small as possible (<a href="#methods">Sec 3</a>), so the
-                        risks in the printed table are calibrated on the training data. RiskSLIM and FasterRisk print
-                        the same kind of table; they write <i>b</i> as an integer offset and <i>1/a</i> as a
-                        multiplier.</p>
+                        curve, <code>risk(s) = 1 / (1 + exp(-(a&middot;s + b)))</code>, with <i>a</i> =
+                        <code>model.scale_</code> and <i>b</i> = <code>model.intercept_</code>; both are fit to the
+                        training data once the points are chosen. The points are chosen to make the log loss of this
+                        curve as small as possible (<a href="#methods">Sec 3</a>), so the risks in the diagram are
+                        calibrated on the training data. RiskSLIM and FasterRisk show the same kind of table; they write
+                        <i>b</i> as an integer offset and <i>1/a</i> as a multiplier.</p>
                     </details>
 
                     <h2 id="results">2. Experimental results</h2>
 
-                    <p>FastRiskScore came out of the autoresearch loop of
+                    <p><b>The autoresearch loop.</b> FastRiskScore came out of the autoresearch loop of
                         <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
-                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_slim">github</a>). Two coding
-                        agents started from the same solver, FasterRisk rewritten as a single Python file, and used the
-                        same benchmark. Each ran for about 90 minutes. One was asked to lower the loss and the other to
+                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_slim">github</a>).
+                        Two coding agents (Claude Code with Opus 5.5) started from the same solver, FasterRisk rewritten as a single Python file, and used the
+                        same benchmark. One was asked to lower the loss and the other to
                         make the solver faster. In each round an agent changed the solver, ran the benchmark, and kept
                         the change only if the loss went down without the time rising by more than 10%, or the time
-                        went down by at least 10% without the loss rising. The benchmark, called the visible set, has
-                        70 problems: 14 datasets &times; 5 values of <code>k</code> (3, 4, 5, 7 and 10). Each problem
-                        has a 60 s limit and runs on one core.</p>
-
-                    <p>All solvers are scored the same way. A solver returns integer points in [&minus;5, 5] for at most
+                        went down by at least 10% without the loss rising. The agents ran for about 75 hours of autoresearch.
+                      All solvers are scored the same way. A solver returns integer points in [&minus;5, 5] for at most
                         <code>k</code> of a dataset's binary features. The benchmark then fits the risk curve for those
-                        points itself and records three numbers: the training log loss of that curve, which is the
+                        points itself and records 3 numbers: the training log loss of that curve, which is the
                         quantity being minimized; the test AUC of the total score on a held-out 20% split; and the fit
-                        time. Since the loss is computed from the points alone, a solver cannot improve its score by
-                        reporting a wrong loss.</p>
+                        time.
+                      </p>
+
+                    <p><b>Datasets, baselines, and evaluations.</b> The benchmark that the agents optimize over (which we call the "visible set"),
+                        has 70 problems: 14 datasets &times; 5 values of <code>k</code> (3, 4, 5, 7 and 10). Each problem
+                        has a 60 s limit and runs on one core.
+                        We compare against 19 baselines that run without a commercial solver, from FasterRisk and exact
+                      solvers to sparse models with rounding and recent scoring-system packages (listed below).
+                      
+                      </p>
 
 <details class="collapsible" id="datasets">
                       <summary>The 14 visible datasets (from the RiskSLIM and FasterRisk papers, and OpenML)</summary>
@@ -168,29 +237,67 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         and never used during development. Builder: <code>evolve_slim/data/build_data.py</code>.</p>
                     </details>
 
-                    <p>Fig <a href="#fig1">1</a> plots the training loss (panels A to C, lower is better) and the test AUC
-                      (panel D, higher is better) against the time per problem (left is faster). The loss is shown as
+                    <details class="collapsible" id="baselines">
+                      <summary>The 19 baselines</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>baseline</th><th>family</th><th>source and how it is run</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>FasterRisk</td><td style="white-space:nowrap">FasterRisk</td><td><a href="https://arxiv.org/abs/2210.05846">Liu et al. 2022</a>; package <code>fasterrisk</code> 0.1.10, default settings</td></tr>
+                          <tr><td>FasterRisk, wide search</td><td style="white-space:nowrap">FasterRisk</td><td>the same with a beam of 50 &times; 50, a pool of 200, 100 swaps and 100 multipliers</td></tr>
+                          <tr><td>RiskSLIM</td><td style="white-space:nowrap">exact</td><td><a href="https://jmlr.org/papers/v20/18-615.html">Ustun &amp; Rudin 2019</a>; <code>risk-slim</code> with the free CPLEX Community Edition</td></tr>
+                          <tr><td>Cutting planes, HiGHS</td><td style="white-space:nowrap">exact</td><td>RiskSLIM's cutting-plane algorithm reimplemented with the open-source HiGHS solver</td></tr>
+                          <tr><td>SLIM</td><td style="white-space:nowrap">exact</td><td><a href="https://arxiv.org/abs/1502.04269">Ustun &amp; Rudin 2016</a>; its 0-1 loss integer program solved with HiGHS</td></tr>
+                          <tr><td>abess + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://www.jmlr.org/papers/v23/21-1060.html">Zhu et al. 2022</a>; best-subset selection, package <code>abess</code></td></tr>
+                          <tr><td>fastSparse + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://arxiv.org/abs/2202.11389">Liu et al. 2022</a>; the L0 path, package <code>fastsparsegams</code></td></tr>
+                          <tr><td>OKRidge + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://arxiv.org/abs/2304.06686">Liu et al. 2023</a>; optimal sparse ridge support, vendored</td></tr>
+                          <tr><td>L1 path + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td>supports along the L1 logistic path (scikit-learn)</td></tr>
+                          <tr><td>L0Learn + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://arxiv.org/abs/2001.06471">Dedieu et al. 2021</a>; L0L2 logistic path with swaps, R package <code>L0Learn</code></td></tr>
+                          <tr><td>OKGLM + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://github.com/jiachangliu/OKGLM">Liu et al. 2025</a>; certified k-sparse logistic regression in [&minus;5, 5], vendored, CPU</td></tr>
+                          <tr><td>skscope + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://github.com/abess-team/skscope">Wang et al. 2024</a>; k-sparse logistic regression by splicing, package <code>skscope</code></td></tr>
+                          <tr><td>Probabilistic scoring list</td><td style="white-space:nowrap">scoring system</td><td><a href="https://arxiv.org/abs/2407.21535">Hanselle et al. 2025</a>; package <code>scikit-psl</code>, vendored</td></tr>
+                          <tr><td>AutoScore</td><td style="white-space:nowrap">scoring system</td><td><a href="https://medinform.jmir.org/2020/10/e21798/">Xie et al. 2020</a>; reimplemented (R only)</td></tr>
+                          <tr><td>riskscores, annealing</td><td style="white-space:nowrap">scoring system</td><td><a href="https://cran.r-project.org/package=riskscores">R package <code>riskscores</code></a> 1.3.0</td></tr>
+                          <tr><td>riskscores, coordinate descent</td><td style="white-space:nowrap">scoring system</td><td>the same package, its coordinate-descent method</td></tr>
+                          <tr><td>Rounded L1 logistic</td><td style="white-space:nowrap">common practice</td><td>L1 logistic regression with <code>k</code> features, scaled to a largest point of 5 and rounded</td></tr>
+                          <tr><td>Unit weighting</td><td style="white-space:nowrap">common practice</td><td>the L1-selected features, each worth +1 or &minus;1 by its sign</td></tr>
+                          <tr><td>imodels SLIMClassifier (before)</td><td style="white-space:nowrap">common practice</td><td>imodels 3.0.2 without a commercial solver: a rounded L2 logistic regression</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">The baselines came from two searches for methods that can be run without a
+                        commercial solver: one of packages for risk scores and sparse logistic regression, and a later one of
+                        2023 to 2026 papers that cite FasterRisk, RiskSLIM, fastSparse, OKRidge, scoring lists or the
+                        certifier of Liu et al. (ICML 2025). Each "+ rounding" method gives a sparse real-valued solution with
+                        at most <code>k</code> features, which FasterRisk's rounding step turns into points. Penalized
+                        methods (riskscores, L0Learn, the L1 path, imodels' SLIMClassifier) have their penalty searched until
+                        at most <code>k</code> points are nonzero, and points are clipped to [&minus;5, 5]. scikit-psl and
+                        okridge pin numpy&nbsp;&lt;&nbsp;2 and are vendored with small fixes (a numpy 2 incompatibility in
+                        scikit-psl, a call to a removed method in okridge), and scikit-psl gains a stop after <code>k</code>
+                        stages. AutoScore is only available in R, so its recipe (rank by random-forest importance, fit a
+                        logistic regression, divide by the smallest coefficient and round) is reimplemented on the binary
+                        features. RiskSLIM has no open-solver version, so its cutting-plane algorithm is reimplemented with
+                        HiGHS, re-solving the integer program each round and starting from rounded heuristic solutions as
+                        RiskSLIM does; it proves optimality on 6 of the 70 visible problems. L0Learn runs from its R package,
+                        since the Python package has no build past Python 3.10, and the R methods run in one persistent R
+                        process per worker so that R's start-up is not timed. OKGLM has no intercept, so a constant column is
+                        added. imodels' previous SLIMClassifier solves its integer program only with a commercial solver
+                        installed; without one, which is the default, it rounds an L2 logistic regression. Probabilistic
+                        scoring lists are killed at 3&times; the time limit on 10 visible and 51 hidden problems, and
+                        riskscores often passes the time limit, since it checks the clock only between fits; a solver
+                        without a score is charged the base rate. Left out: scorepyo (abandoned, pinned to 2022 packages),
+                        weight-of-evidence scorecards (optbinning, scorecardpy; not sparse integer points), GroupFasterRisk
+                        (the same as FasterRisk without feature groups), recent methods without public code (a GPU branch
+                        and bound for k-sparse GLMs, net-benefit risk scores) and those that optimise a different objective
+                        (boosted risk scores, SHAPoint, AgentScore).</p>
+                    </details>
+
+                    <p><b>FastRiskScore is fast and accurate.</b> Fig <a href="#fig1">1</a> plots time per problem against the training loss (Fig 1A-C) and the tett error (Fig 1D).
+                      In all cases, FastRiskScore achieves the best performance (lower left).
+                      The loss is shown as
                       the excess over the lowest loss any solver reached on each problem, averaged over problems. A
                       solver that returns no score on a problem is charged the loss of predicting the base rate there.
-                      We compare against 14 baselines that can be run from Python without a commercial solver
-                      (<a href="#baselines">details below</a>):</p>
-                    <ul>
-                      <li><a href="https://arxiv.org/abs/2210.05846">FasterRisk</a> (Liu et al., 2022), with its default
-                        settings and with every search width raised.</li>
-                      <li>Exact methods: <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a> (Ustun &amp; Rudin,
-                        2019) with the free CPLEX Community Edition, RiskSLIM's cutting-plane algorithm with the
-                        open-source HiGHS solver, and <a href="https://arxiv.org/abs/1502.04269">SLIM</a> (Ustun &amp;
-                        Rudin, 2016).</li>
-                      <li>Sparse real-valued models rounded with FasterRisk's rounding step:
-                        <a href="https://www.jmlr.org/papers/v23/21-1060.html">abess</a> best-subset selection, the
-                        <a href="https://arxiv.org/abs/2202.11389">fastSparse</a> L0 path,
-                        <a href="https://arxiv.org/abs/2304.06686">OKRidge</a>'s optimal sparse ridge support, and the L1
-                        path.</li>
-                      <li><a href="https://arxiv.org/abs/2407.21535">Probabilistic scoring lists</a> and
-                        <a href="https://medinform.jmir.org/2020/10/e21798/">AutoScore</a>.</li>
-                      <li>Common practice: L1 logistic regression scaled and rounded, unit weights, and the previous
-                        <code>SLIMClassifier</code> in imodels.</li>
-                    </ul>
+                      </p>
                     <span class="fig-anchor" id="fig1"></span>
                     <div class="fig-wide">
                       <ul class="fig-legend" aria-label="Legend">
@@ -218,65 +325,42 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         </div>
                         <div class="fig-panel">
                           <span class="panel-letter" aria-hidden="true">D</span>
-                          <h4>Hidden set, test AUC <span>(27 datasets &times; 5 values of k, 60 s per problem)</span></h4>
-                          <div id="pareto-test" role="img" aria-label="Mean test AUC against geometric-mean time for the kept versions and the baselines on the 27 held-out TabArena datasets."></div>
+                          <h4>Hidden set, test error <span>(27 datasets &times; 5 values of k, 60 s per problem)</span></h4>
+                          <div id="pareto-test" role="img" aria-label="Mean test error (1 minus AUC) against geometric-mean time for the kept versions and the baselines on the 27 held-out TabArena datasets."></div>
                         </div>
                       </div>
                     </div>
-                    <p class="caption"><b>Fig 1.</b> Training loss and test AUC against fit time. <b>A</b>: the visible set
+                    <p class="caption"><b>Fig 1.</b> Training loss and test error against fit time. FastRiskScore (star)
+                        is about 40&times; faster than FasterRisk on the visible set and 50&times; on the held-out sets (by
+                        the median), has a lower loss on 54 of 70, 90 of 135 and 21 of 27 problems (a higher one on 1, 5
+                        and 0), and has the lowest test error of the integer scores. The closest baselines are sparse
+                        models rounded with FasterRisk's rounding step. <b>A</b>: the visible set
                         that the loop was scored on, with every version either run tried (discarded attempts are faded).
                         <b>B</b>: the same protocol on 27 held-out TabArena datasets, for the versions each run kept.
                         <b>C</b>: the held-out datasets at full size, up to 120,000 training rows, at <code>k</code> = 5
-                        with 10 minutes per problem. <b>D</b>: the test AUC of the solvers in B, averaged over the 135
-                        held-out problems; the axis starts at 0.725, so the solvers below it (RiskSLIM 0.568, SLIM
-                        0.642, cutting planes 0.667 and scoring lists 0.681) are not shown. Each point is one solver; the x-axis is its geometric-mean fit time, and in A
+                        with 10 minutes per problem. <b>D</b>: the test error (1 &minus; AUC) of the solvers in B, averaged over the 135
+                        held-out problems; the axis stops at 0.275, so the solvers above it (RiskSLIM 0.432, SLIM
+                        0.358, cutting planes 0.333 and scoring lists 0.319) are not shown. Each point is one solver; the x-axis is its geometric-mean fit time, and in A
                         to C the y-axis is its mean excess training loss over the best loss any solver reached on each
                         problem (log scale). Large points are the mean of three runs. In C no solver beats FastRiskScore
                         on any dataset, so its excess loss is 0 and its star sits at the bottom of the axis. All runs
                         used one core per problem on a Linux server (two Xeon Platinum 8468V), with 14 problems at a
                         time (27 in C).</p>
-                    <details class="collapsible" id="fig1-measurement">
-                      <summary>Extra details on experimental settings</summary>
-                      <p><b>Scoring.</b> The benchmark rejects any answer whose points are not integers, fall outside
-                        [&minus;5, 5] or use more than <code>k</code> features; no solver in the figure had such an answer.
-                        Given the points, the risk curve is fit by Newton's method on the two numbers <i>a</i> and
-                        <i>b</i>, a convex problem. Each solver process first fits a tiny warm-up problem, untimed, so
-                        numba compilation is not counted; FastRiskScore's first fit on a new machine takes about 30 s
-                        longer for that reason.</p>
-                      <p><b>Best known losses.</b> The excess loss is measured against the lowest loss any integer
-                        solver reached on the problem in any of these runs, including FasterRisk with every search
-                        width raised (a beam of 50 &times; 50, a pool of 200 and 100 multipliers) and a 20-minute
-                        limit, which takes about 12&times; its default time.</p>
-                      <p><b>RiskSLIM.</b> The free CPLEX Community Edition refuses problems above 1,000 variables or
-                        constraints, and RiskSLIM's cutting planes pass that limit on wider datasets; it returned no
-                        score on 25 of 70 visible problems and 102 of 135 hidden ones, and
-                        is charged the base rate there. With a full CPLEX licence it would do better, but within these time
-                        limits it still certifies optimality only on small problems, as the FasterRisk paper also
-                        found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
-                        near 60 s.</p>
-                      <p id="baselines"><b>Baselines.</b> The search tested each candidate package in a clean Python 3.12
-                        environment. abess and fastsparsegams install from PyPI; scikit-psl and okridge pin numpy&nbsp;&lt;&nbsp;2
-                        and are vendored with small fixes (a numpy 2 incompatibility in scikit-psl, a call to a removed
-                        method in okridge), and scikit-psl gains a stop after <code>k</code> stages. AutoScore is only
-                        available in R, so its recipe (rank by random-forest importance, fit a logistic regression, divide
-                        by the smallest coefficient and round) is reimplemented on the binary features. RiskSLIM has no
-                        open-solver version, so its cutting-plane algorithm is reimplemented with HiGHS, re-solving the
-                        integer program each round and starting from rounded heuristic solutions as RiskSLIM does; it
-                        proves optimality on 6 of the 70 visible problems. Left out: scorepyo (abandoned, pinned to 2022
-                        packages), weight-of-evidence scorecards (optbinning, scorecardpy; not sparse integer points),
-                        l0learn (no Python 3.12 build; fastsparsegams is the same code) and GroupFasterRisk (the same as
-                        FasterRisk without feature groups). Probabilistic scoring lists are killed at 3&times; the time
-                        limit on 10 visible and 51 hidden problems and charged the base rate there.</p>
-                      <p><b>imodels' previous SLIMClassifier</b> solves its integer program only with a commercial
-                        solver installed; without one, which is the default, it rounds an L2 logistic regression. Its
-                        penalty is searched here so that at most <code>k</code> points are nonzero, and points are
-                        clipped to [&minus;5, 5].</p>
-                      <p><b>C.</b> One run per solver at <code>k</code> = 5 on each of the 27 datasets at full size, 27 at a
-                        time, with a 10-minute limit (killed at 30 minutes). RiskSLIM stops at the CPLEX Community
-                        Edition's size limit on 22 datasets; SLIM passes its limit on 25, since HiGHS finishes its
-                        current step before stopping, and on the remaining 2 returns a proven optimum of its 0-1
-                        loss.</p>
-                    </details>
+                    <script>
+                    // a link to a collapsible (e.g. Table 1, the baselines) opens it
+                    (function () {
+                      function openTarget(id) {
+                        var el = id && document.getElementById(id);
+                        for (; el; el = el.parentElement) if (el.tagName === 'DETAILS') el.open = true;
+                      }
+                      document.addEventListener('click', function (e) {
+                        var a = e.target.closest && e.target.closest('a[href^="#"]');
+                        if (a) openTarget(a.getAttribute('href').slice(1));
+                      });
+                      window.addEventListener('hashchange', function () { openTarget(location.hash.slice(1)); });
+                      openTarget(location.hash.slice(1));
+                    })();
+                    </script>
                     <style>
                       details.collapsible { border: 1px solid transparent; border-radius: 6px;
                         padding: 0 0.9em; margin: 0.1em -0.9em; }
@@ -309,7 +393,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       table.results-table th.grp { text-align: center; border-bottom: 1px solid var(--line-soft); }
                     </style>
                     <script>
-                    var PARETO = {"dev":{"points":[{"model":"v2_latticels","label":"run 1, v2_latticels (discarded)","group":"run1_discard","runs":1,"c":0.0006668879999656818,"c_sd":0.0,"c_raw":0.0006668879999656818,"t":1.6773742110407939,"t_sd":0.0,"auc":0.8422718027218137,"loss":0.35648210457139423,"direct":null},{"model":"v3_fastnewton","label":"run 1, v3_fastnewton","group":"run1","runs":1,"c":0.003383543947817734,"c_sd":0.0,"c_raw":0.003383543947817734,"t":0.2786439064088904,"t_sd":0.0,"auc":0.8414513943521209,"loss":0.3591987605192463,"direct":null},{"model":"v4_fast_lattice","label":"run 1, v4_fast_lattice (discarded)","group":"run1_discard","runs":1,"c":0.00061363547201414,"c_sd":0.0,"c_raw":0.00061363547201414,"t":0.4499177945067113,"t_sd":0.0,"auc":0.8427178412852384,"loss":0.3564288520434427,"direct":null},{"model":"v5_tunetop","label":"run 1, v5_tunetop","group":"run1","runs":1,"c":0.0034228635563495254,"c_sd":0.0,"c_raw":0.0034228635563495254,"t":0.2109683220610578,"t_sd":0.0,"auc":0.8423962687203825,"loss":0.35923808012777814,"direct":null},{"model":"v6_numbaray","label":"run 1, v6_numbaray","group":"run1","runs":1,"c":0.0034228635563495254,"c_sd":0.0,"c_raw":0.0034228635563495254,"t":0.17589742635509312,"t_sd":0.0,"auc":0.8423962687203825,"loss":0.35923808012777814,"direct":null},{"model":"v7_histlattice","label":"run 1, v7_histlattice (discarded)","group":"run1_discard","runs":1,"c":0.0007293465523772741,"c_sd":0.0,"c_raw":0.0007293465523772741,"t":0.22632651649857224,"t_sd":0.0,"auc":0.8428777730439325,"loss":0.3565445631238058,"direct":null},{"model":"v8_screenall","label":"run 1, v8_screenall (discarded)","group":"run1_discard","runs":1,"c":0.0011646205774451916,"c_sd":0.0,"c_raw":0.0011646205774451916,"t":0.20436667390801977,"t_sd":0.0,"auc":0.8419319512012755,"loss":0.3569798371488737,"direct":null},{"model":"v9_pool10","label":"run 1, v9_pool10","group":"run1","runs":1,"c":0.0007908595910851452,"c_sd":0.0,"c_raw":0.0007908595910851452,"t":0.16325686467038256,"t_sd":0.0,"auc":0.8427287431413141,"loss":0.35660607616251366,"direct":null},{"model":"v10_pairmoves","label":"run 1, v10_pairmoves (discarded)","group":"run1_discard","runs":1,"c":0.0006842636901164545,"c_sd":0.0,"c_raw":0.0006842636901164545,"t":0.1775842500734551,"t_sd":0.0,"auc":0.8427812187555873,"loss":0.356499480261545,"direct":null},{"model":"v11_pooltune","label":"run 1, v11_pooltune","group":"run1","runs":1,"c":0.0007908595910851452,"c_sd":0.0,"c_raw":0.0007908595910851452,"t":0.14323855097260818,"t_sd":0.0,"auc":0.8427287431413141,"loss":0.35660607616251366,"direct":null},{"model":"v12_quickcalib","label":"run 1, v12_quickcalib (discarded)","group":"run1_discard","runs":1,"c":0.000865821416790191,"c_sd":0.0,"c_raw":0.000865821416790191,"t":0.13558344365262606,"t_sd":0.0,"auc":0.842687930591287,"loss":0.35668103798821865,"direct":null},{"model":"v13_zerostart","label":"run 1, v13_zerostart (discarded)","group":"run1_discard","runs":1,"c":0.0007049760735867444,"c_sd":0.0,"c_raw":0.0007049760735867444,"t":0.17151720447483812,"t_sd":0.0,"auc":0.8428502725938792,"loss":0.3565201926450152,"direct":null},{"model":"v24_child5","label":"run 1, v24_child5","group":"run1","runs":1,"c":0.0004993207099990845,"c_sd":0.0,"c_raw":0.0004993207099990845,"t":0.14242451026917957,"t_sd":0.0,"auc":0.8425545201208247,"loss":0.3563145372814276,"direct":null},{"model":"v27_cheap1d","label":"run 1, v27_cheap1d","group":"run1","runs":1,"c":0.0005078997569928585,"c_sd":0.0,"c_raw":0.0005078997569928585,"t":0.12205924285829114,"t_sd":0.0,"auc":0.842502265384076,"loss":0.35632311632842134,"direct":null},{"model":"v28_ray5","label":"run 1, v28_ray5","group":"run1","runs":1,"c":0.0005039749049652114,"c_sd":0.0,"c_raw":0.0005039749049652114,"t":0.10528357015569992,"t_sd":0.0,"auc":0.8425027854271876,"loss":0.3563191914763938,"direct":null},{"model":"v29_tune1","label":"run 1, v29_tune1","group":"run1","runs":1,"c":0.0005436241435849678,"c_sd":0.0,"c_raw":0.0005436241435849678,"t":0.08699413967050863,"t_sd":0.0,"auc":0.842728101635063,"loss":0.3563588407150135,"direct":null},{"model":"v32_nbsupport","label":"run 1, v32_nbsupport (discarded)","group":"run1_discard","runs":1,"c":0.0005718517887443767,"c_sd":0.0,"c_raw":0.0005718517887443767,"t":0.08070478328094494,"t_sd":0.0,"auc":0.8428223269492295,"loss":0.3563870683601729,"direct":null},{"model":"v34_2starts","label":"run 1, v34_2starts","group":"run1","runs":1,"c":0.0005820461648349324,"c_sd":0.0,"c_raw":0.0005820461648349324,"t":0.07384977194301151,"t_sd":0.0,"auc":0.8431151936324391,"loss":0.35639726273626343,"direct":null},{"model":"v36_robust","label":"run 1, v36_robust (discarded)","group":"run1_discard","runs":1,"c":0.0005820461648349324,"c_sd":0.0,"c_raw":0.0005820461648349324,"t":0.07142996109434327,"t_sd":0.0,"auc":0.8431151936324391,"loss":0.35639726273626343,"direct":null},{"model":"v2_numba","label":"run 2, v2_numba","group":"run2","runs":1,"c":0.0039916197333299585,"c_sd":0.0,"c_raw":0.0039916197333299585,"t":0.2957089755591123,"t_sd":0.0,"auc":0.8413670449571636,"loss":0.3598068363047585,"direct":null},{"model":"v3_ils","label":"run 2, v3_ils (discarded)","group":"run2_discard","runs":1,"c":0.000727826514835234,"c_sd":0.0,"c_raw":0.000727826514835234,"t":0.5400809129696741,"t_sd":0.0,"auc":0.8415267411807712,"loss":0.35654304308626383,"direct":null},{"model":"v4_binned","label":"run 2, v4_binned (discarded)","group":"run2_discard","runs":1,"c":0.000727826514835234,"c_sd":0.0,"c_raw":0.000727826514835234,"t":0.3673504389149524,"t_sd":0.0,"auc":0.8415267411807712,"loss":0.35654304308626383,"direct":null},{"model":"v5_nopool","label":"run 2, v5_nopool","group":"run2","runs":1,"c":0.0005535028211696714,"c_sd":0.0,"c_raw":0.0005535028211696714,"t":0.26351006428397006,"t_sd":0.0,"auc":0.8427418275507956,"loss":0.3563687193925983,"direct":null},{"model":"v6_screen","label":"run 2, v6_screen (discarded)","group":"run2_discard","runs":1,"c":0.001570154391340804,"c_sd":0.0,"c_raw":0.001570154391340804,"t":0.19546352837958617,"t_sd":0.0,"auc":0.8414740241873349,"loss":0.3573853709627694,"direct":null},{"model":"v7_groups","label":"run 2, v7_groups","group":"run2","runs":1,"c":0.0005563269992397226,"c_sd":0.0,"c_raw":0.0005563269992397226,"t":0.10746288951891601,"t_sd":0.0,"auc":0.8427351926039711,"loss":0.3563715435706683,"direct":null},{"model":"v8_rawscreen","label":"run 2, v8_rawscreen (discarded)","group":"run2_discard","runs":1,"c":0.0006195847943366298,"c_sd":0.0,"c_raw":0.0006195847943366298,"t":0.10399492685027058,"t_sd":0.0,"auc":0.8428456393419839,"loss":0.3564348013657653,"direct":null},{"model":"v9_starts10","label":"run 2, v9_starts10 (discarded)","group":"run2_discard","runs":1,"c":0.0004923252882175549,"c_sd":0.0,"c_raw":0.0004923252882175549,"t":0.16486669178295177,"t_sd":0.0,"auc":0.8428066856008192,"loss":0.35630754185964614,"direct":null},{"model":"v10_fastdata","label":"run 2, v10_fastdata (discarded)","group":"run2_discard","runs":1,"c":0.0005535028211641416,"c_sd":0.0,"c_raw":0.0005535028211641416,"t":0.1025300579560031,"t_sd":0.0,"auc":0.8427418275507956,"loss":0.35636871939259274,"direct":null},{"model":"v11_swapscreen","label":"run 2, v11_swapscreen (discarded)","group":"run2_discard","runs":1,"c":0.0005746430208302792,"c_sd":0.0,"c_raw":0.0005746430208302792,"t":0.09845275837459513,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v12_countbins","label":"run 2, v12_countbins (discarded)","group":"run2_discard","runs":1,"c":0.0005746430208302792,"c_sd":0.0,"c_raw":0.0005746430208302792,"t":0.09932464723118427,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v14_numbachild","label":"run 2, v14_numbachild","group":"run2","runs":1,"c":0.0005746430208302783,"c_sd":0.0,"c_raw":0.0005746430208302783,"t":0.07107390174229641,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v16_swaplast","label":"run 2, v16_swaplast","group":"run2","runs":1,"c":0.00040221969229924223,"c_sd":0.0,"c_raw":0.00040221969229924223,"t":0.06332244643461542,"t_sd":0.0,"auc":0.842695108436234,"loss":0.3562174362637278,"direct":null},{"model":"v17_calround","label":"run 2, v17_calround","group":"run2","runs":1,"c":0.00020183144614052817,"c_sd":0.0,"c_raw":0.00020183144614052817,"t":0.06640448163406695,"t_sd":0.0,"auc":0.8429672806203793,"loss":0.3560170480175691,"direct":null},{"model":"v18_roundnb","label":"run 2, v18_roundnb","group":"run2","runs":1,"c":0.00015711013733503258,"c_sd":0.0,"c_raw":0.00015711013733503258,"t":0.057098558282938756,"t_sd":0.0,"auc":0.8430056554683208,"loss":0.3559723267087636,"direct":null},{"model":"v21_hybrid","label":"run 2, v21_hybrid (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.055776150163625936,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v24_blasscreen","label":"run 2, v24_blasscreen","group":"run2","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04875331803740214,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v25_blasgrad","label":"run 2, v25_blasgrad (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.05064696947537793,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v27","label":"run 2, v27 (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.045668249297980294,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v30_lazycodes","label":"run 2, v30_lazycodes","group":"run2","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04179518334216692,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v31_batchchild","label":"run 2, v31_batchchild (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04421339440824031,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v32_valdeltas","label":"run 2, v32_valdeltas (discarded)","group":"run2_discard","runs":1,"c":0.00010346102879218114,"c_sd":0.0,"c_raw":0.00010346102879218114,"t":0.0415808425818319,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760022067,"direct":null},{"model":"v33_estskip","label":"run 2, v33_estskip (discarded)","group":"run2_discard","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.039821539571939214,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"v34_gemm","label":"run 2, v34_gemm","group":"run2","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.03678721733665011,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"v35_scratch","label":"FastRiskScore (shipped, run 2 v35)","group":"run2","runs":3,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.03755693413093347,"t_sd":0.00105084316327481,"auc":0.8423832230824079,"loss":0.35591584760486267,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":3,"c":0.004479163360635082,"c_sd":0.0,"c_raw":0.004479163360635082,"t":1.5073436609393494,"t_sd":0.00983769519336968,"auc":0.8406357065453834,"loss":0.36029437993206365,"direct":"FasterRisk"},{"model":"fasterrisk_wide","label":"FasterRisk, wide search","group":"baseline","runs":1,"c":0.0024105029624621414,"c_sd":0.0,"c_raw":0.0024105029624621414,"t":18.240121340631212,"t_sd":0.0,"auc":0.8411915629351795,"loss":0.35822571953389076,"direct":"FasterRisk, wide"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.09653671915697379,"c_sd":0.0,"c_raw":0.09653671915697379,"t":13.629099261291483,"t_sd":0.0,"auc":0.7178720690821245,"loss":0.4523519357284023,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.05384211572294605,"c_sd":0.0,"c_raw":0.05384211572294605,"t":57.01210435659151,"t_sd":0.0,"auc":0.7758253724397398,"loss":0.40965733229437473,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.08132380625726489,"c_sd":0.0,"c_raw":0.08132380625726489,"t":49.33836566239545,"t_sd":0.0,"auc":0.7672711091547323,"loss":0.4371390228286935,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.017311616521905954,"c_sd":0.0,"c_raw":0.017311616521905954,"t":0.20724729341920822,"t_sd":0.0,"auc":0.84150955080711,"loss":0.37312683309333455,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.01801897263366212,"c_sd":0.0,"c_raw":0.01801897263366212,"t":0.1234621666118213,"t_sd":0.0,"auc":0.8358314035808458,"loss":0.3738341892050907,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.009597745268327558,"c_sd":0.0,"c_raw":0.009597745268327558,"t":20.43918102010233,"t_sd":0.0,"auc":0.8410834864934316,"loss":0.36541296183975613,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.052928386549874064,"c_sd":0.0,"c_raw":0.052928386549874064,"t":0.09922026976718795,"t_sd":0.0,"auc":0.8130738018717304,"loss":0.40874360312130265,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.06264577985734536,"c_sd":0.0,"c_raw":0.06264577985734536,"t":13.848526629079693,"t_sd":0.0,"auc":0.7869401800892395,"loss":0.4184609964287739,"direct":"PSL"},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.044138632040684724,"c_sd":0.0,"c_raw":0.044138632040684724,"t":0.2602017510172334,"t_sd":0.0,"auc":0.8212424358043419,"loss":0.39995384861211325,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.0537984050475992,"c_sd":0.0,"c_raw":0.0537984050475992,"t":0.06812085167675588,"t_sd":0.0,"auc":0.8119099246868361,"loss":0.40961362161902765,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.07525024409660368,"c_sd":0.0,"c_raw":0.07525024409660368,"t":0.06246824948833679,"t_sd":0.0,"auc":0.8040234988688862,"loss":0.43106546066803225,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.07015104183230092,"c_sd":0.0,"c_raw":0.07015104183230092,"t":0.257997297339979,"t_sd":0.0,"auc":0.7892398384214064,"loss":0.4259662584037296,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":0.0015523495830414764,"c_sd":0.0,"c_raw":0.0015523495830414764,"t":0.867335535210784,"t_sd":0.0,"auc":0.8444061026487082,"loss":0.35736756615446996,"direct":null}]},"hidden":{"points":[{"model":"v3_fastnewton_run1","label":"run 1, v3_fastnewton","group":"run1","runs":1,"c":0.00043165619717812494,"c_sd":0.0,"c_raw":0.00043165619717812494,"t":1.0125023330023604,"t_sd":0.0,"auc":0.7924423451691124,"loss":0.3272216482712522,"direct":null},{"model":"v5_tunetop_run1","label":"run 1, v5_tunetop","group":"run1","runs":1,"c":0.0005609074927011953,"c_sd":0.0,"c_raw":0.0005609074927011953,"t":0.7933140065437001,"t_sd":0.0,"auc":0.792760125596641,"loss":0.32735089956677527,"direct":null},{"model":"v6_numbaray_run1","label":"run 1, v6_numbaray","group":"run1","runs":1,"c":0.0005609074927011969,"c_sd":0.0,"c_raw":0.0005609074927011969,"t":0.7435331326053756,"t_sd":0.0,"auc":0.792760125596641,"loss":0.32735089956677527,"direct":null},{"model":"v9_pool10_run1","label":"run 1, v9_pool10","group":"run1","runs":1,"c":0.00017481660780230404,"c_sd":0.0,"c_raw":0.00017481660780230404,"t":0.57778239360264,"t_sd":0.0,"auc":0.7936215079502204,"loss":0.32696480868187633,"direct":null},{"model":"v11_pooltune_run1","label":"run 1, v11_pooltune","group":"run1","runs":1,"c":0.0001820588787031692,"c_sd":0.0,"c_raw":0.0001820588787031692,"t":0.4342988212311033,"t_sd":0.0,"auc":0.7936786871275537,"loss":0.32697205095277726,"direct":null},{"model":"v24_child5_run1","label":"run 1, v24_child5","group":"run1","runs":1,"c":0.00017003541014500901,"c_sd":0.0,"c_raw":0.00017003541014500901,"t":0.3999592832635217,"t_sd":0.0,"auc":0.7933461061047424,"loss":0.32696002748421904,"direct":null},{"model":"v27_cheap1d_run1","label":"run 1, v27_cheap1d","group":"run1","runs":1,"c":0.00017037395367794017,"c_sd":0.0,"c_raw":0.00017037395367794017,"t":0.3420623251849143,"t_sd":0.0,"auc":0.7932688634667081,"loss":0.326960366027752,"direct":null},{"model":"v28_ray5_run1","label":"run 1, v28_ray5","group":"run1","runs":1,"c":0.00024952285711059584,"c_sd":0.0,"c_raw":0.00024952285711059584,"t":0.30010774087896136,"t_sd":0.0,"auc":0.7931027297388428,"loss":0.32703951493118466,"direct":null},{"model":"v29_tune1_run1","label":"run 1, v29_tune1","group":"run1","runs":1,"c":0.00033240809129178855,"c_sd":0.0,"c_raw":0.00033240809129178855,"t":0.2288486586123713,"t_sd":0.0,"auc":0.7934131122532364,"loss":0.3271224001653658,"direct":null},{"model":"v34_2starts_run1","label":"run 1, v34_2starts","group":"run1","runs":1,"c":0.0003736813713097921,"c_sd":0.0,"c_raw":0.0003736813713097921,"t":0.20154678634478038,"t_sd":0.0,"auc":0.793140210064641,"loss":0.3271636734453839,"direct":null},{"model":"v2_numba_run2","label":"run 2, v2_numba","group":"run2","runs":1,"c":0.0003556434980320974,"c_sd":0.0,"c_raw":0.0003556434980320974,"t":1.1847419284974259,"t_sd":0.0,"auc":0.7928053537938684,"loss":0.3271456355721062,"direct":null},{"model":"v5_nopool_run2","label":"run 2, v5_nopool","group":"run2","runs":1,"c":0.0002519259842402591,"c_sd":0.0,"c_raw":0.0002519259842402591,"t":0.7552853508478035,"t_sd":0.0,"auc":0.7930810073408957,"loss":0.32704191805831434,"direct":null},{"model":"v7_groups_run2","label":"run 2, v7_groups","group":"run2","runs":1,"c":0.0002495006879945752,"c_sd":0.0,"c_raw":0.0002495006879945752,"t":0.22485289580412837,"t_sd":0.0,"auc":0.7930975302267963,"loss":0.3270394927620687,"direct":null},{"model":"v14_numbachild_run2","label":"run 2, v14_numbachild","group":"run2","runs":1,"c":0.00022152718498377904,"c_sd":0.0,"c_raw":0.00022152718498377904,"t":0.13985294614135804,"t_sd":0.0,"auc":0.7931983411620216,"loss":0.3270115192590578,"direct":null},{"model":"v16_swaplast_run2","label":"run 2, v16_swaplast","group":"run2","runs":1,"c":0.00018776733432377735,"c_sd":0.0,"c_raw":0.00018776733432377735,"t":0.12909268575216665,"t_sd":0.0,"auc":0.7935520632045826,"loss":0.32697775940839785,"direct":null},{"model":"v17_calround_run2","label":"run 2, v17_calround","group":"run2","runs":1,"c":0.00018893687268331389,"c_sd":0.0,"c_raw":0.00018893687268331389,"t":0.12666150014580235,"t_sd":0.0,"auc":0.7934587505994907,"loss":0.32697892894675734,"direct":null},{"model":"v18_roundnb_run2","label":"run 2, v18_roundnb","group":"run2","runs":1,"c":0.00018893687268534866,"c_sd":0.0,"c_raw":0.00018893687268534866,"t":0.1167090244468145,"t_sd":0.0,"auc":0.7934587505994907,"loss":0.32697892894675945,"direct":null},{"model":"v24_blasscreen_run2","label":"run 2, v24_blasscreen","group":"run2","runs":1,"c":0.00016076986871541932,"c_sd":0.0,"c_raw":0.00016076986871541932,"t":0.09364422704359683,"t_sd":0.0,"auc":0.7937332682907179,"loss":0.32695076194278944,"direct":null},{"model":"v30_lazycodes_run2","label":"run 2, v30_lazycodes","group":"run2","runs":1,"c":0.00016076986871541992,"c_sd":0.0,"c_raw":0.00016076986871541992,"t":0.0731640774942275,"t_sd":0.0,"auc":0.7937332682907179,"loss":0.32695076194278944,"direct":null},{"model":"v34_gemm_run2","label":"run 2, v34_gemm","group":"run2","runs":1,"c":0.00016425307742091633,"c_sd":0.0,"c_raw":0.00016425307742091633,"t":0.057527707978582414,"t_sd":0.0,"auc":0.7936978417338044,"loss":0.326954245151495,"direct":null},{"model":"v35_scratch","label":"FastRiskScore (shipped, run 2 v35)","group":"run2","runs":3,"c":0.00016425307742091633,"c_sd":0.0,"c_raw":0.00016425307742091633,"t":0.0574551379816848,"t_sd":0.0003957816078149496,"auc":0.7936978417338044,"loss":0.326954245151495,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":3,"c":0.0004111937726185008,"c_sd":5.421010862427522e-20,"c_raw":0.0004111937726185008,"t":3.2763619728639894,"t_sd":0.008466015516731077,"auc":0.7927032232980241,"loss":0.3272011858466926,"direct":"FasterRisk"},{"model":"fasterrisk_wide","label":"FasterRisk, wide search","group":"baseline","runs":1,"c":0.000307851414062256,"c_sd":0.0,"c_raw":0.000307851414062256,"t":47.261960621252506,"t_sd":0.0,"auc":0.792729907274373,"loss":0.32709784348813636,"direct":"FasterRisk, wide"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.07781276464959078,"c_sd":0.0,"c_raw":0.07781276464959078,"t":9.978703605682002,"t_sd":0.0,"auc":0.5681400499804655,"loss":0.4046027567236649,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.04712494398348043,"c_sd":0.0,"c_raw":0.04712494398348043,"t":59.9892549802186,"t_sd":0.0,"auc":0.6666441141391071,"loss":0.37391493605755455,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.0627538907024295,"c_sd":0.0,"c_raw":0.0627538907024295,"t":60.226651748046336,"t_sd":0.0,"auc":0.6416688050066152,"loss":0.38954388277650354,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.0034793465867551834,"c_sd":0.0,"c_raw":0.0034793465867551834,"t":0.511566725288811,"t_sd":0.0,"auc":0.7888501007189695,"loss":0.33026933866082925,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.0034763727832366927,"c_sd":0.0,"c_raw":0.0034763727832366927,"t":0.2066893290780686,"t_sd":0.0,"auc":0.7910554757779091,"loss":0.33026636485731076,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.001767526862772208,"c_sd":0.0,"c_raw":0.001767526862772208,"t":26.532134966744152,"t_sd":0.0,"auc":0.7896254726244603,"loss":0.32855751893684626,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.02782701438170616,"c_sd":0.0,"c_raw":0.02782701438170616,"t":0.23071092770085966,"t_sd":0.0,"auc":0.7439449178252512,"loss":0.3546170064557802,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.035496653907025895,"c_sd":0.0,"c_raw":0.035496653907025895,"t":51.21649080593996,"t_sd":0.0,"auc":0.680684251465697,"loss":0.3622866459811,"direct":"PSL"},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.019348297137668707,"c_sd":0.0,"c_raw":0.019348297137668707,"t":0.49532925164002184,"t_sd":0.0,"auc":0.7631582794850211,"loss":0.34613828921174283,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.02787668453865631,"c_sd":0.0,"c_raw":0.02787668453865631,"t":0.18034567530224385,"t_sd":0.0,"auc":0.7429862233049997,"loss":0.3546666766127304,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.039691523424329314,"c_sd":0.0,"c_raw":0.039691523424329314,"t":0.17951405065124443,"t_sd":0.0,"auc":0.7322474719152956,"loss":0.36648151549840335,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.03147802220664373,"c_sd":0.0,"c_raw":0.03147802220664373,"t":0.8100761741005241,"t_sd":0.0,"auc":0.7357156077001237,"loss":0.3582680142807178,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":-0.00030783203393577754,"t":1.5567462248818653,"t_sd":0.0,"auc":0.7945515542881856,"loss":0.32648216004013825,"direct":null}]},"full":{"points":[{"model":"v35_scratch","label":"FastRiskScore (shipped, run 2 v35)","group":"run2","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":7.215131779073994e-10,"t":0.07919745692834594,"t_sd":0.0,"auc":0.7926162808222627,"loss":0.3278882773881798,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":1,"c":0.00033798325294587646,"c_sd":0.0,"c_raw":0.00033798325294587646,"t":4.819896029533332,"t_sd":0.0,"auc":0.7904661402494876,"loss":0.32822625991961263,"direct":"FasterRisk"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.07519504583645328,"c_sd":0.0,"c_raw":0.07519504583645328,"t":16.170251526535495,"t_sd":0.0,"auc":0.5599128941582422,"loss":0.4030833225031199,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.03228530486367241,"c_sd":0.0,"c_raw":0.03228530486367241,"t":600.0127924649623,"t_sd":0.0,"auc":0.6950381276509835,"loss":0.360173581530339,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.055571089609703125,"c_sd":0.0,"c_raw":0.055571089609703125,"t":542.1981147999868,"t_sd":0.0,"auc":0.6469181173182484,"loss":0.3834593662763698,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.003812879319923085,"c_sd":0.0,"c_raw":0.003812879319923085,"t":0.7898362987118063,"t_sd":0.0,"auc":0.7883603665041662,"loss":0.3317011559865897,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.002545361183379443,"c_sd":0.0,"c_raw":0.002545361183379443,"t":0.3035289509935306,"t_sd":0.0,"auc":0.7900523626552867,"loss":0.33043363785004615,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.001762351898121326,"c_sd":0.0,"c_raw":0.001762351898121326,"t":214.214131014772,"t_sd":0.0,"auc":0.7864531939816615,"loss":0.32965062856478805,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.03018715802879251,"c_sd":0.0,"c_raw":0.03018715802879251,"t":0.36964584916189575,"t_sd":0.0,"auc":0.7438943402884967,"loss":0.35807543469545916,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.008714675235483605,"c_sd":0.0,"c_raw":0.008714675235483605,"t":126.55545584209344,"t_sd":0.0,"auc":0.7625898017570294,"loss":0.33660295190215034,"direct":"PSL"},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.019000235571050697,"c_sd":0.0,"c_raw":0.019000235571050697,"t":0.8692640471498939,"t_sd":0.0,"auc":0.7679285047063744,"loss":0.34688851223771733,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.030159485456736808,"c_sd":0.0,"c_raw":0.030159485456736808,"t":0.2919445176296467,"t_sd":0.0,"auc":0.7440282893447614,"loss":0.35804776212340345,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.03858282830258381,"c_sd":0.0,"c_raw":0.03858282830258381,"t":0.29338090837096675,"t_sd":0.0,"auc":0.7388756652482604,"loss":0.36647110496925045,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.03328550960965681,"c_sd":0.0,"c_raw":0.03328550960965681,"t":1.4156933057070593,"t_sd":0.0,"auc":0.732367577724122,"loss":0.3611737862763235,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":-0.0003985309463005858,"t":2.270590994309173,"t_sd":0.0,"auc":0.7938083027048326,"loss":0.3274897457203661,"direct":null}]}};
+                    var PARETO = {"dev":{"points":[{"model":"v2_latticels","label":"run 1, v2_latticels (discarded)","group":"run1_discard","runs":1,"c":0.0006668879999656818,"c_sd":0.0,"c_raw":0.0006668879999656818,"t":1.6773742110407939,"t_sd":0.0,"auc":0.8422718027218137,"loss":0.35648210457139423,"direct":null},{"model":"v3_fastnewton","label":"run 1, v3_fastnewton","group":"run1","runs":1,"c":0.003383543947817734,"c_sd":0.0,"c_raw":0.003383543947817734,"t":0.2786439064088904,"t_sd":0.0,"auc":0.8414513943521209,"loss":0.3591987605192463,"direct":null},{"model":"v4_fast_lattice","label":"run 1, v4_fast_lattice (discarded)","group":"run1_discard","runs":1,"c":0.00061363547201414,"c_sd":0.0,"c_raw":0.00061363547201414,"t":0.4499177945067113,"t_sd":0.0,"auc":0.8427178412852384,"loss":0.3564288520434427,"direct":null},{"model":"v5_tunetop","label":"run 1, v5_tunetop","group":"run1","runs":1,"c":0.0034228635563495254,"c_sd":0.0,"c_raw":0.0034228635563495254,"t":0.2109683220610578,"t_sd":0.0,"auc":0.8423962687203825,"loss":0.35923808012777814,"direct":null},{"model":"v6_numbaray","label":"run 1, v6_numbaray","group":"run1","runs":1,"c":0.0034228635563495254,"c_sd":0.0,"c_raw":0.0034228635563495254,"t":0.17589742635509312,"t_sd":0.0,"auc":0.8423962687203825,"loss":0.35923808012777814,"direct":null},{"model":"v7_histlattice","label":"run 1, v7_histlattice (discarded)","group":"run1_discard","runs":1,"c":0.0007293465523772741,"c_sd":0.0,"c_raw":0.0007293465523772741,"t":0.22632651649857224,"t_sd":0.0,"auc":0.8428777730439325,"loss":0.3565445631238058,"direct":null},{"model":"v8_screenall","label":"run 1, v8_screenall (discarded)","group":"run1_discard","runs":1,"c":0.0011646205774451916,"c_sd":0.0,"c_raw":0.0011646205774451916,"t":0.20436667390801977,"t_sd":0.0,"auc":0.8419319512012755,"loss":0.3569798371488737,"direct":null},{"model":"v9_pool10","label":"run 1, v9_pool10","group":"run1","runs":1,"c":0.0007908595910851452,"c_sd":0.0,"c_raw":0.0007908595910851452,"t":0.16325686467038256,"t_sd":0.0,"auc":0.8427287431413141,"loss":0.35660607616251366,"direct":null},{"model":"v10_pairmoves","label":"run 1, v10_pairmoves (discarded)","group":"run1_discard","runs":1,"c":0.0006842636901164545,"c_sd":0.0,"c_raw":0.0006842636901164545,"t":0.1775842500734551,"t_sd":0.0,"auc":0.8427812187555873,"loss":0.356499480261545,"direct":null},{"model":"v11_pooltune","label":"run 1, v11_pooltune","group":"run1","runs":1,"c":0.0007908595910851452,"c_sd":0.0,"c_raw":0.0007908595910851452,"t":0.14323855097260818,"t_sd":0.0,"auc":0.8427287431413141,"loss":0.35660607616251366,"direct":null},{"model":"v12_quickcalib","label":"run 1, v12_quickcalib (discarded)","group":"run1_discard","runs":1,"c":0.000865821416790191,"c_sd":0.0,"c_raw":0.000865821416790191,"t":0.13558344365262606,"t_sd":0.0,"auc":0.842687930591287,"loss":0.35668103798821865,"direct":null},{"model":"v13_zerostart","label":"run 1, v13_zerostart (discarded)","group":"run1_discard","runs":1,"c":0.0007049760735867444,"c_sd":0.0,"c_raw":0.0007049760735867444,"t":0.17151720447483812,"t_sd":0.0,"auc":0.8428502725938792,"loss":0.3565201926450152,"direct":null},{"model":"v24_child5","label":"run 1, v24_child5","group":"run1","runs":1,"c":0.0004993207099990845,"c_sd":0.0,"c_raw":0.0004993207099990845,"t":0.14242451026917957,"t_sd":0.0,"auc":0.8425545201208247,"loss":0.3563145372814276,"direct":null},{"model":"v27_cheap1d","label":"run 1, v27_cheap1d","group":"run1","runs":1,"c":0.0005078997569928585,"c_sd":0.0,"c_raw":0.0005078997569928585,"t":0.12205924285829114,"t_sd":0.0,"auc":0.842502265384076,"loss":0.35632311632842134,"direct":null},{"model":"v28_ray5","label":"run 1, v28_ray5","group":"run1","runs":1,"c":0.0005039749049652114,"c_sd":0.0,"c_raw":0.0005039749049652114,"t":0.10528357015569992,"t_sd":0.0,"auc":0.8425027854271876,"loss":0.3563191914763938,"direct":null},{"model":"v29_tune1","label":"run 1, v29_tune1","group":"run1","runs":1,"c":0.0005436241435849678,"c_sd":0.0,"c_raw":0.0005436241435849678,"t":0.08699413967050863,"t_sd":0.0,"auc":0.842728101635063,"loss":0.3563588407150135,"direct":null},{"model":"v32_nbsupport","label":"run 1, v32_nbsupport (discarded)","group":"run1_discard","runs":1,"c":0.0005718517887443767,"c_sd":0.0,"c_raw":0.0005718517887443767,"t":0.08070478328094494,"t_sd":0.0,"auc":0.8428223269492295,"loss":0.3563870683601729,"direct":null},{"model":"v34_2starts","label":"run 1, v34_2starts","group":"run1","runs":1,"c":0.0005820461648349324,"c_sd":0.0,"c_raw":0.0005820461648349324,"t":0.07384977194301151,"t_sd":0.0,"auc":0.8431151936324391,"loss":0.35639726273626343,"direct":null},{"model":"v36_robust","label":"run 1, v36_robust (discarded)","group":"run1_discard","runs":1,"c":0.0005820461648349324,"c_sd":0.0,"c_raw":0.0005820461648349324,"t":0.07142996109434327,"t_sd":0.0,"auc":0.8431151936324391,"loss":0.35639726273626343,"direct":null},{"model":"v2_numba","label":"run 2, v2_numba","group":"run2","runs":1,"c":0.0039916197333299585,"c_sd":0.0,"c_raw":0.0039916197333299585,"t":0.2957089755591123,"t_sd":0.0,"auc":0.8413670449571636,"loss":0.3598068363047585,"direct":null},{"model":"v3_ils","label":"run 2, v3_ils (discarded)","group":"run2_discard","runs":1,"c":0.000727826514835234,"c_sd":0.0,"c_raw":0.000727826514835234,"t":0.5400809129696741,"t_sd":0.0,"auc":0.8415267411807712,"loss":0.35654304308626383,"direct":null},{"model":"v4_binned","label":"run 2, v4_binned (discarded)","group":"run2_discard","runs":1,"c":0.000727826514835234,"c_sd":0.0,"c_raw":0.000727826514835234,"t":0.3673504389149524,"t_sd":0.0,"auc":0.8415267411807712,"loss":0.35654304308626383,"direct":null},{"model":"v5_nopool","label":"run 2, v5_nopool","group":"run2","runs":1,"c":0.0005535028211696714,"c_sd":0.0,"c_raw":0.0005535028211696714,"t":0.26351006428397006,"t_sd":0.0,"auc":0.8427418275507956,"loss":0.3563687193925983,"direct":null},{"model":"v6_screen","label":"run 2, v6_screen (discarded)","group":"run2_discard","runs":1,"c":0.001570154391340804,"c_sd":0.0,"c_raw":0.001570154391340804,"t":0.19546352837958617,"t_sd":0.0,"auc":0.8414740241873349,"loss":0.3573853709627694,"direct":null},{"model":"v7_groups","label":"run 2, v7_groups","group":"run2","runs":1,"c":0.0005563269992397226,"c_sd":0.0,"c_raw":0.0005563269992397226,"t":0.10746288951891601,"t_sd":0.0,"auc":0.8427351926039711,"loss":0.3563715435706683,"direct":null},{"model":"v8_rawscreen","label":"run 2, v8_rawscreen (discarded)","group":"run2_discard","runs":1,"c":0.0006195847943366298,"c_sd":0.0,"c_raw":0.0006195847943366298,"t":0.10399492685027058,"t_sd":0.0,"auc":0.8428456393419839,"loss":0.3564348013657653,"direct":null},{"model":"v9_starts10","label":"run 2, v9_starts10 (discarded)","group":"run2_discard","runs":1,"c":0.0004923252882175549,"c_sd":0.0,"c_raw":0.0004923252882175549,"t":0.16486669178295177,"t_sd":0.0,"auc":0.8428066856008192,"loss":0.35630754185964614,"direct":null},{"model":"v10_fastdata","label":"run 2, v10_fastdata (discarded)","group":"run2_discard","runs":1,"c":0.0005535028211641416,"c_sd":0.0,"c_raw":0.0005535028211641416,"t":0.1025300579560031,"t_sd":0.0,"auc":0.8427418275507956,"loss":0.35636871939259274,"direct":null},{"model":"v11_swapscreen","label":"run 2, v11_swapscreen (discarded)","group":"run2_discard","runs":1,"c":0.0005746430208302792,"c_sd":0.0,"c_raw":0.0005746430208302792,"t":0.09845275837459513,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v12_countbins","label":"run 2, v12_countbins (discarded)","group":"run2_discard","runs":1,"c":0.0005746430208302792,"c_sd":0.0,"c_raw":0.0005746430208302792,"t":0.09932464723118427,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v14_numbachild","label":"run 2, v14_numbachild","group":"run2","runs":1,"c":0.0005746430208302783,"c_sd":0.0,"c_raw":0.0005746430208302783,"t":0.07107390174229641,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v16_swaplast","label":"run 2, v16_swaplast","group":"run2","runs":1,"c":0.00040221969229924223,"c_sd":0.0,"c_raw":0.00040221969229924223,"t":0.06332244643461542,"t_sd":0.0,"auc":0.842695108436234,"loss":0.3562174362637278,"direct":null},{"model":"v17_calround","label":"run 2, v17_calround","group":"run2","runs":1,"c":0.00020183144614052817,"c_sd":0.0,"c_raw":0.00020183144614052817,"t":0.06640448163406695,"t_sd":0.0,"auc":0.8429672806203793,"loss":0.3560170480175691,"direct":null},{"model":"v18_roundnb","label":"run 2, v18_roundnb","group":"run2","runs":1,"c":0.00015711013733503258,"c_sd":0.0,"c_raw":0.00015711013733503258,"t":0.057098558282938756,"t_sd":0.0,"auc":0.8430056554683208,"loss":0.3559723267087636,"direct":null},{"model":"v21_hybrid","label":"run 2, v21_hybrid (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.055776150163625936,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v24_blasscreen","label":"run 2, v24_blasscreen","group":"run2","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04875331803740214,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v25_blasgrad","label":"run 2, v25_blasgrad (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.05064696947537793,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v27","label":"run 2, v27 (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.045668249297980294,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v30_lazycodes","label":"run 2, v30_lazycodes","group":"run2","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04179518334216692,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v31_batchchild","label":"run 2, v31_batchchild (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04421339440824031,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v32_valdeltas","label":"run 2, v32_valdeltas (discarded)","group":"run2_discard","runs":1,"c":0.00010346102879218114,"c_sd":0.0,"c_raw":0.00010346102879218114,"t":0.0415808425818319,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760022067,"direct":null},{"model":"v33_estskip","label":"run 2, v33_estskip (discarded)","group":"run2_discard","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.039821539571939214,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"v34_gemm","label":"run 2, v34_gemm","group":"run2","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.03678721733665011,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"v35_scratch","label":"FastRiskScore (shipped, run 2 v35)","group":"run2","runs":3,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.03755693413093347,"t_sd":0.00105084316327481,"auc":0.8423832230824079,"loss":0.35591584760486267,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":3,"c":0.004479163360635082,"c_sd":0.0,"c_raw":0.004479163360635082,"t":1.5073436609393494,"t_sd":0.00983769519336968,"auc":0.8406357065453834,"loss":0.36029437993206365,"direct":"FasterRisk"},{"model":"fasterrisk_wide","label":"FasterRisk, wide search","group":"baseline","runs":1,"c":0.0024105029624621414,"c_sd":0.0,"c_raw":0.0024105029624621414,"t":18.240121340631212,"t_sd":0.0,"auc":0.8411915629351795,"loss":0.35822571953389076,"direct":"FasterRisk, wide"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.09653671915697379,"c_sd":0.0,"c_raw":0.09653671915697379,"t":13.629099261291483,"t_sd":0.0,"auc":0.7178720690821245,"loss":0.4523519357284023,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.05384211572294605,"c_sd":0.0,"c_raw":0.05384211572294605,"t":57.01210435659151,"t_sd":0.0,"auc":0.7758253724397398,"loss":0.40965733229437473,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.08132380625726489,"c_sd":0.0,"c_raw":0.08132380625726489,"t":49.33836566239545,"t_sd":0.0,"auc":0.7672711091547323,"loss":0.4371390228286935,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.017311616521905954,"c_sd":0.0,"c_raw":0.017311616521905954,"t":0.20724729341920822,"t_sd":0.0,"auc":0.84150955080711,"loss":0.37312683309333455,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.01801897263366212,"c_sd":0.0,"c_raw":0.01801897263366212,"t":0.1234621666118213,"t_sd":0.0,"auc":0.8358314035808458,"loss":0.3738341892050907,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.009597745268327558,"c_sd":0.0,"c_raw":0.009597745268327558,"t":20.43918102010233,"t_sd":0.0,"auc":0.8410834864934316,"loss":0.36541296183975613,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.052928386549874064,"c_sd":0.0,"c_raw":0.052928386549874064,"t":0.09922026976718795,"t_sd":0.0,"auc":0.8130738018717304,"loss":0.40874360312130265,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.06264577985734536,"c_sd":0.0,"c_raw":0.06264577985734536,"t":13.848526629079693,"t_sd":0.0,"auc":0.7869401800892395,"loss":0.4184609964287739,"direct":"PSL"},{"model":"l0learn_seqround","label":"L0Learn + sequential rounding","group":"baseline","runs":1,"c":0.007507691775115506,"c_sd":0.0,"c_raw":0.007507691775115506,"t":0.8803393548793718,"t_sd":0.0,"auc":0.843160715475689,"loss":0.36332290834654407,"direct":null},{"model":"okglm_seqround","label":"OKGLM (certified k-sparse) + sequential rounding","group":"baseline","runs":1,"c":0.005089947036350736,"c_sd":0.0,"c_raw":0.005089947036350736,"t":25.337711587408098,"t_sd":0.0,"auc":0.8417287683215576,"loss":0.36090516360777936,"direct":null},{"model":"skscope_seqround","label":"skscope + sequential rounding","group":"baseline","runs":1,"c":0.019249247871961046,"c_sd":0.0,"c_raw":0.019249247871961046,"t":0.22182674295104646,"t_sd":0.0,"auc":0.8372380615111444,"loss":0.3750644644433896,"direct":null},{"model":"riskscores_cd","label":"riskscores (coordinate descent)","group":"baseline","runs":1,"c":0.09178361456962594,"c_sd":0.0,"c_raw":0.09178361456962594,"t":12.716380221215834,"t_sd":0.0,"auc":0.7566905805819607,"loss":0.44759883114105453,"direct":null},{"model":"riskscores","label":"riskscores (annealing)","group":"baseline","runs":1,"c":0.13177351596877643,"c_sd":0.0,"c_raw":0.13177351596877643,"t":38.27495332069355,"t_sd":0.0,"auc":0.7007412009529421,"loss":0.4875887325402049,"direct":null},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.044138632040684724,"c_sd":0.0,"c_raw":0.044138632040684724,"t":0.2602017510172334,"t_sd":0.0,"auc":0.8212424358043419,"loss":0.39995384861211325,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.0537984050475992,"c_sd":0.0,"c_raw":0.0537984050475992,"t":0.06812085167675588,"t_sd":0.0,"auc":0.8119099246868361,"loss":0.40961362161902765,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.07525024409660368,"c_sd":0.0,"c_raw":0.07525024409660368,"t":0.06246824948833679,"t_sd":0.0,"auc":0.8040234988688862,"loss":0.43106546066803225,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.07015104183230092,"c_sd":0.0,"c_raw":0.07015104183230092,"t":0.257997297339979,"t_sd":0.0,"auc":0.7892398384214064,"loss":0.4259662584037296,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":0.0015523495830414764,"c_sd":0.0,"c_raw":0.0015523495830414764,"t":0.867335535210784,"t_sd":0.0,"auc":0.8444061026487082,"loss":0.35736756615446996,"direct":null}]},"hidden":{"points":[{"model":"v3_fastnewton_run1","label":"run 1, v3_fastnewton","group":"run1","runs":1,"c":0.00043165619717812494,"c_sd":0.0,"c_raw":0.00043165619717812494,"t":1.0125023330023604,"t_sd":0.0,"auc":0.7924423451691124,"loss":0.3272216482712522,"direct":null},{"model":"v5_tunetop_run1","label":"run 1, v5_tunetop","group":"run1","runs":1,"c":0.0005609074927011953,"c_sd":0.0,"c_raw":0.0005609074927011953,"t":0.7933140065437001,"t_sd":0.0,"auc":0.792760125596641,"loss":0.32735089956677527,"direct":null},{"model":"v6_numbaray_run1","label":"run 1, v6_numbaray","group":"run1","runs":1,"c":0.0005609074927011969,"c_sd":0.0,"c_raw":0.0005609074927011969,"t":0.7435331326053756,"t_sd":0.0,"auc":0.792760125596641,"loss":0.32735089956677527,"direct":null},{"model":"v9_pool10_run1","label":"run 1, v9_pool10","group":"run1","runs":1,"c":0.00017481660780230404,"c_sd":0.0,"c_raw":0.00017481660780230404,"t":0.57778239360264,"t_sd":0.0,"auc":0.7936215079502204,"loss":0.32696480868187633,"direct":null},{"model":"v11_pooltune_run1","label":"run 1, v11_pooltune","group":"run1","runs":1,"c":0.0001820588787031692,"c_sd":0.0,"c_raw":0.0001820588787031692,"t":0.4342988212311033,"t_sd":0.0,"auc":0.7936786871275537,"loss":0.32697205095277726,"direct":null},{"model":"v24_child5_run1","label":"run 1, v24_child5","group":"run1","runs":1,"c":0.00017003541014500901,"c_sd":0.0,"c_raw":0.00017003541014500901,"t":0.3999592832635217,"t_sd":0.0,"auc":0.7933461061047424,"loss":0.32696002748421904,"direct":null},{"model":"v27_cheap1d_run1","label":"run 1, v27_cheap1d","group":"run1","runs":1,"c":0.00017037395367794017,"c_sd":0.0,"c_raw":0.00017037395367794017,"t":0.3420623251849143,"t_sd":0.0,"auc":0.7932688634667081,"loss":0.326960366027752,"direct":null},{"model":"v28_ray5_run1","label":"run 1, v28_ray5","group":"run1","runs":1,"c":0.00024952285711059584,"c_sd":0.0,"c_raw":0.00024952285711059584,"t":0.30010774087896136,"t_sd":0.0,"auc":0.7931027297388428,"loss":0.32703951493118466,"direct":null},{"model":"v29_tune1_run1","label":"run 1, v29_tune1","group":"run1","runs":1,"c":0.00033240809129178855,"c_sd":0.0,"c_raw":0.00033240809129178855,"t":0.2288486586123713,"t_sd":0.0,"auc":0.7934131122532364,"loss":0.3271224001653658,"direct":null},{"model":"v34_2starts_run1","label":"run 1, v34_2starts","group":"run1","runs":1,"c":0.0003736813713097921,"c_sd":0.0,"c_raw":0.0003736813713097921,"t":0.20154678634478038,"t_sd":0.0,"auc":0.793140210064641,"loss":0.3271636734453839,"direct":null},{"model":"v2_numba_run2","label":"run 2, v2_numba","group":"run2","runs":1,"c":0.0003556434980320974,"c_sd":0.0,"c_raw":0.0003556434980320974,"t":1.1847419284974259,"t_sd":0.0,"auc":0.7928053537938684,"loss":0.3271456355721062,"direct":null},{"model":"v5_nopool_run2","label":"run 2, v5_nopool","group":"run2","runs":1,"c":0.0002519259842402591,"c_sd":0.0,"c_raw":0.0002519259842402591,"t":0.7552853508478035,"t_sd":0.0,"auc":0.7930810073408957,"loss":0.32704191805831434,"direct":null},{"model":"v7_groups_run2","label":"run 2, v7_groups","group":"run2","runs":1,"c":0.0002495006879945752,"c_sd":0.0,"c_raw":0.0002495006879945752,"t":0.22485289580412837,"t_sd":0.0,"auc":0.7930975302267963,"loss":0.3270394927620687,"direct":null},{"model":"v14_numbachild_run2","label":"run 2, v14_numbachild","group":"run2","runs":1,"c":0.00022152718498377904,"c_sd":0.0,"c_raw":0.00022152718498377904,"t":0.13985294614135804,"t_sd":0.0,"auc":0.7931983411620216,"loss":0.3270115192590578,"direct":null},{"model":"v16_swaplast_run2","label":"run 2, v16_swaplast","group":"run2","runs":1,"c":0.00018776733432377735,"c_sd":0.0,"c_raw":0.00018776733432377735,"t":0.12909268575216665,"t_sd":0.0,"auc":0.7935520632045826,"loss":0.32697775940839785,"direct":null},{"model":"v17_calround_run2","label":"run 2, v17_calround","group":"run2","runs":1,"c":0.00018893687268331389,"c_sd":0.0,"c_raw":0.00018893687268331389,"t":0.12666150014580235,"t_sd":0.0,"auc":0.7934587505994907,"loss":0.32697892894675734,"direct":null},{"model":"v18_roundnb_run2","label":"run 2, v18_roundnb","group":"run2","runs":1,"c":0.00018893687268534866,"c_sd":0.0,"c_raw":0.00018893687268534866,"t":0.1167090244468145,"t_sd":0.0,"auc":0.7934587505994907,"loss":0.32697892894675945,"direct":null},{"model":"v24_blasscreen_run2","label":"run 2, v24_blasscreen","group":"run2","runs":1,"c":0.00016076986871541932,"c_sd":0.0,"c_raw":0.00016076986871541932,"t":0.09364422704359683,"t_sd":0.0,"auc":0.7937332682907179,"loss":0.32695076194278944,"direct":null},{"model":"v30_lazycodes_run2","label":"run 2, v30_lazycodes","group":"run2","runs":1,"c":0.00016076986871541992,"c_sd":0.0,"c_raw":0.00016076986871541992,"t":0.0731640774942275,"t_sd":0.0,"auc":0.7937332682907179,"loss":0.32695076194278944,"direct":null},{"model":"v34_gemm_run2","label":"run 2, v34_gemm","group":"run2","runs":1,"c":0.00016425307742091633,"c_sd":0.0,"c_raw":0.00016425307742091633,"t":0.057527707978582414,"t_sd":0.0,"auc":0.7936978417338044,"loss":0.326954245151495,"direct":null},{"model":"v35_scratch","label":"FastRiskScore (shipped, run 2 v35)","group":"run2","runs":3,"c":0.00016425307742091633,"c_sd":0.0,"c_raw":0.00016425307742091633,"t":0.0574551379816848,"t_sd":0.0003957816078149496,"auc":0.7936978417338044,"loss":0.326954245151495,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":3,"c":0.0004111937726185008,"c_sd":5.421010862427522e-20,"c_raw":0.0004111937726185008,"t":3.2763619728639894,"t_sd":0.008466015516731077,"auc":0.7927032232980241,"loss":0.3272011858466926,"direct":"FasterRisk"},{"model":"fasterrisk_wide","label":"FasterRisk, wide search","group":"baseline","runs":1,"c":0.000307851414062256,"c_sd":0.0,"c_raw":0.000307851414062256,"t":47.261960621252506,"t_sd":0.0,"auc":0.792729907274373,"loss":0.32709784348813636,"direct":"FasterRisk, wide"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.07781276464959078,"c_sd":0.0,"c_raw":0.07781276464959078,"t":9.978703605682002,"t_sd":0.0,"auc":0.5681400499804655,"loss":0.4046027567236649,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.04712494398348043,"c_sd":0.0,"c_raw":0.04712494398348043,"t":59.9892549802186,"t_sd":0.0,"auc":0.6666441141391071,"loss":0.37391493605755455,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.0627538907024295,"c_sd":0.0,"c_raw":0.0627538907024295,"t":60.226651748046336,"t_sd":0.0,"auc":0.6416688050066152,"loss":0.38954388277650354,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.0034793465867551834,"c_sd":0.0,"c_raw":0.0034793465867551834,"t":0.511566725288811,"t_sd":0.0,"auc":0.7888501007189695,"loss":0.33026933866082925,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.0034763727832366927,"c_sd":0.0,"c_raw":0.0034763727832366927,"t":0.2066893290780686,"t_sd":0.0,"auc":0.7910554757779091,"loss":0.33026636485731076,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.001767526862772208,"c_sd":0.0,"c_raw":0.001767526862772208,"t":26.532134966744152,"t_sd":0.0,"auc":0.7896254726244603,"loss":0.32855751893684626,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.02782701438170616,"c_sd":0.0,"c_raw":0.02782701438170616,"t":0.23071092770085966,"t_sd":0.0,"auc":0.7439449178252512,"loss":0.3546170064557802,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.035496653907025895,"c_sd":0.0,"c_raw":0.035496653907025895,"t":51.21649080593996,"t_sd":0.0,"auc":0.680684251465697,"loss":0.3622866459811,"direct":"PSL"},{"model":"l0learn_seqround","label":"L0Learn + sequential rounding","group":"baseline","runs":1,"c":0.002184228992942932,"c_sd":0.0,"c_raw":0.002184228992942932,"t":2.841720760948088,"t_sd":0.0,"auc":0.7916736376721459,"loss":0.32897422106701696,"direct":null},{"model":"okglm_seqround","label":"OKGLM (certified k-sparse) + sequential rounding","group":"baseline","runs":1,"c":0.0024632500374661822,"c_sd":0.0,"c_raw":0.0024632500374661822,"t":31.369874230924694,"t_sd":0.0,"auc":0.7916048806722317,"loss":0.3292532421115403,"direct":null},{"model":"skscope_seqround","label":"skscope + sequential rounding","group":"baseline","runs":1,"c":0.004985577270758103,"c_sd":0.0,"c_raw":0.004985577270758103,"t":0.720080368237441,"t_sd":0.0,"auc":0.7911709634113189,"loss":0.33177556934483216,"direct":null},{"model":"riskscores_cd","label":"riskscores (coordinate descent)","group":"baseline","runs":1,"c":0.05494390209294082,"c_sd":0.0,"c_raw":0.05494390209294082,"t":36.564920027801044,"t_sd":0.0,"auc":0.6660282004352887,"loss":0.381733894167015,"direct":null},{"model":"riskscores","label":"riskscores (annealing)","group":"baseline","runs":1,"c":0.08287055838141533,"c_sd":0.0,"c_raw":0.08287055838141533,"t":70.05802450962635,"t_sd":0.0,"auc":0.5852242260467527,"loss":0.40966055045548944,"direct":null},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.019348297137668707,"c_sd":0.0,"c_raw":0.019348297137668707,"t":0.49532925164002184,"t_sd":0.0,"auc":0.7631582794850211,"loss":0.34613828921174283,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.02787668453865631,"c_sd":0.0,"c_raw":0.02787668453865631,"t":0.18034567530224385,"t_sd":0.0,"auc":0.7429862233049997,"loss":0.3546666766127304,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.039691523424329314,"c_sd":0.0,"c_raw":0.039691523424329314,"t":0.17951405065124443,"t_sd":0.0,"auc":0.7322474719152956,"loss":0.36648151549840335,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.03147802220664373,"c_sd":0.0,"c_raw":0.03147802220664373,"t":0.8100761741005241,"t_sd":0.0,"auc":0.7357156077001237,"loss":0.3582680142807178,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":-0.00030783203393577754,"t":1.5567462248818653,"t_sd":0.0,"auc":0.7945515542881856,"loss":0.32648216004013825,"direct":null}]},"full":{"points":[{"model":"v35_scratch","label":"FastRiskScore (shipped, run 2 v35)","group":"run2","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":7.215131779073994e-10,"t":0.07919745692834594,"t_sd":0.0,"auc":0.7926162808222627,"loss":0.3278882773881798,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":1,"c":0.00033798325294587646,"c_sd":0.0,"c_raw":0.00033798325294587646,"t":4.819896029533332,"t_sd":0.0,"auc":0.7904661402494876,"loss":0.32822625991961263,"direct":"FasterRisk"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.07519504583645328,"c_sd":0.0,"c_raw":0.07519504583645328,"t":16.170251526535495,"t_sd":0.0,"auc":0.5599128941582422,"loss":0.4030833225031199,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.03228530486367241,"c_sd":0.0,"c_raw":0.03228530486367241,"t":600.0127924649623,"t_sd":0.0,"auc":0.6950381276509835,"loss":0.360173581530339,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.055571089609703125,"c_sd":0.0,"c_raw":0.055571089609703125,"t":542.1981147999868,"t_sd":0.0,"auc":0.6469181173182484,"loss":0.3834593662763698,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.003812879319923085,"c_sd":0.0,"c_raw":0.003812879319923085,"t":0.7898362987118063,"t_sd":0.0,"auc":0.7883603665041662,"loss":0.3317011559865897,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.002545361183379443,"c_sd":0.0,"c_raw":0.002545361183379443,"t":0.3035289509935306,"t_sd":0.0,"auc":0.7900523626552867,"loss":0.33043363785004615,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.001762351898121326,"c_sd":0.0,"c_raw":0.001762351898121326,"t":214.214131014772,"t_sd":0.0,"auc":0.7864531939816615,"loss":0.32965062856478805,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.03018715802879251,"c_sd":0.0,"c_raw":0.03018715802879251,"t":0.36964584916189575,"t_sd":0.0,"auc":0.7438943402884967,"loss":0.35807543469545916,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.008714675235483605,"c_sd":0.0,"c_raw":0.008714675235483605,"t":126.55545584209344,"t_sd":0.0,"auc":0.7625898017570294,"loss":0.33660295190215034,"direct":"PSL"},{"model":"l0learn_seqround","label":"L0Learn + sequential rounding","group":"baseline","runs":1,"c":0.0014518955423139903,"c_sd":0.0,"c_raw":0.0014518955423139903,"t":4.20650146715854,"t_sd":0.0,"auc":0.7903228639705079,"loss":0.3293401722089807,"direct":null},{"model":"okglm_seqround","label":"OKGLM (certified k-sparse) + sequential rounding","group":"baseline","runs":1,"c":0.0017438777881956516,"c_sd":0.0,"c_raw":0.0017438777881956516,"t":174.60636588195416,"t_sd":0.0,"auc":0.7932550799286758,"loss":0.3296321544548623,"direct":null},{"model":"skscope_seqround","label":"skscope + sequential rounding","group":"baseline","runs":1,"c":0.004625802611543922,"c_sd":0.0,"c_raw":0.004625802611543922,"t":1.121150441199486,"t_sd":0.0,"auc":0.791719684159297,"loss":0.33251407927821064,"direct":null},{"model":"riskscores_cd","label":"riskscores (coordinate descent)","group":"baseline","runs":1,"c":0.04344496459604424,"c_sd":0.0,"c_raw":0.04344496459604424,"t":111.4321648934499,"t_sd":0.0,"auc":0.699476438512315,"loss":0.37133324126271094,"direct":null},{"model":"riskscores","label":"riskscores (annealing)","group":"baseline","runs":1,"c":0.05421527429000238,"c_sd":0.0,"c_raw":0.05421527429000238,"t":282.61541437736406,"t_sd":0.0,"auc":0.6654175968913029,"loss":0.38210355095666904,"direct":null},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.019000235571050697,"c_sd":0.0,"c_raw":0.019000235571050697,"t":0.8692640471498939,"t_sd":0.0,"auc":0.7679285047063744,"loss":0.34688851223771733,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.030159485456736808,"c_sd":0.0,"c_raw":0.030159485456736808,"t":0.2919445176296467,"t_sd":0.0,"auc":0.7440282893447614,"loss":0.35804776212340345,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.03858282830258381,"c_sd":0.0,"c_raw":0.03858282830258381,"t":0.29338090837096675,"t_sd":0.0,"auc":0.7388756652482604,"loss":0.36647110496925045,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.03328550960965681,"c_sd":0.0,"c_raw":0.03328550960965681,"t":1.4156933057070593,"t_sd":0.0,"auc":0.732367577724122,"loss":0.3611737862763235,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":-0.0003985309463005858,"t":2.270590994309173,"t_sd":0.0,"auc":0.7938083027048326,"loss":0.3274897457203661,"direct":null}]}};
                     (function () {
                       if (!window.Plotly || !PARETO.dev) return;
                       var C = {
@@ -328,7 +412,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       }
                       function panel(el, D, metric) {
                         var auc = metric === 'auc';
-                        function yv(p) { return auc ? p.auc : p.c; }
+                        function yv(p) { return auc ? 1 - p.auc : p.c; }
                         var pts = D.points, traces = [];
                         ['run1_discard', 'run2_discard', 'baseline', 'run1', 'run2'].forEach(function (g) {
                           [false, true].forEach(function (rep) {
@@ -356,11 +440,11 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                                     rounded_lr: [-30, -22], imodels_slim: [36, -16], riskslim: [-24, -20],
                                     slim_milp: [14, -24], cpa_highs: [-64, 8], psl: [-8, 30], abess_seqround: [44, 14],
                                     autoscore: [-44, -18] };
-                        var AUC_MIN = 0.725;  // panel D is cropped to the solvers that compete; the rest are listed in the caption
-                        var notes = pts.filter(function (p) { return p.direct && (!auc || p.auc >= AUC_MIN); }).map(function (p) {
-                          return { x: Math.log10(p.t), y: auc ? p.auc : Math.log10(p.c), xref: 'x', yref: 'y', text: p.direct,
+                        var ERR_MAX = 0.275;  // panel D (test error, 1 - AUC) is cropped to the solvers that compete; the rest are listed in the caption
+                        var notes = pts.filter(function (p) { return p.direct && (!auc || 1 - p.auc <= ERR_MAX); }).map(function (p) {
+                          return { x: Math.log10(p.t), y: auc ? 1 - p.auc : Math.log10(p.c), xref: 'x', yref: 'y', text: p.direct,
                                    showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis,
-                                   ax: (OFF[p.model] || [28, -22])[0], ay: (auc ? -1 : 1) * (OFF[p.model] || [28, -22])[1],
+                                   ax: (OFF[p.model] || [28, -22])[0], ay: (OFF[p.model] || [28, -22])[1],
                                    font: { size: 11, color: C.ink }, bgcolor: 'rgba(255,255,255,0.85)', borderpad: 2 };
                         });
                         var axis = { gridcolor: C.grid, linecolor: C.axis, zeroline: false, ticks: 'outside', tickcolor: C.axis,
@@ -370,7 +454,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                           paper_bgcolor: C.surface, plot_bgcolor: C.surface,
                           font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: C.ink },
                           xaxis: Object.assign({ type: 'log', title: { text: 'Geometric-mean time per problem (s)' } }, axis),
-                          yaxis: Object.assign(auc ? { range: [AUC_MIN, 0.8], title: { text: 'Mean test AUC' } }
+                          yaxis: Object.assign(auc ? { range: [0.2, ERR_MAX], title: { text: 'Mean test error (1 − AUC)' } }
                                                   : { type: 'log', exponentformat: 'power', title: { text: 'Mean excess training loss' } }, axis),
                           hovermode: 'closest', hoverlabel: { bgcolor: C.surface, bordercolor: C.grid, font: { color: C.ink, size: 12 } },
                           annotations: notes
@@ -385,58 +469,26 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                     })();
                     </script>
 
-                    <p>On the visible set (Fig <a href="#fig1">1</a>A), both runs made the solver more than 20&times;
-                        faster and lowered the loss, and the kept versions move down and to the left. Run 2's final
-                        version takes 0.038 s per problem, against 1.49 s for FasterRisk, and has a lower training loss on
-                        54 of the 70 problems and a higher one on 1. Its loss is also lower than that of FasterRisk with
-                        every search width raised, which takes 18 s per problem. The two runs started from the same code
-                        with different goals and made the same two main changes (<a href="#methods">Sec 3</a>).</p>
+                    <p>Table <a href="#tab2">2</a> in <a href="#finer">Sec 3</a> gives results for six later loops on
+                        versions of both suites with 99 thresholds per numeric column instead of 9. Table <a href="#tab3">3</a> gives a later version, not yet in the
+                        package, that matches FastRiskScore's loss at 3 to 4&times; its speed.</p>
 
-                    <p>On the 27 held-out TabArena datasets (Fig <a href="#fig1">1</a>B), FastRiskScore is 54&times; faster
-                        than FasterRisk (median over problems; the slowest fit takes 0.51 s against 35 s). Its loss is
-                        lower on 90 of the 135 problems, the same on 40 and higher on 5. The mean loss drops by only
-                        0.00025, about a third of the gap between FasterRisk and a real-valued model on the same
-                        features. Most of the gain on the visible set came from datasets with real-valued columns,
-                        mainly spambase, where FasterRisk's rounding drops a feature. All held-out datasets are binarized,
-                        and on them FasterRisk was already close to the best score.</p>
-
-                    <p>The strongest baselines after FasterRisk are the sparse real-valued models rounded with FasterRisk's
-                        rounding step. On the held-out set OKRidge's support reaches a loss of 0.3286, and abess and
-                        fastSparse reach 0.3303, against 0.3272 for FasterRisk and 0.3270 for FastRiskScore
-                        (Table <a href="#tab1">1</a>). OKRidge also takes about 450&times; as long as FastRiskScore. The
-                        exact methods do worse partly because of time limits and partly because of their objective.
-                        RiskSLIM fixes the scale of the score instead of fitting it. On the 6 problems where the cutting
-                        planes prove RiskSLIM's optimum, that optimal score still has a higher loss than FastRiskScore's
-                        once the risk curve is fit (for example 0.0875 against 0.0659 on breastcancer at
-                        <code>k</code> = 10). This is why FasterRisk added its multiplier.</p>
-
-                    <p>The results are similar at full size (Fig <a href="#fig1">1</a>C, Table <a href="#tab1">1</a>), with every
-                        row kept (up to 120,000 training rows) and <code>k</code> = 5. FastRiskScore takes 0.08 s per
-                        problem against 4.8 s for FasterRisk (50&times; faster by the median; the slowest fit takes
-                        1.0 s against 103 s), and its loss is lower on 21 of the 27 datasets and higher on none.
-                        RiskSLIM returns no score on 22 of the 27 because of the free CPLEX edition's size limits, and
-                        SLIM uses its full 10 minutes on 25 of them and returns worse scores than rounded logistic
-                        regression.</p>
-
-                    <p>Test AUC (Fig <a href="#fig1">1</a>D) ranks the solvers almost the same way as training loss. On
-                        the held-out set FastRiskScore has a mean test AUC of 0.794, against 0.793 for FasterRisk, 0.789
-                        to 0.791 for the rounded sparse models, 0.743 for rounded L1 logistic regression and 0.568 for
-                        RiskSLIM. On all three suites FastRiskScore has the highest test AUC of the integer scores, within
-                        0.002 of the real-valued model it approximates (0.795 on the held-out set).</p>
-
-                    <p class="caption" id="tab1"><b>Table 1.</b> Mean training log loss, mean test AUC and geometric-mean
-                      fit time (s) of every solver on the three suites of Fig <a href="#fig1">1</a>. Eight of the baselines
-                      (cutting planes, abess, fastSparse, OKRidge, the L1 path, scoring lists, AutoScore and unit
-                      weighting) were added after a search for baselines that can be run
-                      (<a href="#baselines">details</a>). The last row is not a risk score: it is FasterRisk's
-                      real-valued solution before rounding, shown as a reference.</p>
-                    <table class="ranktbl results-table">
-                      <thead>
-                        <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
-                        <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
-                      </thead>
-                      <tbody>
-                          <!-- TABLE1 -->
+                    <details class="collapsible" id="tab1">
+                      <summary>Table 1: loss, test AUC and time of every solver on the three suites</summary>
+                      <p class="caption"><b>Table 1.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) of every solver on the three suites of Fig <a href="#fig1">1</a>. Eight of the baselines
+                        (cutting planes, abess, fastSparse, OKRidge, the L1 path, scoring lists, AutoScore and unit
+                        weighting) were added after a search for baselines that can be run, and five more (L0Learn,
+                        OKGLM, skscope and two versions of riskscores) after a search of papers that cite them
+                        (<a href="#baselines">details</a>). The last row is not a risk score: it is FasterRisk's
+                        real-valued solution before rounding, shown as a reference.</p>
+                      <table class="ranktbl results-table">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- TABLE1 -->
                           <tr class="ours"><td>FastRiskScore (ours)</td><td>0.3559</td><td>0.842</td><td>0.038</td><td>0.3270</td><td>0.794</td><td>0.057</td><td>0.3279</td><td>0.793</td><td>0.079</td></tr>
                           <tr><td>FasterRisk</td><td>0.3603</td><td>0.841</td><td>1.51</td><td>0.3272</td><td>0.793</td><td>3.28</td><td>0.3282</td><td>0.790</td><td>4.82</td></tr>
                           <tr><td>FasterRisk, wide search</td><td>0.3582</td><td>0.841</td><td>18.2</td><td>0.3271</td><td>0.793</td><td>47.3</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
@@ -448,23 +500,249 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                           <tr><td>OKRidge + sequential rounding</td><td>0.3654</td><td>0.841</td><td>20.4</td><td>0.3286</td><td>0.790</td><td>26.5</td><td>0.3297</td><td>0.786</td><td>214</td></tr>
                           <tr><td>L1 path + sequential rounding</td><td>0.4087</td><td>0.813</td><td>0.099</td><td>0.3546</td><td>0.744</td><td>0.231</td><td>0.3581</td><td>0.744</td><td>0.370</td></tr>
                           <tr><td>Probabilistic scoring list</td><td>0.4185</td><td>0.787</td><td>13.8</td><td>0.3623</td><td>0.681</td><td>51.2</td><td>0.3366</td><td>0.763</td><td>127</td></tr>
+                          <tr><td>L0Learn + sequential rounding</td><td>0.3633</td><td>0.843</td><td>0.880</td><td>0.3290</td><td>0.792</td><td>2.84</td><td>0.3293</td><td>0.790</td><td>4.21</td></tr>
+                          <tr><td>OKGLM (certified k-sparse) + sequential rounding</td><td>0.3609</td><td>0.842</td><td>25.3</td><td>0.3293</td><td>0.792</td><td>31.4</td><td>0.3296</td><td>0.793</td><td>175</td></tr>
+                          <tr><td>skscope + sequential rounding</td><td>0.3751</td><td>0.837</td><td>0.222</td><td>0.3318</td><td>0.791</td><td>0.720</td><td>0.3325</td><td>0.792</td><td>1.12</td></tr>
+                          <tr><td>riskscores (coordinate descent)</td><td>0.4476</td><td>0.757</td><td>12.7</td><td>0.3817</td><td>0.666</td><td>36.6</td><td>0.3713</td><td>0.699</td><td>111</td></tr>
+                          <tr><td>riskscores (annealing)</td><td>0.4876</td><td>0.701</td><td>38.3</td><td>0.4097</td><td>0.585</td><td>70.1</td><td>0.3821</td><td>0.665</td><td>283</td></tr>
                           <tr><td>AutoScore</td><td>0.4000</td><td>0.821</td><td>0.260</td><td>0.3461</td><td>0.763</td><td>0.495</td><td>0.3469</td><td>0.768</td><td>0.869</td></tr>
                           <tr><td>Rounded L1 logistic</td><td>0.4096</td><td>0.812</td><td>0.068</td><td>0.3547</td><td>0.743</td><td>0.180</td><td>0.3580</td><td>0.744</td><td>0.292</td></tr>
                           <tr><td>Unit weighting</td><td>0.4311</td><td>0.804</td><td>0.062</td><td>0.3665</td><td>0.732</td><td>0.180</td><td>0.3665</td><td>0.739</td><td>0.293</td></tr>
                           <tr><td>imodels SLIMClassifier (before)</td><td>0.4260</td><td>0.789</td><td>0.258</td><td>0.3583</td><td>0.736</td><td>0.810</td><td>0.3612</td><td>0.732</td><td>1.42</td></tr>
                           <tr><td>Real-valued k-sparse (not integer)</td><td>0.3574</td><td>0.844</td><td>0.867</td><td>0.3265</td><td>0.795</td><td>1.56</td><td>0.3275</td><td>0.794</td><td>2.27</td></tr>
                           <!-- /TABLE1 -->
-                      </tbody>
-                    </table>
-
-                    <p>The benchmark only compares solvers with each other, so we also checked against the true optimum.
-                        We generated 50 random problems small enough to check every possible score (300 rows, 7 binary
-                        features, <code>k</code> = 3, points in [&minus;3, 3]: 8,358 candidate scores each).
-                        FastRiskScore finds the best score on 49 of the 50 (on the other it is 0.0008 above it).
-                        FasterRisk finds it on 28 of the 50, and its mean gap to the best score is 50 times larger
-                        (<code>evolve_slim/benchmarks/exhaustive_check.py</code>).</p>
+                        </tbody>
+                      </table>
+                    </details>
+                    <details class="collapsible" id="fig1-measurement">
+                      <summary>Extra details on experimental settings</summary>
+                      <p><b>Scoring.</b> The benchmark rejects any answer whose points are not integers, fall outside
+                        [&minus;5, 5] or use more than <code>k</code> features; no solver in the figure had such an answer.
+                        Given the points, the risk curve is fit by Newton's method on the two numbers <i>a</i> and
+                        <i>b</i>, a convex problem. Each solver process first fits a tiny warm-up problem, untimed, so
+                        numba compilation is not counted; FastRiskScore's first fit on a new machine takes about 30 s
+                        longer for that reason.</p>
+                      <p><b>Best known losses.</b> The excess loss is measured against the lowest loss any integer
+                        solver reached on the problem in any of these runs, including FasterRisk with every search
+                        width raised (a beam of 50 &times; 50, a pool of 200 and 100 multipliers) and a 20-minute
+                        limit, which takes about 12&times; its default time.</p>
+                      <p><b>RiskSLIM.</b> The free CPLEX Community Edition refuses problems above 1,000 variables or
+                        constraints, and RiskSLIM's cutting planes pass that limit on wider datasets; it returned no
+                        score on 25 of 70 visible problems and 102 of 135 hidden ones, and
+                        is charged the base rate there. With a full CPLEX licence it would do better, but within these time
+                        limits it still certifies optimality only on small problems, as the FasterRisk paper also
+                        found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
+                        near 60 s.</p>
+                      <p><b>C.</b> One run per solver at <code>k</code> = 5 on each of the 27 datasets at full size, 27 at a
+                        time, with a 10-minute limit (killed at 30 minutes). RiskSLIM stops at the CPLEX Community
+                        Edition's size limit on 22 datasets; SLIM passes its limit on 25, since HiGHS finishes its
+                        current step before stopping, and on the remaining 2 returns a proven optimum of its 0-1
+                        loss.</p>
+                    </details>
 
                     <h2 id="methods">3. Methods: FastRiskScore</h2>
+
+                    <details class="collapsible" id="related-work">
+                      <summary>Related work</summary>
+                      <style>
+                        .lit-scroll { overflow-x: auto; margin: 0.4em 0 1em; }
+                        #related-work h4 { margin: 1.1em 0 0.4em; font-size: 1rem; }
+                        #related-work h5 { margin: 1em 0 0.3em; font-size: 0.92rem; }
+                        #related-work table { font-size: 0.8rem; }
+                      </style>
+                      <!-- LITERATURE -->
+                      <p>A scoring system (risk score, point system) is a linear model <code>score = sum_j lambda_j x_j</code> with few nonzero coefficients, each a small integer (typically in {-5..5}). A prediction is a threshold on the score (SLIM) or a logistic map of it, <code>P(y=1) = 1/(1+exp(-(lambda_0 + score)/m))</code> (RiskSLIM, FasterRisk). Work falls into three groups: (1) exact mixed-integer programming (MIP) formulations that can certify optimality but need a commercial solver and scale to tens of features; (2) heuristics that fit a sparse continuous model and then round it (FasterRisk, AutoScore, rounding methods); (3) generic L0 best-subset solvers (L0Learn, abess, fastSparse, OKRidge) that produce the sparse continuous model a rounding step needs. All entries below were checked against the arXiv/publisher page and the code repository in September 2026.</p>
+                      <h4>Methods</h4>
+                      <div class="lit-scroll"><table class="ranktbl dataset-table">
+                      <thead>
+                      <tr>
+                      <th>Work</th>
+                      <th>Formulation</th>
+                      <th>Method</th>
+                      <th>Certifies?</th>
+                      <th>Code / solver</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr>
+                      <td>SLIM: Ustun &amp; Rudin, <em>Machine Learning</em> 102(3), 2016. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1502.04269">arXiv 1502.04269</a>, <a target="_blank" rel="noopener" href="https://doi.org/10.1007/s10994-015-5528-6">DOI 10.1007/s10994-015-5528-6</a></td>
+                      <td>0-1 loss + C0·L0 + small L1 tie-break; coefficients integer in a bounded set; operational constraints as linear constraints</td>
+                      <td>Integer program (MILP)</td>
+                      <td>Yes (MIP gap)</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/ustunb/slim-python">ustunb/slim-python</a> (Python 2.7), MATLAB toolbox; needs CPLEX</td>
+                      </tr>
+                      <tr>
+                      <td>RiskSLIM: Ustun &amp; Rudin, "Optimized Risk Scores", KDD 2017 (<a target="_blank" rel="noopener" href="https://www.berkustun.com/papers/optimized-risk-scores-kdd/ustun2017optimized.pdf">PDF</a>); "Learning Optimized Risk Scores", <em>JMLR</em> 20(150), 2019. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1610.00168">arXiv 1610.00168</a>, <a target="_blank" rel="noopener" href="https://jmlr.org/papers/v20/18-615.html">JMLR</a></td>
+                      <td>Logistic loss + C0·L0; lambda_j in {-5..5}, intercept in {-100..100}; model-size and custom constraints</td>
+                      <td>MINLP solved by the Lattice Cutting Plane Algorithm (LCPA): cutting planes for the loss inside one branch-and-bound tree, plus rounding/polishing heuristics</td>
+                      <td>Yes (optimality gap)</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/ustunb/risk-slim">ustunb/risk-slim</a> (not on PyPI, <code>pip install -e .</code>); needs CPLEX 12.6+. Open-source solver support is on the roadmap but not implemented</td>
+                      </tr>
+                      <tr>
+                      <td>"Supersparse Linear Integer Models for Predictive Scoring Systems": Ustun, Tracà, Rudin, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1306.5860">arXiv 1306.5860</a> (2013)</td>
+                      <td>Early SLIM version; no separate published "supersparse logistic regression" method was found, the logistic-loss version is RiskSLIM</td>
+                      <td>MIP</td>
+                      <td>Yes</td>
+                      <td>CPLEX</td>
+                      </tr>
+                      <tr>
+                      <td>Rounding methods: Chevaleyre, Koriche, Zucker, ICML 2013, PMLR 28:651-659. <a target="_blank" rel="noopener" href="https://proceedings.mlr.press/v28/chevaleyre13.html">PMLR</a>, extended <a target="_blank" rel="noopener" href="https://hal.science/hal-00771012/">HAL hal-00771012</a></td>
+                      <td>Hinge loss over discrete (e.g. binary) weight vectors</td>
+                      <td>Solve LP/convex relaxation, then deterministic or randomized rounding with approximation and generalization bounds</td>
+                      <td>No</td>
+                      <td>No public code</td>
+                      </tr>
+                      <tr>
+                      <td>Bayesian scoring systems: Ertekin &amp; Rudin, <em>Big Data</em> 3(4), 2015. <a target="_blank" rel="noopener" href="https://doi.org/10.1089/big.2015.0033">DOI 10.1089/big.2015.0033</a></td>
+                      <td>Logistic likelihood with priors that pull coefficients to a "natural scale" (few significant digits)</td>
+                      <td>Metropolis-Hastings sampling</td>
+                      <td>No</td>
+                      <td>No public code</td>
+                      </tr>
+                      <tr>
+                      <td>DILSVM: Carrizosa, Nogales-Gómez, Romero Morales, "Strongly agree or strongly disagree? Rating features in SVMs", <em>Information Sciences</em> 329, 2016. <a target="_blank" rel="noopener" href="https://optimization-online.org/2013/10/4082/">Optimization Online 2013</a>, <a target="_blank" rel="noopener" href="https://www.sciencedirect.com/science/article/abs/pii/S0020025515006854">ScienceDirect</a></td>
+                      <td>Hinge loss (SVM) with each coefficient restricted to a small set of discrete "rating levels"</td>
+                      <td>MILP plus heuristics</td>
+                      <td>Yes for small instances</td>
+                      <td>No public code; commercial MIP solver</td>
+                      </tr>
+                      <tr>
+                      <td>Fairness-aware scoring system: Yang et al., <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2109.10053">arXiv 2109.10053</a> (2021)</td>
+                      <td>Welfare / risk minimization with integer coefficients and group-fairness constraints</td>
+                      <td>MIP</td>
+                      <td>Yes (MIP gap)</td>
+                      <td>No public code</td>
+                      </tr>
+                      <tr>
+                      <td>Optimal fair multi-class scoring: Rouzot, Ferry, Huguet, ICTAI 2022. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.05023">arXiv 2304.05023</a>, <a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/10097916/">IEEE</a></td>
+                      <td>SLIM (0-1 loss, L0, integer coefficients) generalized to multi-class with fairness constraints</td>
+                      <td>MILP</td>
+                      <td>Yes (gap)</td>
+                      <td>No code linked; MILP solver</td>
+                      </tr>
+                      <tr>
+                      <td>MISS: Grzeszczyk, Trzciński, Sitek, SIAM SDM 2024, pp. 55-63. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2401.05069">arXiv 2401.05069</a>, <a target="_blank" rel="noopener" href="https://doi.org/10.1137/1.9781611978032.7">DOI 10.1137/1.9781611978032.7</a></td>
+                      <td>Multinomial (softmax) logistic loss + L0; one integer score per class</td>
+                      <td>MINLP via an extension of RiskSLIM/LCPA, with dimensionality reduction and heuristics</td>
+                      <td>Yes (gap)</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/SanoScience/MISS">SanoScience/MISS</a>; bundles risk-slim, <code>requirements.txt</code> pins <code>cplex==22.1.0.0</code> (pip CPLEX Community Edition is size-limited)</td>
+                      </tr>
+                      <tr>
+                      <td>FasterRisk: Liu, Zhong, B. Li, Seltzer, Rudin, NeurIPS 2022. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2210.05846">arXiv 2210.05846</a>, <a target="_blank" rel="noopener" href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/7103444259031cc58051f8c9a4868533-Abstract-Conference.html">NeurIPS</a></td>
+                      <td>Logistic loss s.t. L0 &lt;= k and box-bounded integer coefficients, with a real multiplier m on the score</td>
+                      <td>Beam search (SparseBeamLR) for a pool of sparse continuous solutions with different supports, "star ray" search over multipliers, sequential rounding that greedily limits loss increase (with an upper bound on the rounding loss)</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/interpretml/FasterRisk">interpretml/FasterRisk</a>, <code>pip install fasterrisk</code> (v0.1.10, BSD-3), pure Python/NumPy, no solver</td>
+                      </tr>
+                      <tr>
+                      <td>GroupFasterRisk: Zhu, Tian, Semenova, Liu, Xu, Scarpa, Rudin, <em>JAMIA</em> 32(4), 2025. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2311.13015">arXiv 2311.13015</a>, <a target="_blank" rel="noopener" href="https://academic.oup.com/jamia/article-abstract/32/4/736/7985531">JAMIA</a></td>
+                      <td>FasterRisk with group sparsity (feature groups from thresholded continuous variables), soft/hard sparsity, monotonicity constraints</td>
+                      <td>Beam search + rounding, as FasterRisk</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/MuhangTian/GFR-Experiments">MuhangTian/GFR-Experiments</a>; no solver</td>
+                      </tr>
+                      <tr>
+                      <td>AutoScore: Xie, Chakraborty, Ong, Goldstein, Liu, <em>JMIR Med Inform</em> 8(10):e21798, 2020. <a target="_blank" rel="noopener" href="https://medinform.jmir.org/2020/10/e21798/">JMIR</a></td>
+                      <td>Logistic regression on variables discretized by quantiles, coefficients scaled and rounded to points</td>
+                      <td>Random-forest variable ranking, parsimony plot to pick k, then LR, rounding, fine-tuning of cut points</td>
+                      <td>No</td>
+                      <td>R package <a target="_blank" rel="noopener" href="https://cran.r-project.org/web/packages/AutoScore/">AutoScore on CRAN</a>; ordinal/survival variants from nliulab. (The PyPI package named <code>AutoScore</code> is unrelated)</td>
+                      </tr>
+                      <tr>
+                      <td>fastSparse: Liu, Zhong, Seltzer, Rudin, AISTATS 2022, PMLR 151. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2202.11389">arXiv 2202.11389</a></td>
+                      <td>L0 (+ L2) regularized logistic or exponential loss for sparse GLMs/GAMs (continuous coefficients)</td>
+                      <td>Coordinate descent + local swaps, surrogate-cut feature screening, priority queue</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/interpretml/fastSparse">interpretml/fastSparse</a>, <code>pip install fastsparsegams</code> (C++ core, built on L0Learn)</td>
+                      </tr>
+                      <tr>
+                      <td>L0Learn: Dedieu, Hazimeh, Mazumder, <em>JMLR</em> 22(135), 2021. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2001.06471">arXiv 2001.06471</a>, <a target="_blank" rel="noopener" href="https://jmlr.org/papers/v22/19-1049.html">JMLR</a></td>
+                      <td>L0 + L1/L2 regularized logistic / squared-hinge loss (continuous coefficients)</td>
+                      <td>Cyclic coordinate descent + local combinatorial search; exact variant via "integrality generation" MIPs</td>
+                      <td>Exact variant only</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/hazimehh/L0Learn">hazimehh/L0Learn</a>, R on CRAN, <code>pip install l0learn</code> (MIT); heuristic path needs no solver, exact variant uses Gurobi</td>
+                      </tr>
+                      <tr>
+                      <td>Sparse classification via outer approximation: Bertsimas, Pauphilet, Van Parys, <em>Machine Learning</em> 110, 2021. <a target="_blank" rel="noopener" href="https://doi.org/10.1007/s10994-021-06085-5">DOI 10.1007/s10994-021-06085-5</a></td>
+                      <td>Cardinality-constrained, ridge-regularized logistic loss / hinge loss</td>
+                      <td>Outer approximation (cutting planes) in a MIP; also a Boolean relaxation heuristic</td>
+                      <td>Yes (exact variant)</td>
+                      <td>Julia; exact variant uses a commercial MIP solver</td>
+                      </tr>
+                      <tr>
+                      <td>abess: Zhu et al., <em>JMLR</em> 23(202), 2022. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2110.09697">arXiv 2110.09697</a>, <a target="_blank" rel="noopener" href="https://www.jmlr.org/papers/v23/21-1060.html">JMLR</a></td>
+                      <td>Best-subset (L0-constrained) GLMs incl. logistic (continuous coefficients)</td>
+                      <td>Splicing (adaptive support swaps) with information-criterion or CV choice of k</td>
+                      <td>Recovery guarantee under a linear model, no per-instance certificate</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/abess-team/abess">abess-team/abess</a>, <code>pip install abess</code> (GPL-3), R on CRAN</td>
+                      </tr>
+                      <tr>
+                      <td>OKRidge: Liu, Rosen, Zhong, Rudin, NeurIPS 2023. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.06686">arXiv 2304.06686</a></td>
+                      <td>Least squares + L2 s.t. L0 &lt;= k (continuous)</td>
+                      <td>Branch-and-bound with a saddle-point lower bound (linear system or ADMM), beam-search warm start</td>
+                      <td>Yes</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/jiachangliu/OKRidge">jiachangliu/OKRidge</a>, <code>pip install okridge</code>; no commercial solver</td>
+                      </tr>
+                      <tr>
+                      <td>Certifying optimal k-sparse GLMs: Liu, Shafiee, Lodi, ICML 2025, PMLR 267. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2502.09502">arXiv 2502.09502</a>; extended GPU version <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2603.01306">arXiv 2603.01306</a> (2026)</td>
+                      <td>L0-constrained GLM (incl. logistic), continuous</td>
+                      <td>BnB with first-order proximal method on the perspective relaxation, log-linear prox, GPU-friendly</td>
+                      <td>Yes</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/jiachangliu/OKGLM">jiachangliu/OKGLM</a> (not on PyPI; runs on CPU without its commercial-solver pins); <code>okglm_seqround</code></td>
+                      </tr>
+                      <tr>
+                      <td>Probabilistic scoring lists (PSL): Hanselle, Heid, Fürnkranz, Hüllermeier, Discovery Science 2023 (LNCS) and <em>Machine Learning</em> 114, 2025. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2407.21535">arXiv 2407.21535</a>, <a target="_blank" rel="noopener" href="https://link.springer.com/chapter/10.1007/978-3-031-45275-8_13">Springer DS 2023</a></td>
+                      <td>Ordered list of (feature, integer score) pairs; each prefix maps total score to a calibrated probability; stops early when confident</td>
+                      <td>Greedy stagewise selection of feature and score from a fixed score set, optional lookahead</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/TRR318/scikit-psl">TRR318/scikit-psl</a>, <code>pip install scikit-psl</code> (MIT, sklearn API; also has a multi-class scoring list)</td>
+                      </tr>
+                      <tr>
+                      <td>Optimal risk scores for continuous predictors: Molero-Río &amp; D'Ambrosio, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2502.08588">arXiv 2502.08588</a>, Springer chapter 2025</td>
+                      <td>Logistic loss + sparsity, jointly choosing thresholds for continuous features and integer points</td>
+                      <td>MINLP</td>
+                      <td>Yes (gap)</td>
+                      <td>No code linked</td>
+                      </tr>
+                      <tr>
+                      <td>RegScore: Grzeszczyk et al., <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2507.19155">arXiv 2507.19155</a> (2025)</td>
+                      <td>Integer-coefficient scoring systems for regression</td>
+                      <td>Beam search + k-sparse ridge (OKRidge style) + rounding</td>
+                      <td>No</td>
+                      <td>Preprint; code not verified</td>
+                      </tr>
+                      <tr>
+                      <td>SHAPoint: Meirman, Shapira, Dagan, Rokach, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2509.23756">arXiv 2509.23756</a> (2025)</td>
+                      <td>Points derived from Shapley values of a fitted model, task-agnostic (classification, survival)</td>
+                      <td>Fit model, aggregate SHAP, discretize to points</td>
+                      <td>No</td>
+                      <td>Compares to FasterRisk, AutoScore; code not verified</td>
+                      </tr>
+                      <tr>
+                      <td>Buffered AUC scoring systems: Shiina, Ikeda, Takano, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2601.05544">arXiv 2601.05544</a> (2026)</td>
+                      <td>Maximize buffered AUC (concave lower bound on AUC) with integer coefficients and group sparsity</td>
+                      <td>MILP</td>
+                      <td>Yes (gap)</td>
+                      <td>MIP solver; no code linked</td>
+                      </tr>
+                      <tr>
+                      <td>AgentScore: Ruhrberg Estévez, Chiu, van der Schaar, ICML 2026. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2601.22324">arXiv 2601.22324</a></td>
+                      <td>Checklist-style clinical scores built from LLM-proposed rules</td>
+                      <td>LLM proposes candidate rules; deterministic data-grounded verification and selection loop</td>
+                      <td>No</td>
+                      <td>Code not verified</td>
+                      </tr>
+                      <tr>
+                      <td>Gradient Boosted Risk Scores: Georgantas &amp; Richiardi, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2605.02593">arXiv 2605.02593</a> (2026)</td>
+                      <td>Additive point rules with nonlinear feature effects, for regression, classification, survival</td>
+                      <td>Gradient boosting restricted to compact scoring rules</td>
+                      <td>No</td>
+                      <td>C++ with Python/R bindings (per abstract); compared to AutoScore on 12 datasets</td>
+                      </tr>
+                      </tbody>
+                      </table></div>
+                      <!-- /LITERATURE -->
+                    </details>
 
                     <p>The problem is the one RiskSLIM and FasterRisk solve. Over integer points <i>w</i> with at most
                       <i>k</i> nonzero entries, each in [&minus;5, 5], minimise</p>
@@ -496,7 +774,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         estimate ranks all moves, and the two best are checked exactly.</li>
                     </ol>
 
-                    <h3 id="found">What the loop found</h3>
+                    <h3 id="found">Loop findings</h3>
 
                     <details class="collapsible" id="m-lattice">
                       <summary>Searching the integer points directly, scored by the refit loss (both runs)</summary>
@@ -588,6 +866,110 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         <code>runs/sep26-run2/notes.md</code>) list every attempt, kept or not, with its measured effect.</p>
                     </details>
 
+                    <details class="collapsible" id="finer">
+                      <summary>Later loops: finer thresholds</summary>
+
+                      <p>The suites above split each numeric column at its 9 deciles. We also built versions of the visible
+                        and hidden suites that split each numeric column at its 99 percentiles, which gives the search many
+                        more features to choose from (990 instead of 90 on magic). The six RiskSLIM datasets were rebuilt
+                        from their raw OpenML sources for this. Six more loops ran on the fine visible suite with the same keep rule. Loops 1 and 2 both
+                        started from FastRiskScore; each later loop started from the best version of the one before. From loop 3 on, a change was also
+                        rejected if it lowered the mean test AUC by more than 0.001. The fine hidden suite (27 datasets
+                        &times; 5 values of <code>k</code>) was not used during the loops. Table <a href="#tab2">2</a>
+                        gives the best version of each loop that kept a change, on both.</p>
+
+                      <p class="caption" id="tab2"><b>Table 2.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) on the fine suites (99 thresholds per numeric column). FastRiskScore is the shipped
+                        version, unchanged; each loop row is that loop's best version and its main change.</p>
+                      <div style="overflow-x:auto">
+                      <table class="ranktbl results-table t2">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Fine visible (70)</th><th class="grp" colspan="3">Fine hidden (135)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td class="t2-name"><b>FasterRisk</b></td><td>0.34282</td><td>0.848</td><td>2.16</td><td>0.32448</td><td>0.792</td><td>4.62</td></tr>
+                          <tr class="ours"><td class="t2-name"><b>FastRiskScore</b></td><td>0.34119</td><td>0.850</td><td>0.068</td><td>0.32416</td><td>0.792</td><td>0.153</td></tr>
+                          <tr><td class="t2-name"><b>Loop 1</b>: wider local search with kicks</td><td>0.33882</td><td>0.847</td><td>0.259</td><td>0.32393</td><td>0.793</td><td>0.322</td></tr>
+                          <tr><td class="t2-name"><b>Loop 2</b>: thresholds of one column handled together</td><td>0.33982</td><td>0.848</td><td>0.032</td><td>0.32400</td><td>0.793</td><td>0.050</td></tr>
+                          <tr><td class="t2-name"><b>Loop 3</b>: minimum support per feature</td><td>0.33998</td><td>0.851</td><td>0.023</td><td>0.32416</td><td>0.793</td><td>0.042</td></tr>
+                          <tr><td class="t2-name"><b>Loop 4</b>: faster</td><td>0.33996</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
+                          <tr><td class="t2-name"><b>Loop 5</b>: exact polish of the best score</td><td>0.33976</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
+                        </tbody>
+                      </table>
+                      </div>
+                      <style>
+                        table.t2 td.t2-name { min-width: 12em; white-space: normal; }
+                        table.t2 td, table.t2 th { padding-left: 0.5em; padding-right: 0.5em; }
+                      </style>
+                      <p class="tblnote">Versions: loop 1 <code>f31_fastsame</code>, loop 2 <code>g24_fastcol</code>, loop 3
+                        <code>h8_fastbeam</code>, loop 4 <code>i30_final</code>, loop 5 <code>j18_poliso</code>. Hidden-suite AUCs
+                        to four decimals: FasterRisk 0.7917, FastRiskScore 0.7924, loops 1 and 2 0.7927, loop 3 0.7930, loops
+                        4 and 5 0.7932. Times vary by about 5% between runs; the loop 1 and 2 hidden rows were run while
+                        another loop used the same machine.</p>
+
+                      <ul>
+                        <li><b>Loss.</b> Every loop beats FastRiskScore on the fine visible suite, but on the fine hidden
+                          suite the gains are small: 0.0002 at most. Loop 1 has the lowest loss on both suites, at 6 to
+                          15 times the hidden-suite time of the later loops.</li>
+                        <li><b>Feature handling.</b> Loop 2 found that the 99 indicators of a numeric column are nested
+                          (<code>x &le; t</code> for increasing <code>t</code>), and handled each column's indicators as
+                          one ordered variable. This made the search faster and let the beam pick the best threshold
+                          of a column instead of filling with neighbouring thresholds of one column.</li>
+                        <li><b>AUC.</b> Loop 3 required each chosen indicator to cover at least &radic;<i>N</i> training rows
+                          on each side. Without it, the search picks thresholds that fit a handful of training rows. Against loop 2,
+                          it raised visible AUC by 0.003 for a loss increase of 0.0002, and the AUC gain held on the hidden suite
+                          (0.7927 to 0.7930).</li>
+                        <li><b>Speed.</b> Loop 4 reached about the same loss as loop 3 in half the time: 0.021 s on the hidden
+                          suite, 7&times; faster than FastRiskScore and 220&times; faster than FasterRisk.</li>
+                        <li><b>Saturation.</b> Loop 5's only kept change, an exact polish of the final score, lowered the
+                          visible loss by 0.0002. Almost all of that came from two near-separable problems (ionosphere at
+                          <code>k</code> = 7, mushroom at <code>k</code> = 10), and it changed 2 of the 135 hidden
+                          problems. On the problems where the polish runs, no single change of one feature's points, and no swap
+                          of one feature, lowers the loss of the final score. A sixth loop (30 attempts: new starting
+                          points, tabu walks, pair moves) kept nothing; running its whole search 4 times longer lowered
+                          the mean loss by 0.00001.</li>
+                      </ul>
+                    </details>
+
+                    <details class="collapsible" id="next">
+                      <summary>Later loops: a faster version for the decile suites</summary>
+
+                      <p>The fine-track versions are 3&times; faster than FastRiskScore, but on the decile suites they
+                        lost 0.0014 in visible loss, mostly on spambase and ionosphere. Two causes accounted for most of
+                        it: loop 3's minimum support per feature, and beam rules that kept one threshold per variable and
+                        one child per set of variables, which removed good feature sets on decile data. A loop on the
+                        decile visible suite started from loop 5's version with the minimum support switched off and kept
+                        four changes: candidates whose real-valued coefficient rounds to 0 are ranked last in the beam
+                        (spambase, whose large-scale columns collapsed 3 of 5 final feature sets to 2 features), the
+                        search kernels are compiled before the first fit (about 4 s had been spent compiling inside
+                        a few fits), the beam diversity rules are switched off, and the beam is trimmed back to 8 parents.
+                        Table <a href="#tab3">3</a> compares the result with FastRiskScore. It is not yet in the
+                        package.</p>
+
+                      <p class="caption" id="tab3"><b>Table 3.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) of the decile-suite loop's final version (<code>m25_final</code>) on the suites of
+                        Table <a href="#tab1">1</a>.</p>
+                      <table class="ranktbl results-table">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>FasterRisk</td><td>0.36029</td><td>0.841</td><td>1.49</td><td>0.32720</td><td>0.793</td><td>3.27</td><td>0.32823</td><td>0.790</td><td>4.82</td></tr>
+                          <tr><td>FastRiskScore (shipped)</td><td>0.35592</td><td>0.842</td><td>0.035</td><td>0.32695</td><td>0.794</td><td>0.057</td><td>0.32789</td><td>0.793</td><td>0.079</td></tr>
+                          <tr class="ours"><td>decile-suite loop (<code>m25_final</code>)</td><td>0.35585</td><td>0.842</td><td>0.011</td><td>0.32688</td><td>0.794</td><td>0.014</td><td>0.32789</td><td>0.792</td><td>0.019</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">AUCs to four decimals, visible / hidden / full size: FastRiskScore 0.8424 / 0.7937 / 0.7926,
+                        <code>m25_final</code> 0.8420 / 0.7939 / 0.7920. The two hidden-suite rows were run together; the visible
+                        times come from separate runs and vary by about 10% between runs.</p>
+
+                      <p>On the hidden suite the new version has a lower loss than FastRiskScore on 22 of the 135 problems
+                        and a higher one on 10, and it is 3 to 4&times; faster on the three suites (about 230&times; faster than
+                        FasterRisk on the hidden suite). Test AUC is within 0.0006 of FastRiskScore's on every suite.</p>
+                    </details>
+
                     <p>FastRiskScore is a heuristic. Unlike RiskSLIM with a full CPLEX licence, it does not prove that its
                       score is the best one. It is deterministic and single-threaded. It needs numba, which compiles the
                       search once per machine (about 30 seconds) and caches the result; set
@@ -595,39 +977,18 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       a time limit (<code>time_limit</code>, 60 s by default) and returns the best score found so far;
                       every dataset here finished well within it.</p>
 
-                    <h3 id="related-work">Related work</h3>
-                    <table class="ranktbl dataset-table">
-                      <thead><tr><th>work</th><th>how it fits a score</th><th>proves optimality?</th></tr></thead>
-                      <tbody>
-                        <tr><td>SLIM (<a href="https://arxiv.org/abs/1502.04269">Ustun &amp; Rudin 2016</a>)</td><td>0-1 loss with integer coefficients, as a mixed-integer program</td><td>yes, with CPLEX</td></tr>
-                        <tr><td>RiskSLIM (<a href="https://jmlr.org/papers/v20/18-615.html">Ustun &amp; Rudin 2019</a>)</td><td>the same log loss as here, by cutting planes inside one branch-and-bound tree</td><td>yes, with CPLEX</td></tr>
-                        <tr><td>Rounding methods (<a href="https://proceedings.mlr.press/v28/chevaleyre13.html">Chevaleyre et al. 2013</a>)</td><td>solve a relaxation, then round with approximation guarantees</td><td>no</td></tr>
-                        <tr><td>AutoScore (<a href="https://medinform.jmir.org/2020/10/e21798/">Xie et al. 2020</a>)</td><td>rank variables with a random forest, fit logistic regression on quantile bins, scale and round</td><td>no</td></tr>
-                        <tr><td>fastSparse (<a href="https://arxiv.org/abs/2202.11389">Liu et al. 2022</a>), L0Learn (<a href="https://arxiv.org/abs/2001.06471">Dedieu et al. 2021</a>)</td><td>sparse real-valued models by coordinate descent and swaps; a first stage for rounding</td><td>L0Learn's exact variant, with Gurobi</td></tr>
-                        <tr><td>FasterRisk (<a href="https://arxiv.org/abs/2210.05846">Liu et al. 2022</a>)</td><td>beam search for sparse real-valued solutions, then multipliers and sequential rounding; FastRiskScore's starting point</td><td>no</td></tr>
-                        <tr><td>GroupFasterRisk (<a href="https://arxiv.org/abs/2311.13015">Zhu et al. 2025</a>)</td><td>FasterRisk with group sparsity and monotonicity constraints</td><td>no</td></tr>
-                        <tr><td>Probabilistic scoring lists (<a href="https://arxiv.org/abs/2407.21535">Hanselle et al. 2025</a>)</td><td>a greedy ordered list of (feature, points), each prefix with its own calibrated risk</td><td>no</td></tr>
-                        <tr><td>MISS (<a href="https://arxiv.org/abs/2401.05069">Grzeszczyk et al. 2024</a>)</td><td>RiskSLIM extended to several classes</td><td>yes, with CPLEX</td></tr>
-                        <tr><td>Optimal risk scores for continuous predictors (<a href="https://arxiv.org/abs/2502.08588">Molero-R&iacute;o &amp; D'Ambrosio 2025</a>)</td><td>chooses thresholds and points together in one mixed-integer program</td><td>yes</td></tr>
-                      </tbody>
-                    </table>
-                    <p class="tblnote">A longer survey with 24 works and the datasets each used is in
-                      <a href="https://github.com/csinva/agentic-imodels/blob/main/evolve_slim/LITERATURE.md">evolve_slim/LITERATURE.md</a>.</p>
-
                     <h3 id="citation">Citation</h3>
 
                     <p>FastRiskScore came out of the autoresearch loop described in
                         <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a>. If you use
                         either, please cite:</p>
 
-                    <pre><code>@misc{singh2026agenticimodels,
+                    <pre><code>@inproceedings{singh2026agenticimodels,
       title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
       author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and Weiwei Yang and Michel Galley and Jianfeng Gao},
+      booktitle={The Fortieth Annual Conference on Neural Information Processing Systems},
       year={2026},
-      eprint={2605.03808},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2605.03808},
+      url={https://openreview.net/forum?id=EY6O5VNNlV},
 }</code></pre>
 
                 </div>
