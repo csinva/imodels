@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels.tree.iterative_random_forest</title>
+<meta name="description" content="Iterative random forests with bootstrap-stable interaction discovery." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="../../style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<header id="site-header">
+<a href="../../index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="../../index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+<article id="content">
+<section id="section-intro">
+<p>Iterative random forests with bootstrap-stable interaction discovery.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Iterative random forests with bootstrap-stable interaction discovery.&#34;&#34;&#34;
+
+from .iterative_random_forest import IRFClassifier, IRFRegressor
+
+__all__ = [&#34;IRFClassifier&#34;, &#34;IRFRegressor&#34;]</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="imodels.tree.iterative_random_forest.iterative_random_forest" href="iterative_random_forest.html">imodels.tree.iterative_random_forest.iterative_random_forest</a></code></dt>
+<dd>
+<div class="desc"><p>Iterative random forests and bootstrap-stable feature interactions …</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.tree.iterative_random_forest.IRFClassifier"><code class="flex name class">
+<span>class <span class="ident">IRFClassifier</span></span>
+<span>(</span><span>n_estimators=100, n_iterations=5, n_bootstraps=10, max_features='sqrt', max_depth=None, min_samples_split=2, min_samples_leaf=1, bootstrap=True, n_estimators_bootstrap=None, bootstrap_fraction=1.0, stratify_bootstrap=True, n_rit=100, rit_depth=5, rit_branching=2, interaction_class=None, n_jobs=None, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Iteratively reweight forests and discover stable feature interactions.</p>
+<p>At each node, candidate features are sampled without replacement with
+probabilities proportional to the preceding forest's Gini importances.
+All reweighting iterations use the full training data, with ordinary
+per-tree bootstrapping. Interaction discovery then fits new forests on
+outer bootstrap samples, holding the final iteration's <em>input</em> feature
+weights fixed. Random intersection trees (RIT) search each outer forest;
+an interaction receives one vote per outer replicate.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Number of trees in each reweighting forest.</dd>
+<dt><strong><code>n_iterations</code></strong> :&ensp;<code>int</code>, default=<code>5</code></dt>
+<dd>Number of full-data fits, including the initial uniform forest. At one
+iteration, prediction and interaction discovery use uniform weights.</dd>
+<dt><strong><code>n_bootstraps</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of outer bootstrap forests; zero enables prediction only.</dd>
+<dt><strong><code>max_features</code></strong> :&ensp;<code>{"sqrt", "log2", None}, int</code> or <code>float</code>, default=<code>"sqrt"</code></dt>
+<dd>Candidate features per node. A float in (0, 1] specifies a fraction of
+input features; None uses all. Zero-weight features are excluded.</dd>
+<dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Maximum decision-tree depth; None allows unlimited depth.</dd>
+<dt><strong><code>min_samples_split</code></strong> :&ensp;<code>int</code>, default=<code>2</code></dt>
+<dd>Minimum distinct in-bag observations needed to split a node.</dd>
+<dt><strong><code>min_samples_leaf</code></strong> :&ensp;<code>int</code>, default=<code>1</code></dt>
+<dd>Minimum distinct in-bag observations at a leaf.</dd>
+<dt><strong><code>bootstrap</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Bootstrap rows for each tree (inner bootstrap), independently of the
+outer bootstrap controlled by <code>n_bootstraps</code>.</dd>
+<dt><strong><code>n_estimators_bootstrap</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Trees per outer forest; None uses <code>n_estimators</code>.</dd>
+<dt><strong><code>bootstrap_fraction</code></strong> :&ensp;<code>float</code>, default=<code>1.0</code></dt>
+<dd>Outer sample size as a fraction of training rows, rounded up. Sampling
+is with replacement. Original R uses 1.0; historical Python uses 0.2.</dd>
+<dt><strong><code>stratify_bootstrap</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Preserve class proportions in outer samples, as in original R.
+Full-size samples preserve class counts.</dd>
+<dt><strong><code>n_rit</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Random intersection trees per outer forest.</dd>
+<dt><strong><code>rit_depth</code></strong> :&ensp;<code>int</code>, default=<code>5</code></dt>
+<dd>Maximum number of sampled paths intersected along a RIT branch,
+following historical R. Must be at least 2. Pairs are retained
+immediately and stop their branch; larger sets continue to this depth.</dd>
+<dt><strong><code>rit_branching</code></strong> :&ensp;<code>int</code>, default=<code>2</code></dt>
+<dd>Children per RIT node.</dd>
+<dt><strong><code>interaction_class</code></strong> :&ensp;<code>object</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Discover paths whose leaf predicts this label. None selects the last
+label in <code>classes_</code> (1 for labels 0 and 1). Multiclass prediction is
+supported; interaction discovery targets one class. R's default,
+<code>class.id=1</code>, selects the second sorted label instead; the two agree
+for binary labels.</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Parallel jobs for fitting trees. None uses one; -1 uses all processors.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Controls forests, outer samples, and RIT. An integer gives reproducible
+results across <code>n_jobs</code> values. Successive forests use new seeds.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_classes,)</code></dt>
+<dd>Class labels in probability-column order.</dd>
+<dt><strong><code>forest_</code></strong> :&ensp;<code>object</code></dt>
+<dd>Final full-data weighted forest, used for prediction.</dd>
+<dt><strong><code>estimators_</code></strong> :&ensp;<code>list</code></dt>
+<dd>Trees in <code>forest_</code>.</dd>
+<dt><strong><code>feature_weights_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
+<dd>Input sampling weights of the final forest and every outer forest.</dd>
+<dt><strong><code>feature_weights_history_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_iterations, n_features)</code></dt>
+<dd>Input weights of full-data forests, starting with uniform weights.</dd>
+<dt><strong><code>feature_importances_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
+<dd>Normalized Gini importances produced by the final full-data forest.</dd>
+<dt><strong><code>feature_importances_history_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_iterations, n_features)</code></dt>
+<dd>Output importances from each full-data forest.</dd>
+<dt><strong><code>interaction_stability_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Sorted feature-index tuples mapped to the fraction of outer replicates
+recovering that exact set. Sets contain at least two features. Stability holds
+the learned feature weights fixed.</dd>
+<dt><strong><code>interactions_</code></strong> :&ensp;<code>list</code> of <code>tuple</code></dt>
+<dd>Sets ordered by descending stability, then descending size, then
+feature indices. No split directions or thresholds are retained.</dd>
+<dt><strong><code>bootstrap_interactions_</code></strong> :&ensp;<code>list</code> of <code>set</code></dt>
+<dd>Distinct recovered intersections from each outer replicate.</dd>
+<dt><strong><code>bootstrap_samples_</code></strong> :&ensp;<code>list</code> of <code>ndarray</code></dt>
+<dd>Original input row indices for each outer sample, retaining duplicates.</dd>
+<dt><strong><code>interaction_class_</code></strong> :&ensp;<code>object</code></dt>
+<dd>Resolved target class for interaction discovery.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Supports dense, finite numeric inputs and single-output classification.
+This is original unsigned iRF. Nodes are split by a NumPy search that
+reproduces public scikit-learn stumps exactly, falling back to the stumps
+themselves; this can be slower than a compiled random forest. Default tree
+budgets are smaller than the paper's 500 forest trees and 500 RITs.</p>
+<p>Positive <code>sample_weight</code> values affect splits, probabilities, and leaf
+masses. Zero-weight rows are excluded before resampling. Row sampling is
+uniform (stratified for outer samples by default). All-zero Gini importances
+cause an iteration to retain its input feature weights.
+Observation weights are scaled by a common factor for numerical stability.</p>
+<p>RIT leaf masses are computed by routing every observation of the outer
+sample through every tree, including outer-bootstrap duplicates. They are
+not the individual trees' inner-bootstrap training counts.</p>
+<p>RIT follows the paper-era R implementation: two paths initialize each
+root, pairs stop early, and singletons are discarded. The supplement's
+terminal-only RIT pseudocode has different interaction sampling behavior.
+Predictions average leaf probabilities, whereas historical R averages
+hard tree votes. A leaf whose top classes tie is labeled by a uniform
+random draw among them, as in R, so tied leaves can enter RIT.</p>
+<h2 id="references">References</h2>
+<p>Basu, S., Kumbier, K., Brown, J. B., and Yu, B. (2018). Iterative random
+forests to discover predictive and stable high-order interactions.
+PNAS, 115(8), 1943-1948. doi:10.1073/pnas.1711236115.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from imodels import IRFClassifier
+&gt;&gt;&gt; X = [[0, 0], [0, 1], [1, 0], [1, 1]] * 8
+&gt;&gt;&gt; y = [0, 0, 0, 1] * 8
+&gt;&gt;&gt; model = IRFClassifier(n_estimators=10, n_iterations=2,
+...                       n_bootstraps=3, random_state=0).fit(X, y)
+&gt;&gt;&gt; model.predict([[1, 1]]).tolist()
+[1]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IRFClassifier(ClassifierMixin, _IRFBase):
+    &#34;&#34;&#34;Iteratively reweight forests and discover stable feature interactions.
+
+    At each node, candidate features are sampled without replacement with
+    probabilities proportional to the preceding forest&#39;s Gini importances.
+    All reweighting iterations use the full training data, with ordinary
+    per-tree bootstrapping. Interaction discovery then fits new forests on
+    outer bootstrap samples, holding the final iteration&#39;s *input* feature
+    weights fixed. Random intersection trees (RIT) search each outer forest;
+    an interaction receives one vote per outer replicate.
+
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        Number of trees in each reweighting forest.
+    n_iterations : int, default=5
+        Number of full-data fits, including the initial uniform forest. At one
+        iteration, prediction and interaction discovery use uniform weights.
+    n_bootstraps : int, default=10
+        Number of outer bootstrap forests; zero enables prediction only.
+    max_features : {&#34;sqrt&#34;, &#34;log2&#34;, None}, int or float, default=&#34;sqrt&#34;
+        Candidate features per node. A float in (0, 1] specifies a fraction of
+        input features; None uses all. Zero-weight features are excluded.
+    max_depth : int or None, default=None
+        Maximum decision-tree depth; None allows unlimited depth.
+    min_samples_split : int, default=2
+        Minimum distinct in-bag observations needed to split a node.
+    min_samples_leaf : int, default=1
+        Minimum distinct in-bag observations at a leaf.
+    bootstrap : bool, default=True
+        Bootstrap rows for each tree (inner bootstrap), independently of the
+        outer bootstrap controlled by ``n_bootstraps``.
+    n_estimators_bootstrap : int or None, default=None
+        Trees per outer forest; None uses ``n_estimators``.
+    bootstrap_fraction : float, default=1.0
+        Outer sample size as a fraction of training rows, rounded up. Sampling
+        is with replacement. Original R uses 1.0; historical Python uses 0.2.
+    stratify_bootstrap : bool, default=True
+        Preserve class proportions in outer samples, as in original R.
+        Full-size samples preserve class counts.
+    n_rit : int, default=100
+        Random intersection trees per outer forest.
+    rit_depth : int, default=5
+        Maximum number of sampled paths intersected along a RIT branch,
+        following historical R. Must be at least 2. Pairs are retained
+        immediately and stop their branch; larger sets continue to this depth.
+    rit_branching : int, default=2
+        Children per RIT node.
+    interaction_class : object or None, default=None
+        Discover paths whose leaf predicts this label. None selects the last
+        label in ``classes_`` (1 for labels 0 and 1). Multiclass prediction is
+        supported; interaction discovery targets one class. R&#39;s default,
+        ``class.id=1``, selects the second sorted label instead; the two agree
+        for binary labels.
+    n_jobs : int or None, default=None
+        Parallel jobs for fitting trees. None uses one; -1 uses all processors.
+    random_state : int, RandomState or None, default=None
+        Controls forests, outer samples, and RIT. An integer gives reproducible
+        results across ``n_jobs`` values. Successive forests use new seeds.
+
+    Attributes
+    ----------
+    classes_ : ndarray of shape (n_classes,)
+        Class labels in probability-column order.
+    forest_ : object
+        Final full-data weighted forest, used for prediction.
+    estimators_ : list
+        Trees in ``forest_``.
+    feature_weights_ : ndarray of shape (n_features,)
+        Input sampling weights of the final forest and every outer forest.
+    feature_weights_history_ : ndarray of shape (n_iterations, n_features)
+        Input weights of full-data forests, starting with uniform weights.
+    feature_importances_ : ndarray of shape (n_features,)
+        Normalized Gini importances produced by the final full-data forest.
+    feature_importances_history_ : ndarray of shape (n_iterations, n_features)
+        Output importances from each full-data forest.
+    interaction_stability_ : dict
+        Sorted feature-index tuples mapped to the fraction of outer replicates
+        recovering that exact set. Sets contain at least two features. Stability holds
+        the learned feature weights fixed.
+    interactions_ : list of tuple
+        Sets ordered by descending stability, then descending size, then
+        feature indices. No split directions or thresholds are retained.
+    bootstrap_interactions_ : list of set
+        Distinct recovered intersections from each outer replicate.
+    bootstrap_samples_ : list of ndarray
+        Original input row indices for each outer sample, retaining duplicates.
+    interaction_class_ : object
+        Resolved target class for interaction discovery.
+
+    Notes
+    -----
+    Supports dense, finite numeric inputs and single-output classification.
+    This is original unsigned iRF. Nodes are split by a NumPy search that
+    reproduces public scikit-learn stumps exactly, falling back to the stumps
+    themselves; this can be slower than a compiled random forest. Default tree
+    budgets are smaller than the paper&#39;s 500 forest trees and 500 RITs.
+
+    Positive ``sample_weight`` values affect splits, probabilities, and leaf
+    masses. Zero-weight rows are excluded before resampling. Row sampling is
+    uniform (stratified for outer samples by default). All-zero Gini importances
+    cause an iteration to retain its input feature weights.
+    Observation weights are scaled by a common factor for numerical stability.
+
+    RIT leaf masses are computed by routing every observation of the outer
+    sample through every tree, including outer-bootstrap duplicates. They are
+    not the individual trees&#39; inner-bootstrap training counts.
+
+    RIT follows the paper-era R implementation: two paths initialize each
+    root, pairs stop early, and singletons are discarded. The supplement&#39;s
+    terminal-only RIT pseudocode has different interaction sampling behavior.
+    Predictions average leaf probabilities, whereas historical R averages
+    hard tree votes. A leaf whose top classes tie is labeled by a uniform
+    random draw among them, as in R, so tied leaves can enter RIT.
+
+    References
+    ----------
+    Basu, S., Kumbier, K., Brown, J. B., and Yu, B. (2018). Iterative random
+    forests to discover predictive and stable high-order interactions.
+    PNAS, 115(8), 1943-1948. doi:10.1073/pnas.1711236115.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from imodels import IRFClassifier
+    &gt;&gt;&gt; X = [[0, 0], [0, 1], [1, 0], [1, 1]] * 8
+    &gt;&gt;&gt; y = [0, 0, 0, 1] * 8
+    &gt;&gt;&gt; model = IRFClassifier(n_estimators=10, n_iterations=2,
+    ...                       n_bootstraps=3, random_state=0).fit(X, y)
+    &gt;&gt;&gt; model.predict([[1, 1]]).tolist()
+    [1]
+    &#34;&#34;&#34;
+
+    _task = &#34;classification&#34;
+
+    def __init__(
+        self, n_estimators=100, n_iterations=5, n_bootstraps=10,
+        max_features=&#34;sqrt&#34;, max_depth=None, min_samples_split=2,
+        min_samples_leaf=1, bootstrap=True, n_estimators_bootstrap=None,
+        bootstrap_fraction=1.0, stratify_bootstrap=True, n_rit=100,
+        rit_depth=5, rit_branching=2, interaction_class=None,
+        n_jobs=None, random_state=None,
+    ):
+        self.n_estimators = n_estimators
+        self.n_iterations = n_iterations
+        self.n_bootstraps = n_bootstraps
+        self.max_features = max_features
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.bootstrap = bootstrap
+        self.n_estimators_bootstrap = n_estimators_bootstrap
+        self.bootstrap_fraction = bootstrap_fraction
+        self.stratify_bootstrap = stratify_bootstrap
+        self.n_rit = n_rit
+        self.rit_depth = rit_depth
+        self.rit_branching = rit_branching
+        self.interaction_class = interaction_class
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+
+    def _check_parameters(self, n_features):
+        if not isinstance(self.stratify_bootstrap, (bool, np.bool_)):
+            raise ValueError(&#34;stratify_bootstrap must be a boolean.&#34;)
+        super()._check_parameters(n_features)
+
+    def _validate_targets(self, X, y):
+        X, y = validate_data(self, X, y, dtype=np.float32, accept_sparse=False)
+        check_classification_targets(y)
+        return X, y
+
+    def _prepare_targets(self, y):
+        self.classes_, y_encoded = np.unique(y, return_inverse=True)
+        self.n_classes_ = len(self.classes_)
+        return y_encoded
+
+    def _resolve_leaf_selection(self):
+        target = self.classes_[-1] if self.interaction_class is None else self.interaction_class
+        matches = np.flatnonzero(self.classes_ == target)
+        if len(matches) != 1:
+            raise ValueError(&#34;interaction_class must be a label present in y.&#34;)
+        self._target_index = int(matches[0])
+        self.interaction_class_ = self.classes_[self._target_index]
+
+    def _forest_n_classes(self):
+        return self.n_classes_
+
+    def _stratify_labels(self, y_fit):
+        return y_fit if self.stratify_bootstrap else None
+
+    def _select_leaf(self, prediction):
+        return prediction == self._target_index
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Return class probabilities from the final full-data forest.&#34;&#34;&#34;
+        check_is_fitted(self, &#34;forest_&#34;)
+        X = validate_data(self, X, reset=False, dtype=np.float32, accept_sparse=False)
+        return self.forest_.predict_proba(X)
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict labels using the final full-data forest.&#34;&#34;&#34;
+        probabilities = self.predict_proba(X)
+        return self.classes_[np.argmax(probabilities, axis=1)]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.ClassifierMixin</li>
+<li>imodels.tree.iterative_random_forest.iterative_random_forest._IRFBase</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.iterative_random_forest.IRFClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict labels using the final full-data forest.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;Predict labels using the final full-data forest.&#34;&#34;&#34;
+    probabilities = self.predict_proba(X)
+    return self.classes_[np.argmax(probabilities, axis=1)]</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.iterative_random_forest.IRFClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return class probabilities from the final full-data forest.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;Return class probabilities from the final full-data forest.&#34;&#34;&#34;
+    check_is_fitted(self, &#34;forest_&#34;)
+    X = validate_data(self, X, reset=False, dtype=np.float32, accept_sparse=False)
+    return self.forest_.predict_proba(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.iterative_random_forest.IRFClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.iterative_random_forest.IRFClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.tree.iterative_random_forest.IRFRegressor"><code class="flex name class">
+<span>class <span class="ident">IRFRegressor</span></span>
+<span>(</span><span>n_estimators=100, n_iterations=5, n_bootstraps=10, max_features=0.3333333333333333, max_depth=None, min_samples_split=6, min_samples_leaf=1, bootstrap=True, n_estimators_bootstrap=None, bootstrap_fraction=1.0, n_rit=100, rit_depth=5, rit_branching=2, leaf_threshold=None, n_jobs=None, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Iterative random forest regression with stable feature interactions.</p>
+<p>Follows the regression branch of the paper-era R <code>iRF</code> package. Forests
+are reweighted by residual-sum-of-squares importance (R's
+<code>IncNodePurity</code>). Every outer-bootstrap leaf, or every leaf whose mean
+exceeds <code>leaf_threshold</code>, supplies a decision path to random
+intersection trees (RIT). An interaction receives one vote per outer
+replicate.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Number of trees in each reweighting forest.</dd>
+<dt><strong><code>n_iterations</code></strong> :&ensp;<code>int</code>, default=<code>5</code></dt>
+<dd>Number of full-data fits, including the initial uniform forest.</dd>
+<dt><strong><code>n_bootstraps</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of outer bootstrap forests; zero enables prediction only.</dd>
+<dt><strong><code>max_features</code></strong> :&ensp;<code>{"sqrt", "log2", None}, int</code> or <code>float</code>, default=<code>1/3</code></dt>
+<dd>Candidate features per node. The default gives R's regression
+<code>mtry = max(floor(p / 3), 1)</code>. A float in (0, 1] is a fraction of
+input features, rounded down; None uses all.</dd>
+<dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Maximum decision-tree depth; None allows unlimited depth.</dd>
+<dt><strong><code>min_samples_split</code></strong> :&ensp;<code>int</code>, default=<code>6</code></dt>
+<dd>Minimum in-bag draws needed to split a node. Bootstrap duplicates
+count separately, as in R. The default matches R's <code>nodesize=5</code>,
+which stops nodes holding five or fewer draws.</dd>
+<dt><strong><code>min_samples_leaf</code></strong> :&ensp;<code>int</code>, default=<code>1</code></dt>
+<dd>Minimum in-bag draws at a leaf.</dd>
+<dt><strong><code>bootstrap</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Bootstrap rows for each tree (inner bootstrap).</dd>
+<dt><strong><code>n_estimators_bootstrap</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Trees per outer forest; None uses <code>n_estimators</code>.</dd>
+<dt><strong><code>bootstrap_fraction</code></strong> :&ensp;<code>float</code>, default=<code>1.0</code></dt>
+<dd>Outer sample size as a fraction of training rows, rounded up. Sampling
+is with replacement and unstratified, as in R.</dd>
+<dt><strong><code>n_rit</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Random intersection trees per outer forest.</dd>
+<dt><strong><code>rit_depth</code></strong> :&ensp;<code>int</code>, default=<code>5</code></dt>
+<dd>Maximum number of sampled paths intersected along a RIT branch.</dd>
+<dt><strong><code>rit_branching</code></strong> :&ensp;<code>int</code>, default=<code>2</code></dt>
+<dd>Children per RIT node.</dd>
+<dt><strong><code>leaf_threshold</code></strong> :&ensp;<code>float</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Use only leaves whose in-bag mean is strictly greater than this value,
+like R's <code>rit.param$class.cut</code>. None uses every leaf, R's default.</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Parallel jobs for fitting trees. None uses one; -1 uses all processors.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Controls forests, outer samples, and RIT.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>forest_</code></strong> :&ensp;<code>object</code></dt>
+<dd>Final full-data weighted forest, used for prediction.</dd>
+<dt><strong><code>estimators_</code></strong> :&ensp;<code>list</code></dt>
+<dd>Trees in <code>forest_</code>.</dd>
+<dt><strong><code>feature_weights_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
+<dd>Input sampling weights of the final forest and every outer forest.</dd>
+<dt><strong><code>feature_weights_history_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_iterations, n_features)</code></dt>
+<dd>Input weights of full-data forests, starting with uniform weights.</dd>
+<dt><strong><code>feature_importances_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
+<dd>Normalized residual-sum-of-squares decreases of the final forest.</dd>
+<dt><strong><code>feature_importances_history_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_iterations, n_features)</code></dt>
+<dd>Output importances from each full-data forest.</dd>
+<dt><strong><code>interaction_stability_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Sorted feature-index tuples mapped to the fraction of outer replicates
+recovering that exact set.</dd>
+<dt><strong><code>interactions_</code></strong> :&ensp;<code>list</code> of <code>tuple</code></dt>
+<dd>Sets ordered by descending stability, then descending size, then
+feature indices.</dd>
+<dt><strong><code>bootstrap_interactions_</code></strong> :&ensp;<code>list</code> of <code>set</code></dt>
+<dd>Distinct recovered intersections from each outer replicate.</dd>
+<dt><strong><code>bootstrap_samples_</code></strong> :&ensp;<code>list</code> of <code>ndarray</code></dt>
+<dd>Original input row indices for each outer sample, retaining duplicates.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Regression nodes follow R's <code>regTree</code>. Each bootstrap draw is a separate
+case, so duplicates count toward node size. A node splits only when the
+best candidate strictly reduces the residual sum of squares; classification
+instead keeps zero-gain splits. Leaves predict the in-bag mean, and the
+forest averages leaf means. Split search does not depend on the scale or
+offset of the target: targets are shifted and rescaled within each node
+before searching, while predictions and importances keep original units.</p>
+<p>Supports dense, finite numeric inputs and a single continuous target.
+R's options <code>wt.pred.accuracy</code>, <code>cutoff.unimp.feature</code> and
+<code>varnames.grp</code> are not implemented.</p>
+<h2 id="references">References</h2>
+<p>Basu, S., Kumbier, K., Brown, J. B., and Yu, B. (2018). Iterative random
+forests to discover predictive and stable high-order interactions.
+PNAS, 115(8), 1943-1948. doi:10.1073/pnas.1711236115.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from imodels import IRFRegressor
+&gt;&gt;&gt; rng = np.random.RandomState(0)
+&gt;&gt;&gt; X = rng.uniform(size=(200, 4))
+&gt;&gt;&gt; y = (X[:, 0] &gt; 0.5) * (X[:, 1] &gt; 0.5) + 0.1 * rng.normal(size=200)
+&gt;&gt;&gt; model = IRFRegressor(n_estimators=20, n_iterations=3, n_bootstraps=3,
+...                      leaf_threshold=0.5, random_state=0).fit(X, y)
+&gt;&gt;&gt; model.interactions_[0]
+(0, 1)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IRFRegressor(RegressorMixin, _IRFBase):
+    &#34;&#34;&#34;Iterative random forest regression with stable feature interactions.
+
+    Follows the regression branch of the paper-era R ``iRF`` package. Forests
+    are reweighted by residual-sum-of-squares importance (R&#39;s
+    ``IncNodePurity``). Every outer-bootstrap leaf, or every leaf whose mean
+    exceeds ``leaf_threshold``, supplies a decision path to random
+    intersection trees (RIT). An interaction receives one vote per outer
+    replicate.
+
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        Number of trees in each reweighting forest.
+    n_iterations : int, default=5
+        Number of full-data fits, including the initial uniform forest.
+    n_bootstraps : int, default=10
+        Number of outer bootstrap forests; zero enables prediction only.
+    max_features : {&#34;sqrt&#34;, &#34;log2&#34;, None}, int or float, default=1/3
+        Candidate features per node. The default gives R&#39;s regression
+        ``mtry = max(floor(p / 3), 1)``. A float in (0, 1] is a fraction of
+        input features, rounded down; None uses all.
+    max_depth : int or None, default=None
+        Maximum decision-tree depth; None allows unlimited depth.
+    min_samples_split : int, default=6
+        Minimum in-bag draws needed to split a node. Bootstrap duplicates
+        count separately, as in R. The default matches R&#39;s ``nodesize=5``,
+        which stops nodes holding five or fewer draws.
+    min_samples_leaf : int, default=1
+        Minimum in-bag draws at a leaf.
+    bootstrap : bool, default=True
+        Bootstrap rows for each tree (inner bootstrap).
+    n_estimators_bootstrap : int or None, default=None
+        Trees per outer forest; None uses ``n_estimators``.
+    bootstrap_fraction : float, default=1.0
+        Outer sample size as a fraction of training rows, rounded up. Sampling
+        is with replacement and unstratified, as in R.
+    n_rit : int, default=100
+        Random intersection trees per outer forest.
+    rit_depth : int, default=5
+        Maximum number of sampled paths intersected along a RIT branch.
+    rit_branching : int, default=2
+        Children per RIT node.
+    leaf_threshold : float or None, default=None
+        Use only leaves whose in-bag mean is strictly greater than this value,
+        like R&#39;s ``rit.param$class.cut``. None uses every leaf, R&#39;s default.
+    n_jobs : int or None, default=None
+        Parallel jobs for fitting trees. None uses one; -1 uses all processors.
+    random_state : int, RandomState or None, default=None
+        Controls forests, outer samples, and RIT.
+
+    Attributes
+    ----------
+    forest_ : object
+        Final full-data weighted forest, used for prediction.
+    estimators_ : list
+        Trees in ``forest_``.
+    feature_weights_ : ndarray of shape (n_features,)
+        Input sampling weights of the final forest and every outer forest.
+    feature_weights_history_ : ndarray of shape (n_iterations, n_features)
+        Input weights of full-data forests, starting with uniform weights.
+    feature_importances_ : ndarray of shape (n_features,)
+        Normalized residual-sum-of-squares decreases of the final forest.
+    feature_importances_history_ : ndarray of shape (n_iterations, n_features)
+        Output importances from each full-data forest.
+    interaction_stability_ : dict
+        Sorted feature-index tuples mapped to the fraction of outer replicates
+        recovering that exact set.
+    interactions_ : list of tuple
+        Sets ordered by descending stability, then descending size, then
+        feature indices.
+    bootstrap_interactions_ : list of set
+        Distinct recovered intersections from each outer replicate.
+    bootstrap_samples_ : list of ndarray
+        Original input row indices for each outer sample, retaining duplicates.
+
+    Notes
+    -----
+    Regression nodes follow R&#39;s ``regTree``. Each bootstrap draw is a separate
+    case, so duplicates count toward node size. A node splits only when the
+    best candidate strictly reduces the residual sum of squares; classification
+    instead keeps zero-gain splits. Leaves predict the in-bag mean, and the
+    forest averages leaf means. Split search does not depend on the scale or
+    offset of the target: targets are shifted and rescaled within each node
+    before searching, while predictions and importances keep original units.
+
+    Supports dense, finite numeric inputs and a single continuous target.
+    R&#39;s options ``wt.pred.accuracy``, ``cutoff.unimp.feature`` and
+    ``varnames.grp`` are not implemented.
+
+    References
+    ----------
+    Basu, S., Kumbier, K., Brown, J. B., and Yu, B. (2018). Iterative random
+    forests to discover predictive and stable high-order interactions.
+    PNAS, 115(8), 1943-1948. doi:10.1073/pnas.1711236115.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from imodels import IRFRegressor
+    &gt;&gt;&gt; rng = np.random.RandomState(0)
+    &gt;&gt;&gt; X = rng.uniform(size=(200, 4))
+    &gt;&gt;&gt; y = (X[:, 0] &gt; 0.5) * (X[:, 1] &gt; 0.5) + 0.1 * rng.normal(size=200)
+    &gt;&gt;&gt; model = IRFRegressor(n_estimators=20, n_iterations=3, n_bootstraps=3,
+    ...                      leaf_threshold=0.5, random_state=0).fit(X, y)
+    &gt;&gt;&gt; model.interactions_[0]
+    (0, 1)
+    &#34;&#34;&#34;
+
+    _task = &#34;regression&#34;
+
+    def __init__(
+        self, n_estimators=100, n_iterations=5, n_bootstraps=10,
+        max_features=1 / 3, max_depth=None, min_samples_split=6,
+        min_samples_leaf=1, bootstrap=True, n_estimators_bootstrap=None,
+        bootstrap_fraction=1.0, n_rit=100, rit_depth=5, rit_branching=2,
+        leaf_threshold=None, n_jobs=None, random_state=None,
+    ):
+        self.n_estimators = n_estimators
+        self.n_iterations = n_iterations
+        self.n_bootstraps = n_bootstraps
+        self.max_features = max_features
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.bootstrap = bootstrap
+        self.n_estimators_bootstrap = n_estimators_bootstrap
+        self.bootstrap_fraction = bootstrap_fraction
+        self.n_rit = n_rit
+        self.rit_depth = rit_depth
+        self.rit_branching = rit_branching
+        self.leaf_threshold = leaf_threshold
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+
+    def _check_parameters(self, n_features):
+        threshold = self.leaf_threshold
+        if threshold is not None and (
+                isinstance(threshold, (bool, np.bool_)) or not isinstance(threshold, Real)
+                or not np.isfinite(threshold)):
+            raise ValueError(&#34;leaf_threshold must be a finite number or None.&#34;)
+        super()._check_parameters(n_features)
+
+    def _validate_targets(self, X, y):
+        X, y = validate_data(self, X, y, dtype=np.float32, accept_sparse=False,
+                             y_numeric=True)
+        y = np.asarray(y, dtype=np.float64)
+        if not np.all(np.isfinite(y)):
+            raise ValueError(&#34;y must contain finite values.&#34;)
+        return X, y
+
+    def _prepare_targets(self, y):
+        return y
+
+    def _select_leaf(self, prediction):
+        return self.leaf_threshold is None or prediction &gt; self.leaf_threshold
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict by averaging leaf means of the final full-data forest.&#34;&#34;&#34;
+        check_is_fitted(self, &#34;forest_&#34;)
+        X = validate_data(self, X, reset=False, dtype=np.float32, accept_sparse=False)
+        return self.forest_.predict(X)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.RegressorMixin</li>
+<li>imodels.tree.iterative_random_forest.iterative_random_forest._IRFBase</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.iterative_random_forest.IRFRegressor.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict by averaging leaf means of the final full-data forest.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;Predict by averaging leaf means of the final full-data forest.&#34;&#34;&#34;
+    check_is_fitted(self, &#34;forest_&#34;)
+    X = validate_data(self, X, reset=False, dtype=np.float32, accept_sparse=False)
+    return self.forest_.predict(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.iterative_random_forest.IRFRegressor.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor">IRFRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor">IRFRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.iterative_random_forest.IRFRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor">IRFRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor" href="iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor">IRFRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.tree" href="../index.html">imodels.tree</a></code></li>
+</ul>
+</li>
+<li><h3>Our favorite methods</h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3>Prediction classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-tree"></span>trees</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.tree.iterative_random_forest.IRFClassifier" href="#imodels.tree.iterative_random_forest.IRFClassifier">IRFClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.tree.iterative_random_forest.IRFRegressor" href="#imodels.tree.iterative_random_forest.IRFRegressor">IRFRegressor</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

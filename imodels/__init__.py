@@ -45,6 +45,7 @@ from .tree.hierarchical_shrinkage import (
     HSTreeRegressorCV,
     HSTreeClassifierCV,
 )
+from .tree.iterative_random_forest import IRFClassifier, IRFRegressor
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
@@ -78,6 +79,7 @@ CLASSIFIERS = [
     HSTreeClassifierCV,
     GreedyTreeClassifier,
     DecisionTreeCCPClassifier,
+    IRFClassifier,
     AutoInterpretableClassifier,
 ]
 REGRESSORS = [
@@ -95,6 +97,7 @@ REGRESSORS = [
     HSTreeRegressor,
     HSTreeRegressorCV,
     DecisionTreeCCPRegressor,
+    IRFRegressor,
     BART,
     AutoInterpretableRegressor,
 ]
@@ -118,7 +121,7 @@ __all__ = [
     "GreedyTreeClassifier", "GreedyTreeRegressor",
     "HSDecisionTreeCCPClassifierCV", "HSDecisionTreeCCPRegressorCV",
     "HSTreeClassifier", "HSTreeClassifierCV", "HSTreeRegressor",
-    "HSTreeRegressorCV", "MDLPDiscretizer",
+    "HSTreeRegressorCV", "IRFClassifier", "IRFRegressor", "MDLPDiscretizer",
     "MarginalShrinkageLinearRegressor", "OneRClassifier", "REGRESSORS",
     "RFDiscretizer", "RuleFitClassifier", "RuleFitRegressor",
     "SLIMClassifier", "SLIMRegressor", "SkopeRulesClassifier",

@@ -43,6 +43,11 @@ MODEL_KWARGS = {
     # a small score keeps the test fits quick; the search compiles with numba once per machine
     "FastRiskScoreClassifier": dict(k=3, time_limit=30),
     "FIGSRegressorCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
+    # the defaults fit 15 forests of 100 trees each
+    "IRFClassifier": dict(n_estimators=10, n_iterations=2, n_bootstraps=2,
+                          n_rit=10, random_state=0),
+    "IRFRegressor": dict(n_estimators=10, n_iterations=2, n_bootstraps=2,
+                         n_rit=10, random_state=0),
     "BART": dict(n_samples=5, n_burn=5, n_trees=3, n_chains=1),
     "DecisionTreeCCPClassifier": dict(
         estimator_=DecisionTreeClassifier(random_state=0), desired_complexity=3

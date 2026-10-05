@@ -84,6 +84,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
 | **Fast small tree** | [🗂️](https://csinva.io/imodels/fastsmalltree.html),ㅤ[📄](https://csinva.io/imodels/fastsmalltree.html) | Fast implementation of optimal tree for a given penalty per leaf |
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
+| Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [📄](https://www.pnas.org/content/115/8/1943), [🔗](https://github.com/Yu-Group/iterative-Random-Forest) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | **Fast risk score** | [🗂️](https://csinva.io/imodels/fastriskscore.html),ㅤ[📄](https://csinva.io/imodels/fastriskscore.html) | Sparse integer risk score (a few features, small integer points), fit fast |
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
@@ -176,6 +177,7 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | Optimal rule tree           | [FastSmallTreeClassifier](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier) |                                                              | Certifiably optimal rather than greedy; needs [numba](https://pypi.org/project/numba/) |
 | CCP-pruned rule tree        | [DecisionTreeCCPClassifier](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier) | [DecisionTreeCCPRegressor](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor) | Prunes a tree to a target complexity via cost-complexity pruning |
 | TAO rule tree              | [TaoTreeClassifier](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier) |   [TaoTreeRegressor](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor)        |  |
+| Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier) | [IRFRegressor](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor) | [Usage and interaction stability](imodels/tree/iterative_random_forest/README.md) |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Sparse integer risk score | [FastRiskScoreClassifier](https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier) |  | Binary targets; binarizes features itself; needs [numba](https://pypi.org/project/numba/) |
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
@@ -196,7 +198,7 @@ fitting them (they warn if rounding has removed most of the model).
 **Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
 `GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
 `BoostedRulesClassifier`, `SLIMClassifier`, `C45TreeClassifier`,
-`DecisionTreeCCPClassifier`, `FastSmallTreeClassifier` and the `CV` variants. The rule-set and rule-list models, and
+`DecisionTreeCCPClassifier`, `FastSmallTreeClassifier`, `IRFClassifier` and the `CV` variants. The rule-set and rule-list models, and
 `FastRiskScoreClassifier`, are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
 binary.
