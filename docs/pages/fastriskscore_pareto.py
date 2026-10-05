@@ -25,7 +25,7 @@ import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.join(HERE, "fastriskscore.html")
-SHIP = "v35_scratch"
+SHIP = "imodels_solver_pkg"  # the packaged solver (a port of oct05-decile2 n17_lean), run through the harness
 BASELINES = {
     "fasterrisk": "FasterRisk",
     "fasterrisk_wide": "FasterRisk, wide search",
@@ -95,7 +95,7 @@ def panel(root, prefix, version_names, ship_names, fr_names, extra_prefix=None):
             pts.append(point(m, label, grp, [stats[m]], 1))
     ship = [stats[m] for m in ship_names if m in stats]
     if ship:
-        pts.append(point(SHIP, "FastRiskScore (shipped, run 2 v35)", "run2", ship, len(ship), "FastRiskScore"))
+        pts.append(point(SHIP, "FastRiskScore (shipped)", "run2", ship, len(ship), "FastRiskScore"))
     fr = [stats[m] for m in fr_names if m in stats]
     if fr:
         pts.append(point("fasterrisk", BASELINES["fasterrisk"], "baseline", fr, len(fr), DIRECT["fasterrisk"]))
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     root = ap.parse_args().root
     dev_versions = {**versions(root, "sep26-run1"), **versions(root, "sep26-run2")}
     dev_versions.pop(SHIP, None)
-    dev = panel(root, "", dev_versions, [SHIP, SHIP + "_rep2", SHIP + "_rep3"],
+    dev = panel(root, "", dev_versions, [SHIP],
                 ["fasterrisk", "fasterrisk_rep2", "fasterrisk_rep3"], extra_prefix="t1200_")
     hid_versions = {}
     for run, tag in (("sep26-run1", "_run1"), ("sep26-run2", "_run2")):
@@ -162,7 +162,7 @@ if __name__ == "__main__":
             if not grp.endswith("_discard"):
                 hid_versions[m + tag] = (label, grp)
     hid_versions.pop(SHIP + "_run2", None)
-    hidden = panel(root, "hidden_", hid_versions, [SHIP + "_run2", SHIP + "_run2_rep2", SHIP + "_run2_rep3"],
+    hidden = panel(root, "hidden_", hid_versions, [SHIP],
                    ["fasterrisk", "fasterrisk_rep2", "fasterrisk_rep3"], extra_prefix="hidden_t1200_")
     full = panel(root, "hidden_full_t600_", {}, [SHIP], ["fasterrisk"])
     # the real-valued reference goes in the table only: its excess loss is below zero

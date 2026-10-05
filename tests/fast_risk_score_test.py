@@ -75,6 +75,24 @@ def test_binarize_false_uses_columns_as_given():
     m = FastRiskScoreClassifier(k=3, binarize=False).fit(X, y)
     assert m.features_ == [f"X{i}" for i in range(6)]
     assert set(m.points_) <= {"X0", "X1", "X2"}
+    assert m.profile_ == "decile"
+
+
+def test_num_deciles_selects_the_solver_profile(cancer):
+    X_train, X_test, y_train, y_test = cancer
+    m = FastRiskScoreClassifier(k=3).fit(X_train, y_train)
+    assert m.profile_ == "decile"
+    n_decile_features = len(m.features_)
+    m = FastRiskScoreClassifier(k=3, num_deciles=99).fit(X_train, y_train)
+    assert m.profile_ == "fine"
+    assert len(m.features_) > 5 * n_decile_features  # 99 thresholds per numeric column instead of 9
+    assert 1 <= len(m.points_) <= 3 and np.all(np.abs(m.coef_) <= 5)
+    assert roc_auc_score(y_test, m.predict_proba(X_test)[:, 1]) > 0.9
+
+
+def test_unknown_profile_raises():
+    with pytest.raises(ValueError, match="profile"):
+        solve(np.eye(4), [0, 1, 0, 1], 2, profile="coarse")
 
 
 def _brute_force(X, y, k, bound):

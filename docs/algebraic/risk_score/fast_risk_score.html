@@ -54,8 +54,8 @@ and gives each an integer number of points in [-max_points, max_points], choosin
 them to minimise the training log loss of the best map from total score to risk,</p>
 <pre><code>min over points w, and real a, b, of  mean_i log(1 + exp(-y_i (a * x_i.w + b))).
 </code></pre>
-<p>This is the problem RiskSLIM and FasterRisk solve. The solver came out of an
-autoresearch loop that started from FasterRisk; see
+<p>This is the problem RiskSLIM and FasterRisk solve. The solver (<code>solver.py</code>) came out of
+an autoresearch loop (agentic-imodels, evolve_slim) that started from FasterRisk; see
 <a href="https://csinva.io/imodels/fastriskscore.html">https://csinva.io/imodels/fastriskscore.html</a> for the method and the benchmarks.</p>
 <details class="source">
 <summary>
@@ -71,8 +71,8 @@ them to minimise the training log loss of the best map from total score to risk,
 
     min over points w, and real a, b, of  mean_i log(1 + exp(-y_i (a * x_i.w + b))).
 
-This is the problem RiskSLIM and FasterRisk solve. The solver came out of an
-autoresearch loop that started from FasterRisk; see
+This is the problem RiskSLIM and FasterRisk solve. The solver (``solver.py``) came out of
+an autoresearch loop (agentic-imodels, evolve_slim) that started from FasterRisk; see
 https://csinva.io/imodels/fastriskscore.html for the method and the benchmarks.
 &#34;&#34;&#34;
 
@@ -80,6 +80,7 @@ from __future__ import annotations
 
 import math
 import time
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -93,8 +94,10 @@ from imodels.util.arguments import (_finite_check_kwarg, check_binary_target, ch
 NUMBA_HINT = (
     &#34;FastRiskScoreClassifier needs numba, which is not installed. Install it with &#34;
     &#34;`pip install numba` (or `pip install imodels[optional]`). The search is compiled &#34;
-    &#34;with numba once per machine (about 30 seconds) and cached after that.&#34;
+    &#34;with numba once per machine (about two minutes) and cached after that.&#34;
 )
+
+DECILE_PROFILE_MAX = 19  # num_deciles above this use the &#34;fine&#34; profile (measured: &#34;decile&#34; best at 9, &#34;fine&#34; at 99)
 
 
 def calibrate(scores, y):
@@ -138,17 +141,17 @@ def calibrate(scores, y):
 
 
 class _Binarizer:
-    &#34;&#34;&#34;Indicator features: ``x &lt;= t`` at up to ``n_thresholds`` quantiles of each numeric column,
+    &#34;&#34;&#34;Indicator features: ``x &lt;= t`` at up to ``num_deciles`` quantiles of each numeric column,
     ``x = v`` for a two-valued column, one level per indicator for a categorical column (levels
     covering at least 1% of rows, at most 20), and ``x missing`` where the training data had
     missing values.&#34;&#34;&#34;
 
-    def __init__(self, n_thresholds=9):
-        self.n_thresholds = n_thresholds
+    def __init__(self, num_deciles=9):
+        self.num_deciles = num_deciles
 
     def fit(self, frame):
         self.rules_ = []  # (column, kind, value, name)
-        qs = np.arange(1, self.n_thresholds + 1) / (self.n_thresholds + 1)
+        qs = np.arange(1, self.num_deciles + 1) / (self.num_deciles + 1)
         for c in frame.columns:
             col = frame[c]
             if not pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col):
@@ -194,17 +197,29 @@ class _Binarizer:
 class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
     &#34;&#34;&#34;Sparse integer risk score (binary classification).
 
+    The columns of X are turned into binary features (thresholds of numeric columns, levels of
+    categorical ones), and the solver picks at most ``k`` of them with integer points. It runs a
+    continuous beam search over supports (as FasterRisk does), rounds the best supports at many
+    scales keeping the rounding with the smallest calibrated loss, and improves the best of them
+    by an integer local search (value changes, additions, threshold slides and swaps, ranked by
+    an estimate of the calibrated loss and checked exactly), refit swaps and, on near-separable
+    data, an exact polish. The solver comes from an autoresearch loop (agentic-imodels, evolve_slim
+    runs) that started from FasterRisk; the final version is n17_lean of run oct05-decile2. It has
+    two settings profiles: &#34;decile&#34; (tuned with 9 thresholds per numeric column) and &#34;fine&#34; (99),
+    chosen from ``num_deciles``.
+
     Parameters
     ----------
     k: int
         The most features the score may use.
     max_points: int
         Every feature&#39;s points are an integer in [-max_points, max_points].
-    n_thresholds: int
-        Numeric columns are split at up to this many quantiles (``x &lt;= t`` indicators).
+    num_deciles: int
+        Number of quantile thresholds per numeric column: 9 splits at the deciles, 99 at the
+        percentiles (``x &lt;= t`` indicators). More than 19 selects the solver&#39;s &#34;fine&#34; profile.
     binarize: bool
         If False, the columns of X are used as they are (they should then be binary or small
-        integers), and the points apply to them directly.
+        integers), and the points apply to them directly; the solver then uses the &#34;decile&#34; profile.
     time_limit: float
         Seconds for the search. It stops early and returns its best points if the limit is
         reached (``stopped_early_`` is then True); on most data it finishes far sooner.
@@ -219,13 +234,19 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         The risk of a row with total score s is ``1 / (1 + exp(-(scale_ * s + intercept_)))``.
     train_loss_: float
         Mean training log loss of that risk.
+    profile_: str
+        The solver&#39;s settings profile (&#34;decile&#34; or &#34;fine&#34;).
     &#34;&#34;&#34;
 
-    def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
+    def __init__(self, k: int = 5, max_points: int = 5, num_deciles: int = 9, binarize: bool = True,
                  time_limit: float = 60.0):
+        if not solver.HAVE_NUMBA:
+            # say so when the model is built, as for the other models with optional dependencies;
+            # fit raises the same message, since there is no pure-Python fallback
+            warnings.warn(NUMBA_HINT + &#34; Fitting will raise an ImportError until it is installed.&#34;)
         self.k = k
         self.max_points = max_points
-        self.n_thresholds = n_thresholds
+        self.num_deciles = num_deciles
         self.binarize = binarize
         self.time_limit = time_limit
 
@@ -263,7 +284,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         frame = self._frame(X)
         self.n_features_in_ = frame.shape[1]
         if self.binarize:
-            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+            self.binarizer_ = _Binarizer(self.num_deciles).fit(frame)
             B = self.binarizer_.transform(frame)
             self.features_ = list(self.binarizer_.names_)
         else:
@@ -271,11 +292,13 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
             if np.isnan(B).any():
                 raise ValueError(&#34;binarize=False needs X without missing values&#34;)
             self.features_ = list(self.feature_names_)
+        fine = self.binarize and int(self.num_deciles) &gt; DECILE_PROFILE_MAX
+        self.profile_ = &#34;fine&#34; if fine else &#34;decile&#34;
         if B.shape[1] == 0:
             points, stopped = np.zeros(0), False
         else:
             points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
-                                                 time_limit=float(self.time_limit))
+                                                 time_limit=float(self.time_limit), profile=self.profile_)
         points = points.astype(np.int64)
         a, b, loss = calibrate(B @ points if len(points) else np.zeros(len(y01)), y01)
         if a &lt; 0:  # orient the score so that more points always means more risk
@@ -408,21 +431,32 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
 <dl>
 <dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier"><code class="flex name class">
 <span>class <span class="ident">FastRiskScoreClassifier</span></span>
-<span>(</span><span>k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True, time_limit: float = 60.0)</span>
+<span>(</span><span>k: int = 5, max_points: int = 5, num_deciles: int = 9, binarize: bool = True, time_limit: float = 60.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sparse integer risk score (binary classification).</p>
+<p>The columns of X are turned into binary features (thresholds of numeric columns, levels of
+categorical ones), and the solver picks at most <code>k</code> of them with integer points. It runs a
+continuous beam search over supports (as FasterRisk does), rounds the best supports at many
+scales keeping the rounding with the smallest calibrated loss, and improves the best of them
+by an integer local search (value changes, additions, threshold slides and swaps, ranked by
+an estimate of the calibrated loss and checked exactly), refit swaps and, on near-separable
+data, an exact polish. The solver comes from an autoresearch loop (agentic-imodels, evolve_slim
+runs) that started from FasterRisk; the final version is n17_lean of run oct05-decile2. It has
+two settings profiles: "decile" (tuned with 9 thresholds per numeric column) and "fine" (99),
+chosen from <code>num_deciles</code>.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
 <dd>The most features the score may use.</dd>
 <dt><strong><code>max_points</code></strong> :&ensp;<code>int</code></dt>
 <dd>Every feature's points are an integer in [-max_points, max_points].</dd>
-<dt><strong><code>n_thresholds</code></strong> :&ensp;<code>int</code></dt>
-<dd>Numeric columns are split at up to this many quantiles (<code>x &lt;= t</code> indicators).</dd>
+<dt><strong><code>num_deciles</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of quantile thresholds per numeric column: 9 splits at the deciles, 99 at the
+percentiles (<code>x &lt;= t</code> indicators). More than 19 selects the solver's "fine" profile.</dd>
 <dt><strong><code>binarize</code></strong> :&ensp;<code>bool</code></dt>
 <dd>If False, the columns of X are used as they are (they should then be binary or small
-integers), and the points apply to them directly.</dd>
+integers), and the points apply to them directly; the solver then uses the "decile" profile.</dd>
 <dt><strong><code>time_limit</code></strong> :&ensp;<code>float</code></dt>
 <dd>Seconds for the search. It stops early and returns its best points if the limit is
 reached (<code>stopped_early_</code> is then True); on most data it finishes far sooner.</dd>
@@ -437,6 +471,8 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
 <dd>The risk of a row with total score s is <code>1 / (1 + exp(-(scale_ * s + intercept_)))</code>.</dd>
 <dt><strong><code>train_loss_</code></strong> :&ensp;<code>float</code></dt>
 <dd>Mean training log loss of that risk.</dd>
+<dt><strong><code>profile_</code></strong> :&ensp;<code>str</code></dt>
+<dd>The solver's settings profile ("decile" or "fine").</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -445,17 +481,29 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
 <pre><code class="python">class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
     &#34;&#34;&#34;Sparse integer risk score (binary classification).
 
+    The columns of X are turned into binary features (thresholds of numeric columns, levels of
+    categorical ones), and the solver picks at most ``k`` of them with integer points. It runs a
+    continuous beam search over supports (as FasterRisk does), rounds the best supports at many
+    scales keeping the rounding with the smallest calibrated loss, and improves the best of them
+    by an integer local search (value changes, additions, threshold slides and swaps, ranked by
+    an estimate of the calibrated loss and checked exactly), refit swaps and, on near-separable
+    data, an exact polish. The solver comes from an autoresearch loop (agentic-imodels, evolve_slim
+    runs) that started from FasterRisk; the final version is n17_lean of run oct05-decile2. It has
+    two settings profiles: &#34;decile&#34; (tuned with 9 thresholds per numeric column) and &#34;fine&#34; (99),
+    chosen from ``num_deciles``.
+
     Parameters
     ----------
     k: int
         The most features the score may use.
     max_points: int
         Every feature&#39;s points are an integer in [-max_points, max_points].
-    n_thresholds: int
-        Numeric columns are split at up to this many quantiles (``x &lt;= t`` indicators).
+    num_deciles: int
+        Number of quantile thresholds per numeric column: 9 splits at the deciles, 99 at the
+        percentiles (``x &lt;= t`` indicators). More than 19 selects the solver&#39;s &#34;fine&#34; profile.
     binarize: bool
         If False, the columns of X are used as they are (they should then be binary or small
-        integers), and the points apply to them directly.
+        integers), and the points apply to them directly; the solver then uses the &#34;decile&#34; profile.
     time_limit: float
         Seconds for the search. It stops early and returns its best points if the limit is
         reached (``stopped_early_`` is then True); on most data it finishes far sooner.
@@ -470,13 +518,19 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         The risk of a row with total score s is ``1 / (1 + exp(-(scale_ * s + intercept_)))``.
     train_loss_: float
         Mean training log loss of that risk.
+    profile_: str
+        The solver&#39;s settings profile (&#34;decile&#34; or &#34;fine&#34;).
     &#34;&#34;&#34;
 
-    def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
+    def __init__(self, k: int = 5, max_points: int = 5, num_deciles: int = 9, binarize: bool = True,
                  time_limit: float = 60.0):
+        if not solver.HAVE_NUMBA:
+            # say so when the model is built, as for the other models with optional dependencies;
+            # fit raises the same message, since there is no pure-Python fallback
+            warnings.warn(NUMBA_HINT + &#34; Fitting will raise an ImportError until it is installed.&#34;)
         self.k = k
         self.max_points = max_points
-        self.n_thresholds = n_thresholds
+        self.num_deciles = num_deciles
         self.binarize = binarize
         self.time_limit = time_limit
 
@@ -514,7 +568,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         frame = self._frame(X)
         self.n_features_in_ = frame.shape[1]
         if self.binarize:
-            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+            self.binarizer_ = _Binarizer(self.num_deciles).fit(frame)
             B = self.binarizer_.transform(frame)
             self.features_ = list(self.binarizer_.names_)
         else:
@@ -522,11 +576,13 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
             if np.isnan(B).any():
                 raise ValueError(&#34;binarize=False needs X without missing values&#34;)
             self.features_ = list(self.feature_names_)
+        fine = self.binarize and int(self.num_deciles) &gt; DECILE_PROFILE_MAX
+        self.profile_ = &#34;fine&#34; if fine else &#34;decile&#34;
         if B.shape[1] == 0:
             points, stopped = np.zeros(0), False
         else:
             points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
-                                                 time_limit=float(self.time_limit))
+                                                 time_limit=float(self.time_limit), profile=self.profile_)
         points = points.astype(np.int64)
         a, b, loss = calibrate(B @ points if len(points) else np.zeros(len(y01)), y01)
         if a &lt; 0:  # orient the score so that more points always means more risk
@@ -651,7 +707,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
     frame = self._frame(X)
     self.n_features_in_ = frame.shape[1]
     if self.binarize:
-        self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+        self.binarizer_ = _Binarizer(self.num_deciles).fit(frame)
         B = self.binarizer_.transform(frame)
         self.features_ = list(self.binarizer_.names_)
     else:
@@ -659,11 +715,13 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         if np.isnan(B).any():
             raise ValueError(&#34;binarize=False needs X without missing values&#34;)
         self.features_ = list(self.feature_names_)
+    fine = self.binarize and int(self.num_deciles) &gt; DECILE_PROFILE_MAX
+    self.profile_ = &#34;fine&#34; if fine else &#34;decile&#34;
     if B.shape[1] == 0:
         points, stopped = np.zeros(0), False
     else:
         points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
-                                             time_limit=float(self.time_limit))
+                                             time_limit=float(self.time_limit), profile=self.profile_)
     points = points.astype(np.int64)
     a, b, loss = calibrate(B @ points if len(points) else np.zeros(len(y01)), y01)
     if a &lt; 0:  # orient the score so that more points always means more risk
@@ -947,7 +1005,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
-<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
