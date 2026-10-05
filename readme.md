@@ -365,7 +365,7 @@ model.points_               # {"worst area <= 906.6": 5, ...}
 model.predict_proba(X_test)
 ```
 
-Numeric columns are split at their deciles (`num_deciles=9`; `num_deciles=99` splits at the percentiles and switches the solver to settings tuned for that) and categorical ones one-hot encoded, so each line is a condition on an original column. `max_points` (default 5) bounds the points of each line. The search needs numba (`pip install numba`); it compiles once per machine, in about two minutes, and is cached after that.
+Numeric columns are split at their deciles (`n_thresholds=9`; `n_thresholds=99` splits at the percentiles and switches the solver to settings tuned for that) and categorical ones one-hot encoded, so each line is a condition on an original column. `max_points` (default 5) bounds the points of each line. The search needs numba (`pip install numba`); it compiles once per machine, in about two minutes, and is cached after that.
 
 On 27 held-out TabArena datasets, FastRiskScore fits scores about 225× faster than FasterRisk (median over problems) with a lower training loss on 94 of 135 problems and a higher one on 8, and a slightly higher test AUC. On small problems where every score can be enumerated, it finds the best score in 49 of 50 cases, against 28 of 50 for FasterRisk. The [post](https://csinva.io/imodels/fastriskscore.html) has the comparison with RiskSLIM, SLIM and rounded logistic regression.
 

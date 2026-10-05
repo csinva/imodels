@@ -78,12 +78,12 @@ def test_binarize_false_uses_columns_as_given():
     assert m.profile_ == "decile"
 
 
-def test_num_deciles_selects_the_solver_profile(cancer):
+def test_n_thresholds_selects_the_solver_profile(cancer):
     X_train, X_test, y_train, y_test = cancer
     m = FastRiskScoreClassifier(k=3).fit(X_train, y_train)
     assert m.profile_ == "decile"
     n_decile_features = len(m.features_)
-    m = FastRiskScoreClassifier(k=3, num_deciles=99).fit(X_train, y_train)
+    m = FastRiskScoreClassifier(k=3, n_thresholds=99).fit(X_train, y_train)
     assert m.profile_ == "fine"
     assert len(m.features_) > 5 * n_decile_features  # 99 thresholds per numeric column instead of 9
     assert 1 <= len(m.points_) <= 3 and np.all(np.abs(m.coef_) <= 5)

@@ -153,7 +153,7 @@ proba = model.predict_proba(X_test)</code></pre>
                     <p><code>k</code> is the maximum number of conditions, and <code>max_points</code> (default 5) is the
                       largest number of points one condition can carry. Numeric columns are split at their deciles and
                       categorical columns are one-hot encoded, so each condition refers to one of the original columns.
-                      <code>num_deciles</code> (default 9) sets the number of thresholds per numeric column; with more than
+                      <code>n_thresholds</code> (default 9) sets the number of thresholds per numeric column; with more than
                       19 (for example 99, the percentiles) the search switches to settings tuned for fine thresholds.</p>
 
                     <details class="collapsible" id="reading-the-score">
@@ -941,7 +941,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       <p class="caption" id="tab2"><b>Table 2.</b> Mean training log loss, mean test AUC and geometric-mean
                         fit time (s) on the fine suites (99 thresholds per numeric column). Run 2's version is the first
                         release of FastRiskScore; each loop row is that loop's best version and its main change; the last
-                        row is the shipped solver with <code>num_deciles</code> &gt; 19.</p>
+                        row is the shipped solver with <code>n_thresholds</code> &gt; 19.</p>
                       <div style="overflow-x:auto">
                       <table class="ranktbl results-table t2">
                         <thead>
@@ -1008,7 +1008,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         a few fits), the beam diversity rules are switched off, and the beam is trimmed back to 8 parents.
                         A second loop from that version found nothing that held on the hidden suite. The package ships the second
                         loop's final version (<code>n17_lean</code>, with the same hidden-suite results), and switches to the
-                        fine-track settings when <code>num_deciles</code> &gt; 19. Table <a href="#tab3">3</a> compares it with
+                        fine-track settings when <code>n_thresholds</code> &gt; 19. Table <a href="#tab3">3</a> compares it with
                         run 2's version.</p>
 
                       <p class="caption" id="tab3"><b>Table 3.</b> Mean training log loss, mean test AUC and geometric-mean

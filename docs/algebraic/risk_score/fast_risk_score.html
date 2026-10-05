@@ -97,7 +97,7 @@ NUMBA_HINT = (
     &#34;with numba once per machine (about two minutes) and cached after that.&#34;
 )
 
-DECILE_PROFILE_MAX = 19  # num_deciles above this use the &#34;fine&#34; profile (measured: &#34;decile&#34; best at 9, &#34;fine&#34; at 99)
+DECILE_PROFILE_MAX = 19  # n_thresholds above this use the &#34;fine&#34; profile (measured: &#34;decile&#34; best at 9, &#34;fine&#34; at 99)
 
 
 def calibrate(scores, y):
@@ -141,17 +141,17 @@ def calibrate(scores, y):
 
 
 class _Binarizer:
-    &#34;&#34;&#34;Indicator features: ``x &lt;= t`` at up to ``num_deciles`` quantiles of each numeric column,
+    &#34;&#34;&#34;Indicator features: ``x &lt;= t`` at up to ``n_thresholds`` quantiles of each numeric column,
     ``x = v`` for a two-valued column, one level per indicator for a categorical column (levels
     covering at least 1% of rows, at most 20), and ``x missing`` where the training data had
     missing values.&#34;&#34;&#34;
 
-    def __init__(self, num_deciles=9):
-        self.num_deciles = num_deciles
+    def __init__(self, n_thresholds=9):
+        self.n_thresholds = n_thresholds
 
     def fit(self, frame):
         self.rules_ = []  # (column, kind, value, name)
-        qs = np.arange(1, self.num_deciles + 1) / (self.num_deciles + 1)
+        qs = np.arange(1, self.n_thresholds + 1) / (self.n_thresholds + 1)
         for c in frame.columns:
             col = frame[c]
             if not pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col):
@@ -206,7 +206,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
     data, an exact polish. The solver comes from an autoresearch loop (agentic-imodels, evolve_slim
     runs) that started from FasterRisk; the final version is n17_lean of run oct05-decile2. It has
     two settings profiles: &#34;decile&#34; (tuned with 9 thresholds per numeric column) and &#34;fine&#34; (99),
-    chosen from ``num_deciles``.
+    chosen from ``n_thresholds``.
 
     Parameters
     ----------
@@ -214,7 +214,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         The most features the score may use.
     max_points: int
         Every feature&#39;s points are an integer in [-max_points, max_points].
-    num_deciles: int
+    n_thresholds: int
         Number of quantile thresholds per numeric column: 9 splits at the deciles, 99 at the
         percentiles (``x &lt;= t`` indicators). More than 19 selects the solver&#39;s &#34;fine&#34; profile.
     binarize: bool
@@ -238,7 +238,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         The solver&#39;s settings profile (&#34;decile&#34; or &#34;fine&#34;).
     &#34;&#34;&#34;
 
-    def __init__(self, k: int = 5, max_points: int = 5, num_deciles: int = 9, binarize: bool = True,
+    def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
                  time_limit: float = 60.0):
         if not solver.HAVE_NUMBA:
             # say so when the model is built, as for the other models with optional dependencies;
@@ -246,7 +246,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
             warnings.warn(NUMBA_HINT + &#34; Fitting will raise an ImportError until it is installed.&#34;)
         self.k = k
         self.max_points = max_points
-        self.num_deciles = num_deciles
+        self.n_thresholds = n_thresholds
         self.binarize = binarize
         self.time_limit = time_limit
 
@@ -284,7 +284,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         frame = self._frame(X)
         self.n_features_in_ = frame.shape[1]
         if self.binarize:
-            self.binarizer_ = _Binarizer(self.num_deciles).fit(frame)
+            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
             B = self.binarizer_.transform(frame)
             self.features_ = list(self.binarizer_.names_)
         else:
@@ -292,7 +292,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
             if np.isnan(B).any():
                 raise ValueError(&#34;binarize=False needs X without missing values&#34;)
             self.features_ = list(self.feature_names_)
-        fine = self.binarize and int(self.num_deciles) &gt; DECILE_PROFILE_MAX
+        fine = self.binarize and int(self.n_thresholds) &gt; DECILE_PROFILE_MAX
         self.profile_ = &#34;fine&#34; if fine else &#34;decile&#34;
         if B.shape[1] == 0:
             points, stopped = np.zeros(0), False
@@ -431,7 +431,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
 <dl>
 <dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier"><code class="flex name class">
 <span>class <span class="ident">FastRiskScoreClassifier</span></span>
-<span>(</span><span>k: int = 5, max_points: int = 5, num_deciles: int = 9, binarize: bool = True, time_limit: float = 60.0)</span>
+<span>(</span><span>k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True, time_limit: float = 60.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sparse integer risk score (binary classification).</p>
@@ -444,14 +444,14 @@ an estimate of the calibrated loss and checked exactly), refit swaps and, on nea
 data, an exact polish. The solver comes from an autoresearch loop (agentic-imodels, evolve_slim
 runs) that started from FasterRisk; the final version is n17_lean of run oct05-decile2. It has
 two settings profiles: "decile" (tuned with 9 thresholds per numeric column) and "fine" (99),
-chosen from <code>num_deciles</code>.</p>
+chosen from <code>n_thresholds</code>.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
 <dd>The most features the score may use.</dd>
 <dt><strong><code>max_points</code></strong> :&ensp;<code>int</code></dt>
 <dd>Every feature's points are an integer in [-max_points, max_points].</dd>
-<dt><strong><code>num_deciles</code></strong> :&ensp;<code>int</code></dt>
+<dt><strong><code>n_thresholds</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of quantile thresholds per numeric column: 9 splits at the deciles, 99 at the
 percentiles (<code>x &lt;= t</code> indicators). More than 19 selects the solver's "fine" profile.</dd>
 <dt><strong><code>binarize</code></strong> :&ensp;<code>bool</code></dt>
@@ -490,7 +490,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
     data, an exact polish. The solver comes from an autoresearch loop (agentic-imodels, evolve_slim
     runs) that started from FasterRisk; the final version is n17_lean of run oct05-decile2. It has
     two settings profiles: &#34;decile&#34; (tuned with 9 thresholds per numeric column) and &#34;fine&#34; (99),
-    chosen from ``num_deciles``.
+    chosen from ``n_thresholds``.
 
     Parameters
     ----------
@@ -498,7 +498,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         The most features the score may use.
     max_points: int
         Every feature&#39;s points are an integer in [-max_points, max_points].
-    num_deciles: int
+    n_thresholds: int
         Number of quantile thresholds per numeric column: 9 splits at the deciles, 99 at the
         percentiles (``x &lt;= t`` indicators). More than 19 selects the solver&#39;s &#34;fine&#34; profile.
     binarize: bool
@@ -522,7 +522,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         The solver&#39;s settings profile (&#34;decile&#34; or &#34;fine&#34;).
     &#34;&#34;&#34;
 
-    def __init__(self, k: int = 5, max_points: int = 5, num_deciles: int = 9, binarize: bool = True,
+    def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
                  time_limit: float = 60.0):
         if not solver.HAVE_NUMBA:
             # say so when the model is built, as for the other models with optional dependencies;
@@ -530,7 +530,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
             warnings.warn(NUMBA_HINT + &#34; Fitting will raise an ImportError until it is installed.&#34;)
         self.k = k
         self.max_points = max_points
-        self.num_deciles = num_deciles
+        self.n_thresholds = n_thresholds
         self.binarize = binarize
         self.time_limit = time_limit
 
@@ -568,7 +568,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         frame = self._frame(X)
         self.n_features_in_ = frame.shape[1]
         if self.binarize:
-            self.binarizer_ = _Binarizer(self.num_deciles).fit(frame)
+            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
             B = self.binarizer_.transform(frame)
             self.features_ = list(self.binarizer_.names_)
         else:
@@ -576,7 +576,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
             if np.isnan(B).any():
                 raise ValueError(&#34;binarize=False needs X without missing values&#34;)
             self.features_ = list(self.feature_names_)
-        fine = self.binarize and int(self.num_deciles) &gt; DECILE_PROFILE_MAX
+        fine = self.binarize and int(self.n_thresholds) &gt; DECILE_PROFILE_MAX
         self.profile_ = &#34;fine&#34; if fine else &#34;decile&#34;
         if B.shape[1] == 0:
             points, stopped = np.zeros(0), False
@@ -707,7 +707,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
     frame = self._frame(X)
     self.n_features_in_ = frame.shape[1]
     if self.binarize:
-        self.binarizer_ = _Binarizer(self.num_deciles).fit(frame)
+        self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
         B = self.binarizer_.transform(frame)
         self.features_ = list(self.binarizer_.names_)
     else:
@@ -715,7 +715,7 @@ reached (<code>stopped_early_</code> is then True); on most data it finishes far
         if np.isnan(B).any():
             raise ValueError(&#34;binarize=False needs X without missing values&#34;)
         self.features_ = list(self.feature_names_)
-    fine = self.binarize and int(self.num_deciles) &gt; DECILE_PROFILE_MAX
+    fine = self.binarize and int(self.n_thresholds) &gt; DECILE_PROFILE_MAX
     self.profile_ = &#34;fine&#34; if fine else &#34;decile&#34;
     if B.shape[1] == 0:
         points, stopped = np.zeros(0), False
