@@ -59,12 +59,17 @@ from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y
 from sklearn.utils.validation import _check_sample_weight
-from tqdm import tqdm
 from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
 from sklearn.preprocessing import StandardScaler
 from imodels.util.transforms import CorrelationScreenTransformer
 
-from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+from imodels.util.optional_deps import require_optional_dependency
+from imodels.util.progress import progress_iter
+
+try:  # optional dependency, checked for by name when a model is initialized
+    from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+except ImportError:
+    ExplainableBoostingClassifier = ExplainableBoostingRegressor = None
 
 from sklearn.base import RegressorMixin, ClassifierMixin
 
@@ -99,6 +104,7 @@ class MultiTaskGAM(BaseEstimator):
         use_single_task_with_reweighting=False,
         fit_linear_frac: float = None,
         random_state=42,
+        verbose=0,
     ):
         &#34;&#34;&#34;
         Params
@@ -124,6 +130,9 @@ class MultiTaskGAM(BaseEstimator):
         fit_linear_frac: float
             If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         &#34;&#34;&#34;
+        require_optional_dependency(
+            &#39;interpret&#39;, type(self).__name__,
+            purpose=&#39;provides the ExplainableBoostingMachine used to fit the curves&#39;)
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
         self.linear_penalty = linear_penalty
@@ -137,6 +146,7 @@ class MultiTaskGAM(BaseEstimator):
         self.use_single_task_with_reweighting = use_single_task_with_reweighting
         self.use_correlation_screening_for_features = use_correlation_screening_for_features
         self.fit_linear_frac = fit_linear_frac
+        self.verbose = verbose
 
     def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
@@ -193,7 +203,8 @@ class MultiTaskGAM(BaseEstimator):
                                sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ == 1:
             # with 1 output, we fit an EBM to each feature
-            for task_num in tqdm(range(num_features)):
+            for task_num in progress_iter(range(num_features), verbose=self.verbose,
+                                          desc=&#39;feature curves&#39;):
                 y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
                 X_ = deepcopy(X[idxs_ebm])
                 X_[:, task_num] = 0
@@ -212,7 +223,8 @@ class MultiTaskGAM(BaseEstimator):
                     X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ &gt; 1:
             # with multiple outputs, we fit an EBM to each output
-            for task_num in tqdm(range(self.n_outputs_)):
+            for task_num in progress_iter(range(self.n_outputs_), verbose=self.verbose,
+                                          desc=&#39;target curves&#39;):
                 self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
                 y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
                 self.ebms_[task_num].fit(
@@ -375,7 +387,7 @@ class MultiTaskGAMClassifier(MultiTaskGAM, ClassifierMixin):
 <dl>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAM"><code class="flex name class">
 <span>class <span class="ident">MultiTaskGAM</span></span>
-<span>(</span><span>ebm_kwargs=None, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
+<span>(</span><span>ebm_kwargs=None, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
@@ -429,6 +441,7 @@ If not None, the fraction of features to use for the linear model (the rest are 
         use_single_task_with_reweighting=False,
         fit_linear_frac: float = None,
         random_state=42,
+        verbose=0,
     ):
         &#34;&#34;&#34;
         Params
@@ -454,6 +467,9 @@ If not None, the fraction of features to use for the linear model (the rest are 
         fit_linear_frac: float
             If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         &#34;&#34;&#34;
+        require_optional_dependency(
+            &#39;interpret&#39;, type(self).__name__,
+            purpose=&#39;provides the ExplainableBoostingMachine used to fit the curves&#39;)
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
         self.linear_penalty = linear_penalty
@@ -467,6 +483,7 @@ If not None, the fraction of features to use for the linear model (the rest are 
         self.use_single_task_with_reweighting = use_single_task_with_reweighting
         self.use_correlation_screening_for_features = use_correlation_screening_for_features
         self.fit_linear_frac = fit_linear_frac
+        self.verbose = verbose
 
     def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
@@ -523,7 +540,8 @@ If not None, the fraction of features to use for the linear model (the rest are 
                                sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ == 1:
             # with 1 output, we fit an EBM to each feature
-            for task_num in tqdm(range(num_features)):
+            for task_num in progress_iter(range(num_features), verbose=self.verbose,
+                                          desc=&#39;feature curves&#39;):
                 y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
                 X_ = deepcopy(X[idxs_ebm])
                 X_[:, task_num] = 0
@@ -542,7 +560,8 @@ If not None, the fraction of features to use for the linear model (the rest are 
                     X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ &gt; 1:
             # with multiple outputs, we fit an EBM to each output
-            for task_num in tqdm(range(self.n_outputs_)):
+            for task_num in progress_iter(range(self.n_outputs_), verbose=self.verbose,
+                                          desc=&#39;target curves&#39;):
                 self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
                 y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
                 self.ebms_[task_num].fit(
@@ -762,7 +781,8 @@ If not None, the fraction of features to use for the linear model (the rest are 
                            sample_weight=sample_weight[idxs_ebm])
     elif self.n_outputs_ == 1:
         # with 1 output, we fit an EBM to each feature
-        for task_num in tqdm(range(num_features)):
+        for task_num in progress_iter(range(num_features), verbose=self.verbose,
+                                      desc=&#39;feature curves&#39;):
             y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
             X_ = deepcopy(X[idxs_ebm])
             X_[:, task_num] = 0
@@ -781,7 +801,8 @@ If not None, the fraction of features to use for the linear model (the rest are 
                 X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
     elif self.n_outputs_ &gt; 1:
         # with multiple outputs, we fit an EBM to each output
-        for task_num in tqdm(range(self.n_outputs_)):
+        for task_num in progress_iter(range(self.n_outputs_), verbose=self.verbose,
+                                      desc=&#39;target curves&#39;):
             self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
             y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
             self.ebms_[task_num].fit(
@@ -967,7 +988,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier"><code class="flex name class">
 <span>class <span class="ident">MultiTaskGAMClassifier</span></span>
-<span>(</span><span>ebm_kwargs=None, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
+<span>(</span><span>ebm_kwargs=None, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
@@ -1122,7 +1143,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor"><code class="flex name class">
 <span>class <span class="ident">MultiTaskGAMRegressor</span></span>
-<span>(</span><span>ebm_kwargs=None, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
+<span>(</span><span>ebm_kwargs=None, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
@@ -1290,6 +1311,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

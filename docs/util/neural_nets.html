@@ -122,7 +122,19 @@ Example
 from copy import deepcopy
 
 import numpy as np
-from torch import nn
+
+from imodels.util.optional_deps import require_optional_dependency
+
+try:
+    from torch import nn
+except ImportError:
+    # Net subclasses nn.Module, so torch is needed to define it at all;
+    # report that with a message naming the install instead of a bare
+    # ModuleNotFoundError.
+    require_optional_dependency(
+        &#39;torch&#39;, &#39;imodels.util.neural_nets.Net&#39;,
+        purpose=&#39;the converted decision tree is a torch module&#39;)
+    raise  # torch is installed but failed to import for another reason
 
 
 class Net(nn.Module):
@@ -540,6 +552,7 @@ registered hooks while the latter silently ignores them.</p>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

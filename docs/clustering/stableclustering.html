@@ -56,16 +56,19 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.metrics import rand_score, adjusted_rand_score
 from sklearn.utils.validation import check_is_fitted
-from tqdm import tqdm
+
+from imodels.util.progress import progress_iter
 
 
 class StableClustering(BaseEstimator, ClusterMixin):
-    def __init__(self, k_values, n_repetitions=10, algorithm=&#34;k-means&#34;, metric=&#34;adjusted_rand&#34;, random_state=42):
+    def __init__(self, k_values, n_repetitions=10, algorithm=&#34;k-means&#34;, metric=&#34;adjusted_rand&#34;, random_state=42,
+                 verbose=0):
         self.k_values = k_values
         self.n_repetitions = n_repetitions
         self.algorithm = algorithm
         self.metric = metric
         self.random_state = random_state
+        self.verbose = verbose
         self.scores_ = {}
 
     def fit(self, X):
@@ -73,9 +76,12 @@ class StableClustering(BaseEstimator, ClusterMixin):
         best_score = -1
         self.models_ = []
 
-        for k in tqdm(self.k_values, desc=&#34;k&#34;):
+        # the outer bar is the top-level one, so it stays on screen when done
+        for k in progress_iter(self.k_values, verbose=self.verbose, desc=&#34;k&#34;,
+                               leave=True):
             clusters = []
-            for i_rep in tqdm(range(self.n_repetitions), desc=&#39;Repetitions&#39;, leave=False):
+            for i_rep in progress_iter(range(self.n_repetitions), verbose=self.verbose,
+                                       desc=&#39;repetitions&#39;):
                 if self.algorithm == &#34;k-means&#34;:
                     model = KMeans(
                         n_clusters=k, random_state=self.random_state + i_rep)  # , init=&#39;random&#39;)
@@ -155,7 +161,7 @@ class StableClustering(BaseEstimator, ClusterMixin):
 <dl>
 <dt id="imodels.clustering.stableclustering.StableClustering"><code class="flex name class">
 <span>class <span class="ident">StableClustering</span></span>
-<span>(</span><span>k_values, n_repetitions=10, algorithm='k-means', metric='adjusted_rand', random_state=42)</span>
+<span>(</span><span>k_values, n_repetitions=10, algorithm='k-means', metric='adjusted_rand', random_state=42, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -199,12 +205,14 @@ array([3, 3, 3])
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class StableClustering(BaseEstimator, ClusterMixin):
-    def __init__(self, k_values, n_repetitions=10, algorithm=&#34;k-means&#34;, metric=&#34;adjusted_rand&#34;, random_state=42):
+    def __init__(self, k_values, n_repetitions=10, algorithm=&#34;k-means&#34;, metric=&#34;adjusted_rand&#34;, random_state=42,
+                 verbose=0):
         self.k_values = k_values
         self.n_repetitions = n_repetitions
         self.algorithm = algorithm
         self.metric = metric
         self.random_state = random_state
+        self.verbose = verbose
         self.scores_ = {}
 
     def fit(self, X):
@@ -212,9 +220,12 @@ array([3, 3, 3])
         best_score = -1
         self.models_ = []
 
-        for k in tqdm(self.k_values, desc=&#34;k&#34;):
+        # the outer bar is the top-level one, so it stays on screen when done
+        for k in progress_iter(self.k_values, verbose=self.verbose, desc=&#34;k&#34;,
+                               leave=True):
             clusters = []
-            for i_rep in tqdm(range(self.n_repetitions), desc=&#39;Repetitions&#39;, leave=False):
+            for i_rep in progress_iter(range(self.n_repetitions), verbose=self.verbose,
+                                       desc=&#39;repetitions&#39;):
                 if self.algorithm == &#34;k-means&#34;:
                     model = KMeans(
                         n_clusters=k, random_state=self.random_state + i_rep)  # , init=&#39;random&#39;)
@@ -305,9 +316,12 @@ array([3, 3, 3])
     best_score = -1
     self.models_ = []
 
-    for k in tqdm(self.k_values, desc=&#34;k&#34;):
+    # the outer bar is the top-level one, so it stays on screen when done
+    for k in progress_iter(self.k_values, verbose=self.verbose, desc=&#34;k&#34;,
+                           leave=True):
         clusters = []
-        for i_rep in tqdm(range(self.n_repetitions), desc=&#39;Repetitions&#39;, leave=False):
+        for i_rep in progress_iter(range(self.n_repetitions), verbose=self.verbose,
+                                   desc=&#39;repetitions&#39;):
             if self.algorithm == &#34;k-means&#34;:
                 model = KMeans(
                     n_clusters=k, random_state=self.random_state + i_rep)  # , init=&#39;random&#39;)
@@ -415,6 +429,7 @@ Returns -1 for all other points.</p></div>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

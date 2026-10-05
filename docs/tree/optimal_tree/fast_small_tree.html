@@ -75,6 +75,8 @@ from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, ST_LB, ST_UB, BinaryEn
 from imodels.util.arguments import (check_fit_arguments, check_predict_X,
                                     decode_labels)
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.numba_compile import notify_first_compile
+from imodels.tree.optimal_tree import solver as _solver_module
 
 NUMBA_HINT = (
     &#34;FastSmallTreeClassifier needs numba, which is not installed. Install it with &#34;
@@ -244,6 +246,8 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         &#34;&#34;&#34;
         if not HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
+        notify_first_compile(_solver_module.__file__, &#34;FastSmallTreeClassifier&#34;, &#34;about 20 seconds&#34;,
+                             _solver_module.NUMBA_CACHE, &#34;OPTTREE_NUMBA_CACHE&#34;)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         # the certificate rests on bounds of the form &#34;a tree with a leaves costs at least
         # a * regularization&#34; and &#34;a tree&#39;s loss cannot fall below zero&#34;, which need a
@@ -713,6 +717,8 @@ True
         &#34;&#34;&#34;
         if not HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
+        notify_first_compile(_solver_module.__file__, &#34;FastSmallTreeClassifier&#34;, &#34;about 20 seconds&#34;,
+                             _solver_module.NUMBA_CACHE, &#34;OPTTREE_NUMBA_CACHE&#34;)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         # the certificate rests on bounds of the form &#34;a tree with a leaves costs at least
         # a * regularization&#34; and &#34;a tree&#39;s loss cannot fall below zero&#34;, which need a
@@ -995,6 +1001,8 @@ is a DataFrame.</dd>
     &#34;&#34;&#34;
     if not HAVE_NUMBA:
         raise ImportError(NUMBA_HINT)
+    notify_first_compile(_solver_module.__file__, &#34;FastSmallTreeClassifier&#34;, &#34;about 20 seconds&#34;,
+                         _solver_module.NUMBA_CACHE, &#34;OPTTREE_NUMBA_CACHE&#34;)
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
     # the certificate rests on bounds of the form &#34;a tree with a leaves costs at least
     # a * regularization&#34; and &#34;a tree&#39;s loss cannot fall below zero&#34;, which need a
@@ -1312,6 +1320,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

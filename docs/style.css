@@ -13,7 +13,7 @@
      with nothing to break at, once the padding, the 1em indent on nested
      lists and a scrollbar are counted. 29rem stays clear of that while
      leaving the article more of the window. */
-  --sidebar-w: 29rem;
+  --sidebar-w: 24rem;
   --measure: 100ch;
 
   --ink: #1b1f23;
@@ -299,7 +299,7 @@ code { background: var(--code-bg); border-radius: 3px; padding: 1px 5px;
        font-size: 0.9em; }
 pre { background: var(--code-bg); border: 1px solid var(--line);
       border-radius: 4px; margin: 1.1em 0; }
-pre code { background: transparent; padding: 0; }
+pre code { background: transparent; padding: 0; font-size: 0.78em; }  /* code examples: smaller than body text */
 
 /* headings inside a <details> summary must not drop below the arrow */
 summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {

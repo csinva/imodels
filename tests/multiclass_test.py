@@ -22,7 +22,7 @@ BINARY_ONLY_MODELS = [
     'BayesianRuleListClassifier', 'RuleFitClassifier', 'FPLassoClassifier',
     'GreedyRuleListClassifier', 'SkopeRulesClassifier',
     'OneRClassifier', 'FPSkopeClassifier', 'TreeGAMClassifier',
-    'SlipperClassifier', 'FastFrugalTreeClassifier',
+    'SlipperClassifier', 'FastFrugalTreeClassifier', 'FastRiskScoreClassifier',
 ]
 
 

@@ -247,16 +247,15 @@ aria-label="View source on GitHub" title="GitHub">
 <li><a href="index.html#installation">Installation</a></li>
 <li><a href="index.html#supported-models">Supported models</a></li>
 <li><a href="index.html#demo-notebooks">Demo notebooks</a></li>
-<li><a href="index.html#whats-the-difference-between-the-models">What's the difference between the models?</a><ul>
+<li><a href="index.html#model-categories">Model categories</a></li>
 <li><a href="index.html#extras">Extras</a></li>
-</ul>
-</li>
 <li><a href="index.html#references">References</a></li>
 </ul>
 </div>
 <ul id="index">
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
@@ -291,6 +290,7 @@ aria-label="View source on GitHub" title="GitHub">
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoRegressor" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPSkopeClassifier" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></li>
 <li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.FastFrugalTreeClassifier" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.FastRiskScoreClassifier" href="algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></li>
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></li>
 <li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.GPGamRegressor" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
 <li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.GreedyRuleListClassifier" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
@@ -302,7 +302,9 @@ aria-label="View source on GitHub" title="GitHub">
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifierCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressor" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressorCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
-<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearModelRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.IRFClassifier" href="tree/iterative_random_forest/index.html#imodels.tree.iterative_random_forest.IRFClassifier">IRFClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.IRFRegressor" href="tree/iterative_random_forest/index.html#imodels.tree.iterative_random_forest.IRFRegressor">IRFRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></li>
 <li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.OneRClassifier" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
@@ -325,9 +327,9 @@ aria-label="View source on GitHub" title="GitHub">
 <ul class="class-list">
 <li><span class="cat-dot cat-experimental" title="experimental"></span><a title="imodels.BART" href="experimental/bartpy/index.html#imodels.experimental.bartpy.BART">BART</a></li>
 <li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BRLDiscretizer" href="discretization/index.html#imodels.discretization.BRLDiscretizer">BRLDiscretizer</a></li>
-<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BasicDiscretizer" href="discretization/index.html#imodels.discretization.BasicDiscretizer">BasicDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BasicDiscretizer" href="discretization/discretizer.html#imodels.discretization.discretizer.BasicDiscretizer">BasicDiscretizer</a></li>
 <li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.MDLPDiscretizer" href="discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer">MDLPDiscretizer</a></li>
-<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.RFDiscretizer" href="discretization/index.html#imodels.discretization.RFDiscretizer">RFDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.RFDiscretizer" href="discretization/discretizer.html#imodels.discretization.discretizer.RFDiscretizer">RFDiscretizer</a></li>
 <li><span class="cat-dot cat-clustering" title="clustering"></span><a title="imodels.StableClustering" href="clustering/stableclustering.html#imodels.clustering.stableclustering.StableClustering">StableClustering</a></li>
 </ul>
 </li>

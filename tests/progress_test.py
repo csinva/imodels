@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 from imodels import (FIGSClassifier, FIGSClassifierCV, HSTreeClassifierCV,
-                     MarginalShrinkageLinearModelRegressor, OneRClassifier,
+                     MarginalShrinkageLinearRegressor, OneRClassifier,
                      TaoTreeClassifier, TreeGAMClassifier)
 from imodels.util.progress import progress_bar, progress_iter
 
@@ -97,6 +97,6 @@ def test_verbose_round_trips_as_a_param(cls, kwargs):
 def test_regressor_with_a_bar():
     """The marginal fits are per-feature, so the bar is over the columns."""
     y = X_CLS[:, 0] + 0.1 * X_CLS[:, 1]
-    assert fit_stderr(MarginalShrinkageLinearModelRegressor(), y=y) == ''
+    assert fit_stderr(MarginalShrinkageLinearRegressor(), y=y) == ''
     assert 'it' in fit_stderr(
-        MarginalShrinkageLinearModelRegressor(verbose=1), y=y)
+        MarginalShrinkageLinearRegressor(verbose=1), y=y)

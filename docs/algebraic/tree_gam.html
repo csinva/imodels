@@ -69,6 +69,7 @@ from sklearn.base import RegressorMixin, ClassifierMixin
 from imodels.util.arguments import (check_binary_target, check_predict_X, decode_labels,
                                     set_feature_names_in)
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.progress import progress_iter
 
 
 class TreeGAM(RuleInspectionMixin, BaseEstimator):
@@ -95,6 +96,7 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         boosting_strategy=&#34;cyclic&#34;,
         validation_frac=0.15,
         random_state=None,
+        verbose=0,
     ):
         &#34;&#34;&#34;
         Params
@@ -134,6 +136,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
             Fraction of data to use for early stopping.
         random_state : int
             Random seed.
+        verbose : int
+            If nonzero, show a progress bar over the boosting rounds while fitting.
         &#34;&#34;&#34;
         self.n_boosting_rounds = n_boosting_rounds
         self.max_leaf_nodes = max_leaf_nodes
@@ -149,6 +153,7 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
+        self.verbose = verbose
 
     def fit(self, X, y, sample_weight=None):
         set_feature_names_in(self, X)
@@ -216,7 +221,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         Store in self.estimators_marginal&#34;&#34;&#34;
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         p = X_train.shape[1]
-        for feature_num in range(p):
+        for feature_num in progress_iter(range(p), verbose=self.verbose,
+                                         desc=&#39;marginal fits&#39;):
             X_ = np.zeros_like(X_train)
             X_[:, feature_num] = X_train[:, feature_num]
             est = GradientBoostingRegressor(
@@ -259,7 +265,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         mse_val = self._calc_mse(X_val, y_val, sample_weight_val)
         self.decay_coef_towards_marginal_ = []
-        for _ in range(self.n_boosting_rounds):
+        for _ in progress_iter(range(self.n_boosting_rounds),
+                               verbose=self.verbose, desc=&#39;boosting rounds&#39;):
             boosting_round_ests = []
             boosting_round_mses = []
             feature_nums = np.arange(X_train.shape[1])
@@ -428,7 +435,7 @@ class TreeGAMClassifier(TreeGAM, ClassifierMixin):
 <dl>
 <dt id="imodels.algebraic.tree_gam.TreeGAM"><code class="flex name class">
 <span>class <span class="ident">TreeGAM</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, fit_posthoc_tree_coefs=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, fit_posthoc_tree_coefs=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -471,7 +478,9 @@ Whether to use cyclic boosting (cycle over features) or greedy boosting (select 
 validation_frac: float
 Fraction of data to use for early stopping.
 random_state : int
-Random seed.</p></div>
+Random seed.
+verbose : int
+If nonzero, show a progress bar over the boosting rounds while fitting.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -500,6 +509,7 @@ Random seed.</p></div>
         boosting_strategy=&#34;cyclic&#34;,
         validation_frac=0.15,
         random_state=None,
+        verbose=0,
     ):
         &#34;&#34;&#34;
         Params
@@ -539,6 +549,8 @@ Random seed.</p></div>
             Fraction of data to use for early stopping.
         random_state : int
             Random seed.
+        verbose : int
+            If nonzero, show a progress bar over the boosting rounds while fitting.
         &#34;&#34;&#34;
         self.n_boosting_rounds = n_boosting_rounds
         self.max_leaf_nodes = max_leaf_nodes
@@ -554,6 +566,7 @@ Random seed.</p></div>
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
+        self.verbose = verbose
 
     def fit(self, X, y, sample_weight=None):
         set_feature_names_in(self, X)
@@ -621,7 +634,8 @@ Random seed.</p></div>
         Store in self.estimators_marginal&#34;&#34;&#34;
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         p = X_train.shape[1]
-        for feature_num in range(p):
+        for feature_num in progress_iter(range(p), verbose=self.verbose,
+                                         desc=&#39;marginal fits&#39;):
             X_ = np.zeros_like(X_train)
             X_[:, feature_num] = X_train[:, feature_num]
             est = GradientBoostingRegressor(
@@ -664,7 +678,8 @@ Random seed.</p></div>
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         mse_val = self._calc_mse(X_val, y_val, sample_weight_val)
         self.decay_coef_towards_marginal_ = []
-        for _ in range(self.n_boosting_rounds):
+        for _ in progress_iter(range(self.n_boosting_rounds),
+                               verbose=self.verbose, desc=&#39;boosting rounds&#39;):
             boosting_round_ests = []
             boosting_round_mses = []
             feature_nums = np.arange(X_train.shape[1])
@@ -1276,7 +1291,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAMClassifier"><code class="flex name class">
 <span>class <span class="ident">TreeGAMClassifier</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, fit_posthoc_tree_coefs=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, fit_posthoc_tree_coefs=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -1319,7 +1334,9 @@ Whether to use cyclic boosting (cycle over features) or greedy boosting (select 
 validation_frac: float
 Fraction of data to use for early stopping.
 random_state : int
-Random seed.</p></div>
+Random seed.
+verbose : int
+If nonzero, show a progress bar over the boosting rounds while fitting.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1455,7 +1472,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAMRegressor"><code class="flex name class">
 <span>class <span class="ident">TreeGAMRegressor</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, fit_posthoc_tree_coefs=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, fit_posthoc_tree_coefs=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -1498,7 +1515,9 @@ Whether to use cyclic boosting (cycle over features) or greedy boosting (select 
 validation_frac: float
 Fraction of data to use for early stopping.
 random_state : int
-Random seed.</p></div>
+Random seed.
+verbose : int
+If nonzero, show a progress bar over the boosting rounds while fitting.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1647,6 +1666,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

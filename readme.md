@@ -86,6 +86,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
 | Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [📄](https://www.pnas.org/content/115/8/1943), [🔗](https://github.com/Yu-Group/iterative-Random-Forest) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
+| **Fast risk score** | [🗂️](https://csinva.io/imodels/fastriskscore.html),ㅤ[📄](https://csinva.io/imodels/fastriskscore.html) | Sparse integer risk score (a few features, small integer points), fit fast |
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
 | **GP GAM** | [🗂️](https://csinva.io/imodels/gpgam.html),ㅤ[📄](https://csinva.io/imodels/gpgam.html) | Adaptive GAM based on Gaussian processes |
 | <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html),ㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
@@ -121,7 +122,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <a href="https://github.com/csinva/imodels/blob/master/notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
 
-## What's the difference between the models?
+## Model categories
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
 
@@ -178,11 +179,12 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | TAO rule tree              | [TaoTreeClassifier](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier) |   [TaoTreeRegressor](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor)        |  |
 | Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier) | [IRFRegressor](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor) | [Usage and interaction stability](imodels/tree/iterative_random_forest/README.md) |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
+| Sparse integer risk score | [FastRiskScoreClassifier](https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier) |  | Binary targets; binarizes features itself; needs [numba](https://pypi.org/project/numba/) |
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
 | GP GAM |  | [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
-| Marginal shrinkage<br/>linear model |  | [MarginalShrinkageLinearModelRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
+| Marginal shrinkage<br/>linear model |  | [MarginalShrinkageLinearRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
 | BART |  | [BART](https://csinva.io/imodels/experimental/bartpy/index.html) | Bayesian additive regression trees (slow) |
 | Distillation |  | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
@@ -196,7 +198,8 @@ fitting them (they warn if rounding has removed most of the model).
 **Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
 `GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
 `BoostedRulesClassifier`, `SLIMClassifier`, `C45TreeClassifier`,
-`DecisionTreeCCPClassifier`, `FastSmallTreeClassifier`, `IRFClassifier` and the `CV` variants. The rule-set and rule-list models are binary-only and raise a
+`DecisionTreeCCPClassifier`, `FastSmallTreeClassifier`, `IRFClassifier` and the `CV` variants. The rule-set and rule-list models, and
+`FastRiskScoreClassifier`, are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
 binary.
 
@@ -285,7 +288,7 @@ one index per sample; a model made of several trees (FIGS, boosted rules) return
 one column per tree, like `RandomForest.apply`.
 </details>
 
-### Extras
+## Extras
 
 <details>
 <summary><a href="https://csinva.io/imodels/util/data_util.html#imodels.util.data_util.get_clean_dataset">Data-wrangling functions</a> for working with popular tabular datasets (e.g. compas).</summary>
@@ -348,6 +351,25 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 <p align="center">	
 	<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
 </p>
+
+### FastRiskScore: sparse integer risk scores
+
+[🔗 Post](https://csinva.io/imodels/fastriskscore.html), [🗂️ API](https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html)
+
+FastRiskScore fits a risk score: at most `k` features, each worth a small integer number of points, with the risk for each total read off a table. It chooses the points to minimize the log loss of the best-fitting map from total score to risk, the problem RiskSLIM and FasterRisk solve. FastRiskScore came out of an autoresearch loop that started from FasterRisk; it keeps FasterRisk's beam search, rebuilt with numba on compressed data, and adds a local search over the integer points scored by that same loss.
+
+```python
+from imodels import FastRiskScoreClassifier
+model = FastRiskScoreClassifier(k=5).fit(X_train, y_train)
+
+print(model)                # the points of each line, and the risk for every total score
+model.points_               # {"worst area <= 906.6": 5, ...}
+model.predict_proba(X_test)
+```
+
+Numeric columns are split at their deciles (`n_thresholds=9`; `n_thresholds=99` splits at the percentiles and switches the solver to settings tuned for that) and categorical ones one-hot encoded, so each line is a condition on an original column. `max_points` (default 5) bounds the points of each line. The search needs numba (`pip install numba`); it compiles once per machine, in about two minutes, and is cached after that.
+
+On 27 held-out TabArena datasets, FastRiskScore fits scores about 225× faster than FasterRisk (median over problems) with a lower training loss on 94 of 135 problems and a higher one on 8, and a slightly higher test AUC. On small problems where every score can be enumerated, it finds the best score in 49 of 50 cases, against 28 of 50 for FasterRisk. The [post](https://csinva.io/imodels/fastriskscore.html) has the comparison with RiskSLIM, SLIM and rounded logistic regression.
 
 ### GPGam: additive Gaussian processes over binned features
 

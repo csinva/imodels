@@ -50,7 +50,12 @@ aria-label="View source on GitHub" title="GitHub">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+<pre><code class="python">from imodels.util.optional_deps import require_optional_dependency
+
+try:  # optional dependency, checked for by name when a model is initialized
+    from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+except ImportError:
+    ExplainableBoostingClassifier = ExplainableBoostingRegressor = None
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy as np
 from imodels.util.arguments import explicit_get_params, explicit_set_params
@@ -66,6 +71,9 @@ class ShapGAM(BaseEstimator):
         - feature_fraction: Fraction of features to use for each EBM classifier.
         - random_state: Seed for random number generator to ensure reproducibility.
         &#34;&#34;&#34;
+        require_optional_dependency(
+            &#39;interpret&#39;, type(self).__name__,
+            purpose=&#39;provides the ExplainableBoostingMachine used for each ensemble member&#39;)
         self.n_estimators = n_estimators
         self.feature_fraction = feature_fraction
         self.random_state = random_state
@@ -260,6 +268,9 @@ array([3, 3, 3])
         - feature_fraction: Fraction of features to use for each EBM classifier.
         - random_state: Seed for random number generator to ensure reproducibility.
         &#34;&#34;&#34;
+        require_optional_dependency(
+            &#39;interpret&#39;, type(self).__name__,
+            purpose=&#39;provides the ExplainableBoostingMachine used for each ensemble member&#39;)
         self.n_estimators = n_estimators
         self.feature_fraction = feature_fraction
         self.random_state = random_state
@@ -938,6 +949,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

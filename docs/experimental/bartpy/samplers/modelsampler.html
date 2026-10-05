@@ -60,6 +60,7 @@ from ..model import Model
 from ..samplers.sampler import Sampler
 from ..samplers.schedule import SampleSchedule
 from ..trace import TraceLogger
+from imodels.util.progress import progress_iter
 
 Chain = Mapping[str, Union[List[Any], np.ndarray]]
 
@@ -94,13 +95,14 @@ class ModelSampler(Sampler):
                 n_burn: int,
                 thin: float=0.1,
                 store_in_sample_predictions: bool=True,
-                store_acceptance: bool=True) -&gt; Chain:
+                store_acceptance: bool=True,
+                verbose: int=0) -&gt; Chain:
         # print(&#34;Starting burn&#34;)
 
         trace_logger = self.trace_logger_class()
         y = copy.deepcopy(model.data.y.unnormalized_y)
 
-        for _ in range(n_burn):
+        for _ in progress_iter(range(n_burn), verbose=verbose, desc=&#39;burn-in&#39;):
             model.update_z_values(y)
             self.step(model, trace_logger)
 
@@ -113,7 +115,8 @@ class ModelSampler(Sampler):
 
         thin_inverse = 1. / thin
 
-        for ss in range(n_samples):
+        for ss in progress_iter(range(n_samples), verbose=verbose,
+                                desc=&#39;sampling&#39;):
             model.update_z_values(y)
             step_trace_dict, l_score, prob = self.step(model, trace_logger)
             # print(step_trace_dict)
@@ -190,13 +193,14 @@ inheritance.</p></div>
                 n_burn: int,
                 thin: float=0.1,
                 store_in_sample_predictions: bool=True,
-                store_acceptance: bool=True) -&gt; Chain:
+                store_acceptance: bool=True,
+                verbose: int=0) -&gt; Chain:
         # print(&#34;Starting burn&#34;)
 
         trace_logger = self.trace_logger_class()
         y = copy.deepcopy(model.data.y.unnormalized_y)
 
-        for _ in range(n_burn):
+        for _ in progress_iter(range(n_burn), verbose=verbose, desc=&#39;burn-in&#39;):
             model.update_z_values(y)
             self.step(model, trace_logger)
 
@@ -209,7 +213,8 @@ inheritance.</p></div>
 
         thin_inverse = 1. / thin
 
-        for ss in range(n_samples):
+        for ss in progress_iter(range(n_samples), verbose=verbose,
+                                desc=&#39;sampling&#39;):
             model.update_z_values(y)
             step_trace_dict, l_score, prob = self.step(model, trace_logger)
             # print(step_trace_dict)
@@ -243,7 +248,7 @@ inheritance.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.experimental.bartpy.samplers.modelsampler.ModelSampler.samples"><code class="name flex">
-<span>def <span class="ident">samples</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../model.html#imodels.experimental.bartpy.model.Model">Model</a>, n_samples: int, n_burn: int, thin: float = 0.1, store_in_sample_predictions: bool = True, store_acceptance: bool = True) ‑> Mapping[str, List[Any] | numpy.ndarray]</span>
+<span>def <span class="ident">samples</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../model.html#imodels.experimental.bartpy.model.Model">Model</a>, n_samples: int, n_burn: int, thin: float = 0.1, store_in_sample_predictions: bool = True, store_acceptance: bool = True, verbose: int = 0) ‑> Mapping[str, List[Any] | numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -256,13 +261,14 @@ inheritance.</p></div>
             n_burn: int,
             thin: float=0.1,
             store_in_sample_predictions: bool=True,
-            store_acceptance: bool=True) -&gt; Chain:
+            store_acceptance: bool=True,
+            verbose: int=0) -&gt; Chain:
     # print(&#34;Starting burn&#34;)
 
     trace_logger = self.trace_logger_class()
     y = copy.deepcopy(model.data.y.unnormalized_y)
 
-    for _ in range(n_burn):
+    for _ in progress_iter(range(n_burn), verbose=verbose, desc=&#39;burn-in&#39;):
         model.update_z_values(y)
         self.step(model, trace_logger)
 
@@ -275,7 +281,8 @@ inheritance.</p></div>
 
     thin_inverse = 1. / thin
 
-    for ss in range(n_samples):
+    for ss in progress_iter(range(n_samples), verbose=verbose,
+                            desc=&#39;sampling&#39;):
         model.update_z_values(y)
         step_trace_dict, l_score, prob = self.step(model, trace_logger)
         # print(step_trace_dict)
@@ -344,6 +351,7 @@ inheritance.</p></div>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

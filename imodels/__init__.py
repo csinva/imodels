@@ -4,11 +4,15 @@
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/imodels)
 
+import warnings
+
 from .algebraic.gp_gam import GPGamRegressor
-from .algebraic.slim import SLIMRegressor, SLIMClassifier
+# SLIMClassifier is deprecated: it is reached through __getattr__ below, which warns
+from .algebraic.slim import SLIMRegressor, SLIMClassifier as _SLIMClassifier
+from .algebraic.risk_score.fast_risk_score import FastRiskScoreClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
 from .algebraic.marginal_shrinkage_linear_model import (
-    MarginalShrinkageLinearModelRegressor,
+    MarginalShrinkageLinearRegressor,
 )
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -57,7 +61,8 @@ CLASSIFIERS = [
     FastFrugalTreeClassifier,
     SkopeRulesClassifier,
     BoostedRulesClassifier,
-    SLIMClassifier,
+    _SLIMClassifier,
+    FastRiskScoreClassifier,
     SlipperClassifier,
     BayesianRuleSetClassifier,
     C45TreeClassifier,
@@ -88,7 +93,7 @@ REGRESSORS = [
     TaoTreeRegressor,
     TreeGAMRegressor,
     BoostedRulesRegressor,
-    MarginalShrinkageLinearModelRegressor,
+    MarginalShrinkageLinearRegressor,
     HSTreeRegressor,
     HSTreeRegressorCV,
     DecisionTreeCCPRegressor,
@@ -104,7 +109,7 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
 # models and helpers rather than whatever each submodule happened to import.
 __all__ = [
     "GPGamRegressor", "AutoInterpretableClassifier",
-    "AutoInterpretableRegressor", "FastSmallTreeClassifier", "BART",
+    "AutoInterpretableRegressor", "FastSmallTreeClassifier", "FastRiskScoreClassifier", "BART",
     "BRLDiscretizer", "BasicDiscretizer", "BayesianRuleListClassifier",
     "BayesianRuleSetClassifier", "BoostedRulesClassifier",
     "BoostedRulesRegressor", "C45TreeClassifier", "CLASSIFIERS",
@@ -117,7 +122,7 @@ __all__ = [
     "HSDecisionTreeCCPClassifierCV", "HSDecisionTreeCCPRegressorCV",
     "HSTreeClassifier", "HSTreeClassifierCV", "HSTreeRegressor",
     "HSTreeRegressorCV", "IRFClassifier", "IRFRegressor", "MDLPDiscretizer",
-    "MarginalShrinkageLinearModelRegressor", "OneRClassifier", "REGRESSORS",
+    "MarginalShrinkageLinearRegressor", "OneRClassifier", "REGRESSORS",
     "RFDiscretizer", "RuleFitClassifier", "RuleFitRegressor",
     "SLIMClassifier", "SLIMRegressor", "SkopeRulesClassifier",
     "SlipperClassifier", "StableClustering", "TaoTreeClassifier",
@@ -125,3 +130,19 @@ __all__ = [
     "explain_classification_errors", "get_clean_dataset", "get_rules",
     "shadow_tree",
 ]
+
+
+def __getattr__(name):
+    if name == "MarginalShrinkageLinearModelRegressor":  # renamed; the old name still works for now
+        warnings.warn(
+            "MarginalShrinkageLinearModelRegressor has been renamed MarginalShrinkageLinearRegressor; "
+            "the old name will be removed in a future release.", FutureWarning, stacklevel=2)
+        return MarginalShrinkageLinearRegressor
+    if name == "SLIMClassifier":
+        warnings.warn(
+            "SLIMClassifier is deprecated and will be removed in a future release. Use "
+            "FastRiskScoreClassifier, which fits sparse integer risk scores with a calibrated risk "
+            "(https://csinva.io/imodels/fastriskscore.html).",
+            FutureWarning, stacklevel=2)
+        return _SLIMClassifier
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

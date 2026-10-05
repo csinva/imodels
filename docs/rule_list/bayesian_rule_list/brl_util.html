@@ -115,6 +115,8 @@ import numpy as np
 from scipy.special import gammaln
 from scipy.stats import poisson, beta
 
+from imodels.util.progress import progress_iter
+
 try:
     from matplotlib import pyplot as plt
 except:
@@ -153,7 +155,7 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
     res = {}
     for n in range(nchains):
         res[n] = mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin,
-                           nchains, d_inits[n])
+                           nchains, d_inits[n], verbose=verbose)
 
     if verbose:
         print(&#39;Elapsed CPU time&#39;, time.process_time() - t1)
@@ -169,12 +171,12 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
 
 
 def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains,
-              d_init):
+              d_init, verbose=False):
     &#39;&#39;&#39;Run and store mcmc chain
     &#39;&#39;&#39;
     res = {}
     permsdic, res[&#39;perms&#39;] = bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs,
-                                          permsdic, burnin, None, d_init)
+                                          permsdic, burnin, None, d_init, verbose=verbose)
     # Store the permsdic results
     res[&#39;permsdic&#39;] = {perm: list(vals)
                        for perm, vals in permsdic.items() if vals[1] &gt; 0}
@@ -354,7 +356,7 @@ def preds_d_t(X, Y, d_t, theta):
 
 # MCMC core
 def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed,
-                 d_init):
+                 d_init, verbose=False):
     &#39;&#39;&#39;Run Metropolis-Hastings algorithm
     &#39;&#39;&#39;
     # initialize
@@ -384,7 +386,8 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
         permsdic[a_t][1] += 1  # store the initialization sample
 
     # iterate!
-    for itr in range(numiters):
+    for itr in progress_iter(range(numiters), verbose=verbose,
+                            desc=&#39;MCMC iterations&#39;):
         # Sample from proposal distribution
         d_star, Jratio, R_star, step = proposal(d_t, R_t, X, Y, alpha)
         # Compute the new posterior value, if necessary
@@ -634,7 +637,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.rule_list.bayesian_rule_list.brl_util.bayesdl_mcmc"><code class="name flex">
-<span>def <span class="ident">bayesdl_mcmc</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed, d_init)</span>
+<span>def <span class="ident">bayesdl_mcmc</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed, d_init, verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Run Metropolis-Hastings algorithm</p></div>
@@ -643,7 +646,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed,
-                 d_init):
+                 d_init, verbose=False):
     &#39;&#39;&#39;Run Metropolis-Hastings algorithm
     &#39;&#39;&#39;
     # initialize
@@ -673,7 +676,8 @@ def compute_rule_usage(d_star, R_star, X, Y):
         permsdic[a_t][1] += 1  # store the initialization sample
 
     # iterate!
-    for itr in range(numiters):
+    for itr in progress_iter(range(numiters), verbose=verbose,
+                            desc=&#39;MCMC iterations&#39;):
         # Sample from proposal distribution
         d_star, Jratio, R_star, step = proposal(d_t, R_t, X, Y, alpha)
         # Compute the new posterior value, if necessary
@@ -1033,7 +1037,7 @@ Get logalpha (length of list) (overloaded notation in this code, unrelated to th
 </details>
 </dd>
 <dt id="imodels.rule_list.bayesian_rule_list.brl_util.mcmcchain"><code class="name flex">
-<span>def <span class="ident">mcmcchain</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains, d_init)</span>
+<span>def <span class="ident">mcmcchain</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains, d_init, verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Run and store mcmc chain</p></div>
@@ -1042,12 +1046,12 @@ Get logalpha (length of list) (overloaded notation in this code, unrelated to th
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains,
-              d_init):
+              d_init, verbose=False):
     &#39;&#39;&#39;Run and store mcmc chain
     &#39;&#39;&#39;
     res = {}
     permsdic, res[&#39;perms&#39;] = bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs,
-                                          permsdic, burnin, None, d_init)
+                                          permsdic, burnin, None, d_init, verbose=verbose)
     # Store the permsdic results
     res[&#39;permsdic&#39;] = {perm: list(vals)
                        for perm, vals in permsdic.items() if vals[1] &gt; 0}
@@ -1287,7 +1291,7 @@ log-posterior value (so it doesn't need to be re-computed in future chains).</p>
     res = {}
     for n in range(nchains):
         res[n] = mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin,
-                           nchains, d_inits[n])
+                           nchains, d_inits[n], verbose=verbose)
 
     if verbose:
         print(&#39;Elapsed CPU time&#39;, time.process_time() - t1)
@@ -1319,6 +1323,7 @@ log-posterior value (so it doesn't need to be re-computed in future chains).</p>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

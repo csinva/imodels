@@ -52,13 +52,13 @@ def test_marginal_shrinkage_single_feature():
     a single coefficient to a scalar, so X @ coef raised
     "Input operand 1 does not have enough dimensions".
     """
-    from imodels import MarginalShrinkageLinearModelRegressor
+    from imodels import MarginalShrinkageLinearRegressor
 
     rng = np.random.RandomState(0)
     X = rng.randn(200, 1)
     y = 2 * X[:, 0] + 0.1 * rng.randn(200)
 
-    model = MarginalShrinkageLinearModelRegressor().fit(X, y)
+    model = MarginalShrinkageLinearRegressor().fit(X, y)
     assert np.shape(model.coef_marginal_) == (1,)
     assert model.predict(X).shape == (200,)
     assert np.mean((model.predict(X) - y) ** 2) < np.var(y)

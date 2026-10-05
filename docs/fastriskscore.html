@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels &middot; FastRiskScore</title>
+<meta name="description" content="Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use. Check out our new packages! …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+</head>
+
+<body>
+<header id="site-header">
+<a href="index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+        <article id="content">
+<section id="section-intro">
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <p align="center">
+                    <h1 text-align="center" style="padding-bottom: 0px;"> FastRiskScore: Fitting sparse integer risk scores via Autoresearch</h1>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; October 2026</h3>
+                    </p>
+                    <p class="post-links"><a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
+                    <hr>
+
+                    <div class="abstract">
+                    <p>
+                        A risk score is a short list of conditions, each worth a few integer points. You add the
+                        points of the conditions that apply and look up the risk for the total in a table. Clinical
+                        scores often
+                        work this way, so a doctor can compute and check them by hand. Here is an example that predicts whether a breast tumour is benign:</p>
+                    <!-- CARD:abstract -->
+<style>
+  /* risk-score cards (drawn by fastriskscore_card.py) */
+  .rs-card { max-width: 30rem; margin: 1.2em auto 1.4em; padding: 1.1em 1.3em 1em; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 2px rgba(27,31,35,.04), 0 6px 18px rgba(27,31,35,.06);
+    font-size: 0.92rem; line-height: 1.4; color: var(--ink); text-align: left; hyphens: none; }
+  .rs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; margin-bottom: .7em; }
+  .rs-title { font-weight: 600; letter-spacing: .01em; }
+  .rs-meta { color: var(--muted); font-size: .82em; white-space: nowrap; }
+  .rs-rows { list-style: none; margin: 0; padding: 0; counter-reset: rs; }
+  .rs-rows li { display: flex; align-items: center; gap: .7em; padding: .42em 0; border-top: 1px solid var(--line-soft); }
+  .rs-rows li:first-child { border-top: none; }
+  .rs-rows li::before { counter-increment: rs; content: counter(rs); flex: none; width: 1.5em; height: 1.5em; border-radius: 50%;
+    background: var(--surface-alt); border: 1px solid var(--line); color: var(--muted); font-size: .75em; display: grid; place-items: center; }
+  .rs-cond { flex: 1; min-width: 0; }
+  .rs-cond b { font-weight: 500; }
+  .rs-cond span { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rs-pts { flex: none; min-width: 2.6em; text-align: center; padding: .12em .5em; border-radius: 999px; font-weight: 600;
+    font-variant-numeric: tabular-nums; color: #fff; background: var(--accent); }
+  .rs-pts.neg { background: #c05621; }
+  .rs-sum { display: flex; justify-content: space-between; margin: .5em 0 .9em; padding-top: .5em; border-top: 2px solid var(--ink);
+    font-size: .85em; color: var(--muted); }
+  .rs-sum b { color: var(--ink); font-weight: 600; }
+  .rs-chart { position: relative; display: flex; align-items: flex-end; gap: 3px; height: 5.2em; }
+  .rs-half { position: absolute; left: 0; right: 0; bottom: 50%; border-top: 1px dashed var(--line); pointer-events: none; }
+  .rs-half span { position: absolute; left: 0; bottom: 2px; font-size: .62em; color: var(--muted); }
+  .rs-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; }
+  .rs-col i { display: block; font-style: normal; font-size: .68em; color: var(--ink-soft); text-align: center;
+    font-variant-numeric: tabular-nums; margin-bottom: 2px; white-space: nowrap; }
+  .rs-col s { display: block; text-decoration: none; border-radius: 3px 3px 0 0; min-height: 2px; }
+  .rs-axis { display: flex; gap: 3px; border-top: 1px solid var(--line); padding-top: 3px; }
+  .rs-axis span { flex: 1 1 0; min-width: 0; text-align: center; font-size: .7em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rs-foot { display: flex; justify-content: space-between; gap: 1em; margin-top: .35em; font-size: .75em; color: var(--muted); }
+  .rs-card.dense .rs-col i { display: none; }
+  .rs-card.wide { max-width: 50rem; }
+  .rs-card.wide .rs-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0 2em; align-items: end; }
+  .rs-card.wide { padding: .75em 1.1em .7em; margin: .8em auto 1em; }
+  .rs-card.wide .rs-head { margin-bottom: .3em; }
+  .rs-card.wide .rs-rows li { padding: .22em 0; }
+  .rs-card.wide .rs-pts { padding: .02em .5em; }
+  .rs-card.wide .rs-chart { height: 4.6em; }
+  .rs-card.wide .rs-sum { margin: .35em 0 0; padding-top: .35em; }
+  .rs-card.wide .rs-foot { margin-top: .2em; }
+  @media (max-width: 640px) { .rs-card.wide .rs-body { grid-template-columns: 1fr; } .rs-card.wide .rs-sum { margin-bottom: .9em; }
+    .rs-card { padding: .9em .9em .8em; } .abstract .rs-card { margin-left: -2.4em; margin-right: -2.4em; } }
+</style>
+<div class="rs-card wide" role="img" aria-label="Benign breast tumour score: 3 conditions and the chance the tumour is benign for each total score">
+  <div class="rs-head"><span class="rs-title">Benign breast tumour score</span><span class="rs-meta">test AUC 0.972</span></div>
+  <div class="rs-body"><div class="rs-left">
+  <ol class="rs-rows">
+    <li><span class="rs-cond"><b>worst area</b> <span>&le; 906.6</span></span><span class="rs-pts">+3</span></li>
+    <li><span class="rs-cond"><b>worst concave points</b> <span>&le; 0.1479</span></span><span class="rs-pts">+3</span></li>
+    <li><span class="rs-cond"><b>mean texture</b> <span>&le; 20.99</span></span><span class="rs-pts">+2</span></li>
+  </ol>
+  <div class="rs-sum"><span>Add the points of every condition that applies.</span></div>
+  </div><div class="rs-right">
+  <div class="rs-chart"><div class="rs-half"><span>50%</span></div><div class="rs-col" title="total 0: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 2: 0.1%"><i>0.1%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 3: 0.6%"><i>0.6%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 5: 30.1%"><i>30%</i><s style="height:30.1%;background:color-mix(in srgb, var(--accent) 48%, var(--surface))"></s></div><div class="rs-col" title="total 6: 78.3%"><i>78%</i><s style="height:78.3%;background:color-mix(in srgb, var(--accent) 84%, var(--surface))"></s></div><div class="rs-col" title="total 8: 99.6%"><i>99.6%</i><s style="height:99.6%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div></div>
+  <div class="rs-axis"><span>0</span><span>2</span><span>3</span><span>5</span><span>6</span><span>8</span></div>
+  <div class="rs-foot"><span>&uarr; chance the tumour is benign</span><span>total score &rarr;</span></div>
+  </div></div>
+</div>                    <!-- /CARD:abstract -->
+                    <p>Choosing the conditions and points is a slow integer optimization problem.
+                        We used autoresearch to build <b>FastRiskScore</b>, which builds on prior work in the field like <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a> and <a href="https://arxiv.org/abs/2210.05846">FasterRisk</a>.
+                        On held-out datasets FastRiskScore generally fits much faster than competing baselines, without sacrificing training loss or test AUC.
+                    </p>
+                    </div>
+
+                    <nav class="toc-main">
+                      <a href="#quickstart"><span>1</span> Quickstart &amp; example usage</a>
+                      <a href="#results"><span>2</span> Experimental results</a>
+                      <a href="#methods"><span>3</span> Methods: FastRiskScore</a>
+                    </nav>
+
+                    <h2 id="quickstart">1. Quickstart &amp; example usage</h2>
+
+                    <pre><code class="language-python">from imodels import FastRiskScoreClassifier
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+X, y = load_breast_cancer(return_X_y=True, as_frame=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+model = FastRiskScoreClassifier(k=5).fit(X_train, y_train)
+proba = model.predict_proba(X_test)</code></pre>
+
+                    <ul>
+                      <li><code>k</code> (default 5): the most conditions the score may use.</li>
+                      <li><code>max_points</code> (default 5): the largest number of points one condition can carry.</li>
+                      <li><code>n_thresholds</code> (default 9): thresholds per numeric column, so the default splits each at
+                        its deciles. With more than 19 (for example 99, the percentiles) the search switches to settings tuned
+                        for fine thresholds.</li>
+                      <li><code>binarize</code> (default True): numeric columns become <code>x &le; t</code> conditions and
+                        categorical columns one condition per level, so each condition refers to one of the original columns.
+                        Set it to False to use binary or small-integer columns as they are.</li>
+                      <li><code>time_limit</code> (default 60 s): the search returns the best score found by then.</li>
+                    </ul>
+
+                    <details class="collapsible" id="reading-the-score">
+                      <summary>The fitted model: points, total score and risk curve</summary>
+                      <p>Here is the fitted model, fit in 0.02 seconds:</p>
+                    <!-- CARD:quickstart -->
+<div class="rs-card dense wide" role="img" aria-label="Benign breast tumour score: 5 conditions and the chance the tumour is benign for each total score">
+  <div class="rs-head"><span class="rs-title">Benign breast tumour score</span><span class="rs-meta">test AUC 0.984</span></div>
+  <div class="rs-body"><div class="rs-left">
+  <ol class="rs-rows">
+    <li><span class="rs-cond"><b>worst area</b> <span>&le; 906.6</span></span><span class="rs-pts">+5</span></li>
+    <li><span class="rs-cond"><b>worst texture</b> <span>&le; 20.14</span></span><span class="rs-pts">+4</span></li>
+    <li><span class="rs-cond"><b>worst concave points</b> <span>&le; 0.1479</span></span><span class="rs-pts">+4</span></li>
+    <li><span class="rs-cond"><b>mean texture</b> <span>&le; 20.99</span></span><span class="rs-pts">+3</span></li>
+    <li><span class="rs-cond"><b>worst concave points</b> <span>&le; 0.09804</span></span><span class="rs-pts">+2</span></li>
+  </ol>
+  <div class="rs-sum"><span>Add the points of every condition that applies.</span></div>
+  </div><div class="rs-right">
+  <div class="rs-chart"><div class="rs-half"><span>50%</span></div><div class="rs-col" title="total 0: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 2: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 3: 0.0%"><i>0.0%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 4: 0.1%"><i>0.1%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 5: 0.3%"><i>0.3%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 25%, var(--surface))"></s></div><div class="rs-col" title="total 6: 1.2%"><i>1.2%</i><s style="height:2.0%;background:color-mix(in srgb, var(--accent) 26%, var(--surface))"></s></div><div class="rs-col" title="total 7: 4.8%"><i>4.8%</i><s style="height:4.8%;background:color-mix(in srgb, var(--accent) 29%, var(--surface))"></s></div><div class="rs-col" title="total 8: 17.1%"><i>17%</i><s style="height:17.1%;background:color-mix(in srgb, var(--accent) 38%, var(--surface))"></s></div><div class="rs-col" title="total 9: 45.6%"><i>46%</i><s style="height:45.6%;background:color-mix(in srgb, var(--accent) 59%, var(--surface))"></s></div><div class="rs-col" title="total 10: 77.4%"><i>77%</i><s style="height:77.4%;background:color-mix(in srgb, var(--accent) 83%, var(--surface))"></s></div><div class="rs-col" title="total 11: 93.3%"><i>93%</i><s style="height:93.3%;background:color-mix(in srgb, var(--accent) 95%, var(--surface))"></s></div><div class="rs-col" title="total 12: 98.3%"><i>98%</i><s style="height:98.3%;background:color-mix(in srgb, var(--accent) 99%, var(--surface))"></s></div><div class="rs-col" title="total 13: 99.6%"><i>99.6%</i><s style="height:99.6%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 14: 99.9%"><i>99.9%</i><s style="height:99.9%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 15: 100.0%"><i>100.0%</i><s style="height:100.0%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 16: 100.0%"><i>100.0%</i><s style="height:100.0%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div><div class="rs-col" title="total 18: 100.0%"><i>100.0%</i><s style="height:100.0%;background:color-mix(in srgb, var(--accent) 100%, var(--surface))"></s></div></div>
+  <div class="rs-axis"><span>0</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>18</span></div>
+  <div class="rs-foot"><span>&uarr; chance the tumour is benign</span><span>total score &rarr;</span></div>
+  </div></div>
+</div>                    <!-- /CARD:quickstart -->
+                      <p>The fitted model stores the score and its risk curve:</p>
+                      <pre><code class="language-python">model.points_           # {"worst area &lt;= 906.6": 5, ...}, the lines of the score
+model.total_score(X)    # the total points of each row
+model.risk(score)       # 1 / (1 + exp(-(model.scale_ * score + model.intercept_)))
+model.train_loss_       # the mean training log loss of that risk</code></pre>
+                      <p>The points determine the total score of each row. The risk for a total comes from a logistic
+                        curve, <code>risk(s) = 1 / (1 + exp(-(a&middot;s + b)))</code>, with <i>a</i> =
+                        <code>model.scale_</code> and <i>b</i> = <code>model.intercept_</code>; both are fit to the
+                        training data once the points are chosen. The points are chosen to make the log loss of this
+                        curve as small as possible (<a href="#methods">Sec 3</a>), so the risks in the diagram are
+                        calibrated on the training data. RiskSLIM and FasterRisk show the same kind of table; they write
+                        <i>b</i> as an integer offset and <i>1/a</i> as a multiplier.</p>
+                    </details>
+
+                    <h2 id="results">2. Experimental results</h2>
+
+                    <p><b>The autoresearch loop.</b> FastRiskScore came out of the autoresearch loop of
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
+                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_slim">github</a>).
+                        Two coding agents (Claude Code with Opus 5.5) started from the same solver, FasterRisk rewritten as a single Python file, and used the
+                        same benchmark. One was asked to lower the loss and the other to
+                        make the solver faster. In each round an agent changed the solver, ran the benchmark, and kept
+                        the change only if the loss went down without the time rising by more than 10%, or the time
+                        went down by at least 10% without the loss rising. The agents ran for about 75 hours of autoresearch. The
+                        shipped version comes from later loops (<a href="#next">below</a>); Fig <a href="#fig1">1</a> and
+                        Table <a href="#tab1">1</a> show it.
+                      All solvers are scored the same way. A solver returns integer points in [&minus;5, 5] for at most
+                        <code>k</code> of a dataset's binary features. The benchmark then fits the risk curve for those
+                        points itself and records 3 numbers: the training log loss of that curve, which is the
+                        quantity being minimized; the test AUC of the total score on a held-out 20% split; and the fit
+                        time.
+                      </p>
+
+                    <p><b>Datasets, baselines, and evaluations.</b> The benchmark that the agents optimize over (which we call the "visible set"),
+                        has 70 problems: 14 datasets &times; 5 values of <code>k</code> (3, 4, 5, 7 and 10). Each problem
+                        has a 60 s limit and runs on one core.
+                        We compare against 19 baselines that run without a commercial solver, from FasterRisk and exact
+                      solvers to sparse models with rounding and recent scoring-system packages (listed below).
+                      
+                      </p>
+
+<details class="collapsible" id="datasets">
+                      <summary>The 14 visible datasets (from the RiskSLIM and FasterRisk papers, and OpenML)</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>dataset</th><th>what it is</th><th>rows</th><th>binary features</th><th>positive rate</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td><code>adult</code></td><td>UCI Adult income, RiskSLIM binarization</td><td>12,500</td><td>36</td><td>0.24</td></tr>
+                          <tr><td><code>bank</code></td><td>UCI Bank telemarketing, RiskSLIM binarization</td><td>12,500</td><td>57</td><td>0.11</td></tr>
+                          <tr><td><code>breastcancer</code></td><td>UCI Wisconsin breast cancer, 9 cytology scores (1 to 10)</td><td>683</td><td>9</td><td>0.35</td></tr>
+                          <tr><td><code>mammo</code></td><td>UCI Mammographic mass, RiskSLIM binarization</td><td>961</td><td>14</td><td>0.46</td></tr>
+                          <tr><td><code>mushroom</code></td><td>UCI Mushroom, one-hot</td><td>8,124</td><td>113</td><td>0.48</td></tr>
+                          <tr><td><code>spambase</code></td><td>UCI Spambase, 57 word and character frequencies (real-valued)</td><td>4,601</td><td>57</td><td>0.39</td></tr>
+                          <tr><td><code>fico</code></td><td>FICO HELOC credit (OpenML 45023)</td><td>10,000</td><td>142</td><td>0.50</td></tr>
+                          <tr><td><code>compas</code></td><td>ProPublica COMPAS two-year recidivism (OpenML 42192)</td><td>5,278</td><td>32</td><td>0.47</td></tr>
+                          <tr><td><code>australian</code></td><td>Statlog Australian credit</td><td>690</td><td>79</td><td>0.45</td></tr>
+                          <tr><td><code>heart</code></td><td>Statlog heart disease</td><td>270</td><td>57</td><td>0.44</td></tr>
+                          <tr><td><code>ionosphere</code></td><td>UCI Ionosphere radar returns</td><td>351</td><td>267</td><td>0.36</td></tr>
+                          <tr><td><code>ilpd</code></td><td>Indian liver patient records</td><td>583</td><td>79</td><td>0.29</td></tr>
+                          <tr><td><code>magic</code></td><td>MAGIC gamma telescope</td><td>12,500</td><td>90</td><td>0.35</td></tr>
+                          <tr><td><code>haberman</code></td><td>Haberman breast cancer survival</td><td>306</td><td>27</td><td>0.27</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">The first six are the files distributed with <a href="https://github.com/ustunb/risk-slim/tree/master/examples/data">RiskSLIM</a>,
+                        which FasterRisk also uses; breastcancer and spambase keep real-valued columns, and mammo has
+                        one small-integer column. The other eight are binarized here: each numeric column becomes
+                        indicators <code>x &le; t</code> at its deciles, each categorical column one indicator per
+                        level. Datasets above 12,500 rows are subsampled to 12,500, and every dataset is split 80/20
+                        into training and test rows.</p>
+                    </details>
+
+                    <details class="collapsible" id="tabarena">
+                      <summary>The 27 hidden datasets (from <a href="https://tabarena.ai">TabArena</a>)</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>dataset</th><th>rows <span class="tgt">/ full size</span></th><th>columns</th><th>binary features</th><th>positive rate</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td><code>Amazon_employee_access</code></td><td>12,500 <span class="tgt">/ 32,769</span></td><td>9</td><td>107</td><td>0.06</td></tr>
+                          <tr><td><code>APSFailure</code></td><td>12,500 <span class="tgt">/ 76,000</span></td><td>170</td><td>399</td><td>0.02</td></tr>
+                          <tr><td><code>Bank_Customer_Churn</code></td><td>10,000 <span class="tgt">/ 10,000</span></td><td>10</td><td>54</td><td>0.20</td></tr>
+                          <tr><td><code>Bioresponse</code></td><td>3,751 <span class="tgt">/ 3,751</span></td><td>1,776</td><td>306</td><td>0.46</td></tr>
+                          <tr><td><code>blood-transfusion</code></td><td>748 <span class="tgt">/ 748</span></td><td>4</td><td>32</td><td>0.24</td></tr>
+                          <tr><td><code>churn</code></td><td>5,000 <span class="tgt">/ 5,000</span></td><td>19</td><td>148</td><td>0.14</td></tr>
+                          <tr><td><code>coil2000_insurance_policies</code></td><td>9,822 <span class="tgt">/ 9,822</span></td><td>85</td><td>176</td><td>0.06</td></tr>
+                          <tr><td><code>credit-g</code></td><td>1,000 <span class="tgt">/ 1,000</span></td><td>20</td><td>87</td><td>0.30</td></tr>
+                          <tr><td><code>credit_card_clients_default</code></td><td>12,500 <span class="tgt">/ 30,000</span></td><td>23</td><td>154</td><td>0.22</td></tr>
+                          <tr><td><code>customer_satisfaction_in_airline</code></td><td>12,500 <span class="tgt">/ 129,880</span></td><td>21</td><td>109</td><td>0.45</td></tr>
+                          <tr><td><code>Diabetes130US</code></td><td>12,500 <span class="tgt">/ 71,518</span></td><td>47</td><td>196</td><td>0.09</td></tr>
+                          <tr><td><code>E-CommereShippingData</code></td><td>10,999 <span class="tgt">/ 10,999</span></td><td>10</td><td>52</td><td>0.40</td></tr>
+                          <tr><td><code>Fitness_Club</code></td><td>1,500 <span class="tgt">/ 1,500</span></td><td>6</td><td>41</td><td>0.30</td></tr>
+                          <tr><td><code>GiveMeSomeCredit</code></td><td>12,500 <span class="tgt">/ 150,000</span></td><td>10</td><td>57</td><td>0.07</td></tr>
+                          <tr><td><code>hazelnut-contaminant</code></td><td>2,400 <span class="tgt">/ 2,400</span></td><td>30</td><td>270</td><td>0.50</td></tr>
+                          <tr><td><code>HR_Analytics</code></td><td>12,500 <span class="tgt">/ 19,158</span></td><td>12</td><td>98</td><td>0.25</td></tr>
+                          <tr><td><code>in_vehicle_coupon</code></td><td>12,500 <span class="tgt">/ 12,684</span></td><td>24</td><td>112</td><td>0.43</td></tr>
+                          <tr><td><code>Is-this-a-good-customer</code></td><td>1,723 <span class="tgt">/ 1,723</span></td><td>13</td><td>75</td><td>0.11</td></tr>
+                          <tr><td><code>kddcup09_appetency</code></td><td>12,500 <span class="tgt">/ 50,000</span></td><td>212</td><td>294</td><td>0.02</td></tr>
+                          <tr><td><code>Marketing_Campaign</code></td><td>2,240 <span class="tgt">/ 2,240</span></td><td>25</td><td>140</td><td>0.15</td></tr>
+                          <tr><td><code>NATICUSdroid</code></td><td>7,491 <span class="tgt">/ 7,491</span></td><td>86</td><td>80</td><td>0.35</td></tr>
+                          <tr><td><code>online_shoppers_intention</code></td><td>12,330 <span class="tgt">/ 12,330</span></td><td>17</td><td>99</td><td>0.15</td></tr>
+                          <tr><td><code>polish_companies_bankruptcy</code></td><td>5,910 <span class="tgt">/ 5,910</span></td><td>64</td><td>387</td><td>0.07</td></tr>
+                          <tr><td><code>qsar-biodeg</code></td><td>1,054 <span class="tgt">/ 1,054</span></td><td>41</td><td>208</td><td>0.34</td></tr>
+                          <tr><td><code>seismic-bumps</code></td><td>2,584 <span class="tgt">/ 2,584</span></td><td>15</td><td>66</td><td>0.07</td></tr>
+                          <tr><td><code>taiwanese_bankruptcy</code></td><td>6,819 <span class="tgt">/ 6,819</span></td><td>94</td><td>360</td><td>0.03</td></tr>
+                          <tr><td><code>jm1</code></td><td>10,885 <span class="tgt">/ 10,885</span></td><td>21</td><td>167</td><td>0.19</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">Every binary classification dataset of TabArena (OpenML suite
+                        <code>tabarena-v0.1</code>) except bank-marketing, heloc and diabetes, which the visible set
+                        already contains. They were binarized by the same rule as the visible set, with at most 40
+                        columns kept (those with the highest mutual information with the label on the training split),
+                        and never used during development. Builder: <code>evolve_slim/data/build_data.py</code>.</p>
+                    </details>
+
+                    <details class="collapsible" id="baselines">
+                      <summary>The 19 baselines</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>baseline</th><th>family</th><th>source and how it is run</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>FasterRisk</td><td style="white-space:nowrap">FasterRisk</td><td><a href="https://arxiv.org/abs/2210.05846">Liu et al. 2022</a>; package <code>fasterrisk</code> 0.1.10, default settings</td></tr>
+                          <tr><td>FasterRisk, wide search</td><td style="white-space:nowrap">FasterRisk</td><td>the same with a beam of 50 &times; 50, a pool of 200, 100 swaps and 100 multipliers</td></tr>
+                          <tr><td>RiskSLIM</td><td style="white-space:nowrap">exact</td><td><a href="https://jmlr.org/papers/v20/18-615.html">Ustun &amp; Rudin 2019</a>; <code>risk-slim</code> with the free CPLEX Community Edition</td></tr>
+                          <tr><td>Cutting planes, HiGHS</td><td style="white-space:nowrap">exact</td><td>RiskSLIM's cutting-plane algorithm reimplemented with the open-source HiGHS solver</td></tr>
+                          <tr><td>SLIM</td><td style="white-space:nowrap">exact</td><td><a href="https://arxiv.org/abs/1502.04269">Ustun &amp; Rudin 2016</a>; its 0-1 loss integer program solved with HiGHS</td></tr>
+                          <tr><td>abess + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://www.jmlr.org/papers/v23/21-1060.html">Zhu et al. 2022</a>; best-subset selection, package <code>abess</code></td></tr>
+                          <tr><td>fastSparse + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://arxiv.org/abs/2202.11389">Liu et al. 2022</a>; the L0 path, package <code>fastsparsegams</code></td></tr>
+                          <tr><td>OKRidge + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://arxiv.org/abs/2304.06686">Liu et al. 2023</a>; optimal sparse ridge support, vendored</td></tr>
+                          <tr><td>L1 path + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td>supports along the L1 logistic path (scikit-learn)</td></tr>
+                          <tr><td>L0Learn + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://arxiv.org/abs/2001.06471">Dedieu et al. 2021</a>; L0L2 logistic path with swaps, R package <code>L0Learn</code></td></tr>
+                          <tr><td>OKGLM + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://github.com/jiachangliu/OKGLM">Liu et al. 2025</a>; certified k-sparse logistic regression in [&minus;5, 5], vendored, CPU</td></tr>
+                          <tr><td>skscope + rounding</td><td style="white-space:nowrap">sparse + rounding</td><td><a href="https://github.com/abess-team/skscope">Wang et al. 2024</a>; k-sparse logistic regression by splicing, package <code>skscope</code></td></tr>
+                          <tr><td>Probabilistic scoring list</td><td style="white-space:nowrap">scoring system</td><td><a href="https://arxiv.org/abs/2407.21535">Hanselle et al. 2025</a>; package <code>scikit-psl</code>, vendored</td></tr>
+                          <tr><td>AutoScore</td><td style="white-space:nowrap">scoring system</td><td><a href="https://medinform.jmir.org/2020/10/e21798/">Xie et al. 2020</a>; reimplemented (R only)</td></tr>
+                          <tr><td>riskscores, annealing</td><td style="white-space:nowrap">scoring system</td><td><a href="https://cran.r-project.org/package=riskscores">R package <code>riskscores</code></a> 1.3.0</td></tr>
+                          <tr><td>riskscores, coordinate descent</td><td style="white-space:nowrap">scoring system</td><td>the same package, its coordinate-descent method</td></tr>
+                          <tr><td>Rounded L1 logistic</td><td style="white-space:nowrap">common practice</td><td>L1 logistic regression with <code>k</code> features, scaled to a largest point of 5 and rounded</td></tr>
+                          <tr><td>Unit weighting</td><td style="white-space:nowrap">common practice</td><td>the L1-selected features, each worth +1 or &minus;1 by its sign</td></tr>
+                          <tr><td>imodels SLIMClassifier (before)</td><td style="white-space:nowrap">common practice</td><td>imodels 3.0.2 without a commercial solver: a rounded L2 logistic regression</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">The baselines came from two searches for methods that can be run without a
+                        commercial solver: one of packages for risk scores and sparse logistic regression, and a later one of
+                        2023 to 2026 papers that cite FasterRisk, RiskSLIM, fastSparse, OKRidge, scoring lists or the
+                        certifier of Liu et al. (ICML 2025). Each "+ rounding" method gives a sparse real-valued solution with
+                        at most <code>k</code> features, which FasterRisk's rounding step turns into points. Penalized
+                        methods (riskscores, L0Learn, the L1 path, imodels' SLIMClassifier) have their penalty searched until
+                        at most <code>k</code> points are nonzero, and points are clipped to [&minus;5, 5]. scikit-psl and
+                        okridge pin numpy&nbsp;&lt;&nbsp;2 and are vendored with small fixes (a numpy 2 incompatibility in
+                        scikit-psl, a call to a removed method in okridge), and scikit-psl gains a stop after <code>k</code>
+                        stages. AutoScore is only available in R, so its recipe (rank by random-forest importance, fit a
+                        logistic regression, divide by the smallest coefficient and round) is reimplemented on the binary
+                        features. RiskSLIM has no open-solver version, so its cutting-plane algorithm is reimplemented with
+                        HiGHS, re-solving the integer program each round and starting from rounded heuristic solutions as
+                        RiskSLIM does; it proves optimality on 6 of the 70 visible problems. L0Learn runs from its R package,
+                        since the Python package has no build past Python 3.10, and the R methods run in one persistent R
+                        process per worker so that R's start-up is not timed. OKGLM has no intercept, so a constant column is
+                        added. imodels' previous SLIMClassifier solves its integer program only with a commercial solver
+                        installed; without one, which is the default, it rounds an L2 logistic regression. Probabilistic
+                        scoring lists are killed at 3&times; the time limit on 10 visible and 51 hidden problems, and
+                        riskscores often passes the time limit, since it checks the clock only between fits; a solver
+                        without a score is charged the base rate. Left out: scorepyo (abandoned, pinned to 2022 packages),
+                        weight-of-evidence scorecards (optbinning, scorecardpy; not sparse integer points), GroupFasterRisk
+                        (the same as FasterRisk without feature groups), recent methods without public code (a GPU branch
+                        and bound for k-sparse GLMs, net-benefit risk scores) and those that optimise a different objective
+                        (boosted risk scores, SHAPoint, AgentScore).</p>
+                    </details>
+
+                    <p><b>FastRiskScore is fast and accurate.</b> Fig <a href="#fig1">1</a> plots time per problem against the training loss (Fig 1A-C) and the test error (Fig 1D).
+                      In all cases, FastRiskScore achieves the best performance (lower left).
+                      The loss is shown as
+                      the excess over the lowest loss any solver reached on each problem, averaged over problems. A
+                      solver that returns no score on a problem is charged the loss of predicting the base rate there.
+                      </p>
+                    <span class="fig-anchor" id="fig1"></span>
+                    <div class="fig-wide">
+                      <ul class="fig-legend" aria-label="Legend">
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#104281"/></svg>Autoresearch run 1 (lower loss)</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#3987e5"/></svg>Autoresearch run 2 (faster)</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" fill="#3987e5" fill-opacity="0.35"/></svg>Discarded attempts</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#a09f9a"/></svg>Baselines</li>
+                        <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#3987e5"/></svg>FastRiskScore</li>
+                      </ul>
+                      <div class="fig-pair">
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">A</span>
+                          <h4>Visible set <span>(14 datasets &times; 5 values of k, 60 s per problem)</span></h4>
+                          <div id="pareto-dev" role="img" aria-label="Mean excess training loss against geometric-mean time for every version the loop tried and the baselines on the visible set."></div>
+                        </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">B</span>
+                          <h4>Hidden set <span>(27 datasets &times; 5 values of k, 60 s per problem)</span></h4>
+                          <div id="pareto-hidden" role="img" aria-label="The same measure for the kept versions and the baselines on the 27 held-out TabArena datasets."></div>
+                        </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">C</span>
+                          <h4>Hidden set, full size <span>(k = 5, 10 min per problem)</span></h4>
+                          <div id="pareto-full" role="img" aria-label="The same measure on the full-size held-out datasets at k = 5."></div>
+                        </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">D</span>
+                          <h4>Hidden set, test error <span>(27 datasets &times; 5 values of k, 60 s per problem)</span></h4>
+                          <div id="pareto-test" role="img" aria-label="Mean test error (1 minus AUC) against geometric-mean time for the kept versions and the baselines on the 27 held-out TabArena datasets."></div>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="caption"><b>Fig 1. Training loss and test error against fit time.</b> FastRiskScore (star)
+                        is about 180&times; faster than FasterRisk on the visible set and 225&times; on the held-out sets (by
+                        the median), and has a lower loss on 55 of 70, 94 of 135 and 21 of 27 problems (a higher one on 0, 8
+                        and 0), and has the lowest test error of the integer scores. The closest baselines are sparse
+                        models rounded with FasterRisk's rounding step. <b>A</b>: the visible set
+                        that the loop was scored on, with every version either run tried (discarded attempts are faded).
+                        <b>B</b>: the same protocol on 27 held-out TabArena datasets, for the versions each run kept.
+                        <b>C</b>: the held-out datasets at full size, up to 120,000 training rows, at <code>k</code> = 5
+                        with 10 minutes per problem. <b>D</b>: the test error (1 &minus; AUC) of the solvers in B, averaged over the 135
+                        held-out problems; the axis stops at 0.275, so the solvers above it (RiskSLIM 0.432, SLIM
+                        0.358, cutting planes 0.333 and scoring lists 0.319) are not shown. Each point is one solver; the x-axis is its geometric-mean fit time, and in A
+                        to C the y-axis is its mean excess training loss over the best loss any solver reached on each
+                        problem (log scale). Large points are the mean of three runs. In C no other solver shown beats FastRiskScore
+                        on any dataset, so its star sits at the bottom of the axis. All runs
+                        used one core per problem on a Linux server (two Xeon Platinum 8468V), with 14 problems at a
+                        time (27 in C).</p>
+                    <script>
+                    // a link to a collapsible (e.g. Table 1, the baselines) opens it
+                    (function () {
+                      function openTarget(id) {
+                        var el = id && document.getElementById(id);
+                        for (; el; el = el.parentElement) if (el.tagName === 'DETAILS') el.open = true;
+                      }
+                      document.addEventListener('click', function (e) {
+                        var a = e.target.closest && e.target.closest('a[href^="#"]');
+                        if (a) openTarget(a.getAttribute('href').slice(1));
+                      });
+                      window.addEventListener('hashchange', function () { openTarget(location.hash.slice(1)); });
+                      openTarget(location.hash.slice(1));
+                    })();
+                    </script>
+                    <style>
+                      details.collapsible { border: 1px solid transparent; border-radius: 6px;
+                        padding: 0 0.9em; margin: 0.1em -0.9em; }
+                      details.collapsible[open] { background: var(--surface-alt); border-color: var(--line-soft);
+                        padding: 0.35em 0.9em 0.6em; margin: 0.5em -0.9em; }
+                      details.collapsible[open] > summary { margin-bottom: 0.35em; }
+                      .eq { overflow-x: auto; margin: 1em 0 1.2em; }
+                      .fig-wide { margin: 1.2em 0 0.2em; }
+                      @media (min-width: 1100px) {
+                        .fig-wide {
+                          --fig-w: min(1500px, calc(100vw - min(var(--sidebar-w), 32vw) - 6rem));
+                          width: var(--fig-w); margin-left: calc((100% - var(--fig-w)) / 2);
+                        }
+                      }
+                      .fig-pair { display: flex; flex-wrap: wrap; gap: 1em 2.5%; }
+                      .fig-panel { flex: 1 1 300px; min-width: 0; position: relative; }
+                      .panel-letter { position: absolute; left: 0; top: -0.1em; font-size: 1.15rem;
+                        font-weight: 700; color: var(--ink); line-height: 1; }
+                      .fig-panel h4 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.1em 1.6rem; color: var(--ink); }
+                      .fig-panel h4 span { font-weight: 400; color: var(--muted); }
+                      ul.fig-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em 1.3em;
+                        list-style: none; padding: 0; margin: 0 0 0.8em; font-size: 0.8rem; color: var(--ink); }
+                      ul.fig-legend li { display: flex; align-items: center; gap: 0.4em; margin: 0; }
+                      ul.fig-legend svg { width: 16px; height: 16px; flex: 0 0 auto; }
+                      .fig-pending { display: flex; align-items: center; justify-content: center; height: 320px;
+                        color: var(--muted); font-size: 0.9rem; border: 1px dashed var(--line); }
+                      table.results-table td:not(:first-child), table.results-table th:not(:first-child) { text-align: right; white-space: nowrap; }
+                      table.results-table { font-size: 0.85rem; }
+                      table.results-table tr.ours td { font-weight: 600; }
+                      table.results-table th.grp { text-align: center; border-bottom: 1px solid var(--line-soft); }
+                    </style>
+                    <script>
+                    var PARETO = {"dev":{"points":[{"model":"v2_latticels","label":"run 1, v2_latticels (discarded)","group":"run1_discard","runs":1,"c":0.0006668879999656818,"c_sd":0.0,"c_raw":0.0006668879999656818,"t":1.6773742110407939,"t_sd":0.0,"auc":0.8422718027218137,"loss":0.35648210457139423,"direct":null},{"model":"v3_fastnewton","label":"run 1, v3_fastnewton","group":"run1","runs":1,"c":0.003383543947817734,"c_sd":0.0,"c_raw":0.003383543947817734,"t":0.2786439064088904,"t_sd":0.0,"auc":0.8414513943521209,"loss":0.3591987605192463,"direct":null},{"model":"v4_fast_lattice","label":"run 1, v4_fast_lattice (discarded)","group":"run1_discard","runs":1,"c":0.00061363547201414,"c_sd":0.0,"c_raw":0.00061363547201414,"t":0.4499177945067113,"t_sd":0.0,"auc":0.8427178412852384,"loss":0.3564288520434427,"direct":null},{"model":"v5_tunetop","label":"run 1, v5_tunetop","group":"run1","runs":1,"c":0.0034228635563495254,"c_sd":0.0,"c_raw":0.0034228635563495254,"t":0.2109683220610578,"t_sd":0.0,"auc":0.8423962687203825,"loss":0.35923808012777814,"direct":null},{"model":"v6_numbaray","label":"run 1, v6_numbaray","group":"run1","runs":1,"c":0.0034228635563495254,"c_sd":0.0,"c_raw":0.0034228635563495254,"t":0.17589742635509312,"t_sd":0.0,"auc":0.8423962687203825,"loss":0.35923808012777814,"direct":null},{"model":"v7_histlattice","label":"run 1, v7_histlattice (discarded)","group":"run1_discard","runs":1,"c":0.0007293465523772741,"c_sd":0.0,"c_raw":0.0007293465523772741,"t":0.22632651649857224,"t_sd":0.0,"auc":0.8428777730439325,"loss":0.3565445631238058,"direct":null},{"model":"v8_screenall","label":"run 1, v8_screenall (discarded)","group":"run1_discard","runs":1,"c":0.0011646205774451916,"c_sd":0.0,"c_raw":0.0011646205774451916,"t":0.20436667390801977,"t_sd":0.0,"auc":0.8419319512012755,"loss":0.3569798371488737,"direct":null},{"model":"v9_pool10","label":"run 1, v9_pool10","group":"run1","runs":1,"c":0.0007908595910851452,"c_sd":0.0,"c_raw":0.0007908595910851452,"t":0.16325686467038256,"t_sd":0.0,"auc":0.8427287431413141,"loss":0.35660607616251366,"direct":null},{"model":"v10_pairmoves","label":"run 1, v10_pairmoves (discarded)","group":"run1_discard","runs":1,"c":0.0006842636901164545,"c_sd":0.0,"c_raw":0.0006842636901164545,"t":0.1775842500734551,"t_sd":0.0,"auc":0.8427812187555873,"loss":0.356499480261545,"direct":null},{"model":"v11_pooltune","label":"run 1, v11_pooltune","group":"run1","runs":1,"c":0.0007908595910851452,"c_sd":0.0,"c_raw":0.0007908595910851452,"t":0.14323855097260818,"t_sd":0.0,"auc":0.8427287431413141,"loss":0.35660607616251366,"direct":null},{"model":"v12_quickcalib","label":"run 1, v12_quickcalib (discarded)","group":"run1_discard","runs":1,"c":0.000865821416790191,"c_sd":0.0,"c_raw":0.000865821416790191,"t":0.13558344365262606,"t_sd":0.0,"auc":0.842687930591287,"loss":0.35668103798821865,"direct":null},{"model":"v13_zerostart","label":"run 1, v13_zerostart (discarded)","group":"run1_discard","runs":1,"c":0.0007049760735867444,"c_sd":0.0,"c_raw":0.0007049760735867444,"t":0.17151720447483812,"t_sd":0.0,"auc":0.8428502725938792,"loss":0.3565201926450152,"direct":null},{"model":"v24_child5","label":"run 1, v24_child5","group":"run1","runs":1,"c":0.0004993207099990845,"c_sd":0.0,"c_raw":0.0004993207099990845,"t":0.14242451026917957,"t_sd":0.0,"auc":0.8425545201208247,"loss":0.3563145372814276,"direct":null},{"model":"v27_cheap1d","label":"run 1, v27_cheap1d","group":"run1","runs":1,"c":0.0005078997569928585,"c_sd":0.0,"c_raw":0.0005078997569928585,"t":0.12205924285829114,"t_sd":0.0,"auc":0.842502265384076,"loss":0.35632311632842134,"direct":null},{"model":"v28_ray5","label":"run 1, v28_ray5","group":"run1","runs":1,"c":0.0005039749049652114,"c_sd":0.0,"c_raw":0.0005039749049652114,"t":0.10528357015569992,"t_sd":0.0,"auc":0.8425027854271876,"loss":0.3563191914763938,"direct":null},{"model":"v29_tune1","label":"run 1, v29_tune1","group":"run1","runs":1,"c":0.0005436241435849678,"c_sd":0.0,"c_raw":0.0005436241435849678,"t":0.08699413967050863,"t_sd":0.0,"auc":0.842728101635063,"loss":0.3563588407150135,"direct":null},{"model":"v32_nbsupport","label":"run 1, v32_nbsupport (discarded)","group":"run1_discard","runs":1,"c":0.0005718517887443767,"c_sd":0.0,"c_raw":0.0005718517887443767,"t":0.08070478328094494,"t_sd":0.0,"auc":0.8428223269492295,"loss":0.3563870683601729,"direct":null},{"model":"v34_2starts","label":"run 1, v34_2starts","group":"run1","runs":1,"c":0.0005820461648349324,"c_sd":0.0,"c_raw":0.0005820461648349324,"t":0.07384977194301151,"t_sd":0.0,"auc":0.8431151936324391,"loss":0.35639726273626343,"direct":null},{"model":"v36_robust","label":"run 1, v36_robust (discarded)","group":"run1_discard","runs":1,"c":0.0005820461648349324,"c_sd":0.0,"c_raw":0.0005820461648349324,"t":0.07142996109434327,"t_sd":0.0,"auc":0.8431151936324391,"loss":0.35639726273626343,"direct":null},{"model":"v2_numba","label":"run 2, v2_numba","group":"run2","runs":1,"c":0.0039916197333299585,"c_sd":0.0,"c_raw":0.0039916197333299585,"t":0.2957089755591123,"t_sd":0.0,"auc":0.8413670449571636,"loss":0.3598068363047585,"direct":null},{"model":"v3_ils","label":"run 2, v3_ils (discarded)","group":"run2_discard","runs":1,"c":0.000727826514835234,"c_sd":0.0,"c_raw":0.000727826514835234,"t":0.5400809129696741,"t_sd":0.0,"auc":0.8415267411807712,"loss":0.35654304308626383,"direct":null},{"model":"v4_binned","label":"run 2, v4_binned (discarded)","group":"run2_discard","runs":1,"c":0.000727826514835234,"c_sd":0.0,"c_raw":0.000727826514835234,"t":0.3673504389149524,"t_sd":0.0,"auc":0.8415267411807712,"loss":0.35654304308626383,"direct":null},{"model":"v5_nopool","label":"run 2, v5_nopool","group":"run2","runs":1,"c":0.0005535028211696714,"c_sd":0.0,"c_raw":0.0005535028211696714,"t":0.26351006428397006,"t_sd":0.0,"auc":0.8427418275507956,"loss":0.3563687193925983,"direct":null},{"model":"v6_screen","label":"run 2, v6_screen (discarded)","group":"run2_discard","runs":1,"c":0.001570154391340804,"c_sd":0.0,"c_raw":0.001570154391340804,"t":0.19546352837958617,"t_sd":0.0,"auc":0.8414740241873349,"loss":0.3573853709627694,"direct":null},{"model":"v7_groups","label":"run 2, v7_groups","group":"run2","runs":1,"c":0.0005563269992397226,"c_sd":0.0,"c_raw":0.0005563269992397226,"t":0.10746288951891601,"t_sd":0.0,"auc":0.8427351926039711,"loss":0.3563715435706683,"direct":null},{"model":"v8_rawscreen","label":"run 2, v8_rawscreen (discarded)","group":"run2_discard","runs":1,"c":0.0006195847943366298,"c_sd":0.0,"c_raw":0.0006195847943366298,"t":0.10399492685027058,"t_sd":0.0,"auc":0.8428456393419839,"loss":0.3564348013657653,"direct":null},{"model":"v9_starts10","label":"run 2, v9_starts10 (discarded)","group":"run2_discard","runs":1,"c":0.0004923252882175549,"c_sd":0.0,"c_raw":0.0004923252882175549,"t":0.16486669178295177,"t_sd":0.0,"auc":0.8428066856008192,"loss":0.35630754185964614,"direct":null},{"model":"v10_fastdata","label":"run 2, v10_fastdata (discarded)","group":"run2_discard","runs":1,"c":0.0005535028211641416,"c_sd":0.0,"c_raw":0.0005535028211641416,"t":0.1025300579560031,"t_sd":0.0,"auc":0.8427418275507956,"loss":0.35636871939259274,"direct":null},{"model":"v11_swapscreen","label":"run 2, v11_swapscreen (discarded)","group":"run2_discard","runs":1,"c":0.0005746430208302792,"c_sd":0.0,"c_raw":0.0005746430208302792,"t":0.09845275837459513,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v12_countbins","label":"run 2, v12_countbins (discarded)","group":"run2_discard","runs":1,"c":0.0005746430208302792,"c_sd":0.0,"c_raw":0.0005746430208302792,"t":0.09932464723118427,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v14_numbachild","label":"run 2, v14_numbachild","group":"run2","runs":1,"c":0.0005746430208302783,"c_sd":0.0,"c_raw":0.0005746430208302783,"t":0.07107390174229641,"t_sd":0.0,"auc":0.8427951576040007,"loss":0.35638985959225883,"direct":null},{"model":"v16_swaplast","label":"run 2, v16_swaplast","group":"run2","runs":1,"c":0.00040221969229924223,"c_sd":0.0,"c_raw":0.00040221969229924223,"t":0.06332244643461542,"t_sd":0.0,"auc":0.842695108436234,"loss":0.3562174362637278,"direct":null},{"model":"v17_calround","label":"run 2, v17_calround","group":"run2","runs":1,"c":0.00020183144614052817,"c_sd":0.0,"c_raw":0.00020183144614052817,"t":0.06640448163406695,"t_sd":0.0,"auc":0.8429672806203793,"loss":0.3560170480175691,"direct":null},{"model":"v18_roundnb","label":"run 2, v18_roundnb","group":"run2","runs":1,"c":0.00015711013733503258,"c_sd":0.0,"c_raw":0.00015711013733503258,"t":0.057098558282938756,"t_sd":0.0,"auc":0.8430056554683208,"loss":0.3559723267087636,"direct":null},{"model":"v21_hybrid","label":"run 2, v21_hybrid (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.055776150163625936,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v24_blasscreen","label":"run 2, v24_blasscreen","group":"run2","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04875331803740214,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v25_blasgrad","label":"run 2, v25_blasgrad (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.05064696947537793,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v27","label":"run 2, v27 (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.045668249297980294,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v30_lazycodes","label":"run 2, v30_lazycodes","group":"run2","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04179518334216692,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v31_batchchild","label":"run 2, v31_batchchild (discarded)","group":"run2_discard","runs":1,"c":0.00010346102878852272,"c_sd":0.0,"c_raw":0.00010346102878852272,"t":0.04421339440824031,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760021706,"direct":null},{"model":"v32_valdeltas","label":"run 2, v32_valdeltas (discarded)","group":"run2_discard","runs":1,"c":0.00010346102879218114,"c_sd":0.0,"c_raw":0.00010346102879218114,"t":0.0415808425818319,"t_sd":0.0,"auc":0.842839572288757,"loss":0.35591867760022067,"direct":null},{"model":"v33_estskip","label":"run 2, v33_estskip (discarded)","group":"run2_discard","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.039821539571939214,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"v34_gemm","label":"run 2, v34_gemm","group":"run2","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.03678721733665011,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"v35_scratch","label":"run 2, v35_scratch (discarded)","group":"run2_discard","runs":1,"c":0.00010063103343418251,"c_sd":0.0,"c_raw":0.00010063103343418251,"t":0.03801428621356138,"t_sd":0.0,"auc":0.8423832230824078,"loss":0.35591584760486267,"direct":null},{"model":"imodels_solver_pkg","label":"FastRiskScore (shipped)","group":"run2","runs":1,"c":1.1986177902365887e-05,"c_sd":0.0,"c_raw":1.1986177902365887e-05,"t":0.011454759430849464,"t_sd":0.0,"auc":0.842093354768399,"loss":0.3558272027493309,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":3,"c":0.004479163360635082,"c_sd":0.0,"c_raw":0.004479163360635082,"t":1.5073436609393494,"t_sd":0.00983769519336968,"auc":0.8406357065453834,"loss":0.36029437993206365,"direct":"FasterRisk"},{"model":"fasterrisk_wide","label":"FasterRisk, wide search","group":"baseline","runs":1,"c":0.0024105029624621414,"c_sd":0.0,"c_raw":0.0024105029624621414,"t":18.240121340631212,"t_sd":0.0,"auc":0.8411915629351795,"loss":0.35822571953389076,"direct":"FasterRisk, wide"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.09653671915697379,"c_sd":0.0,"c_raw":0.09653671915697379,"t":13.629099261291483,"t_sd":0.0,"auc":0.7178720690821245,"loss":0.4523519357284023,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.05384211572294605,"c_sd":0.0,"c_raw":0.05384211572294605,"t":57.01210435659151,"t_sd":0.0,"auc":0.7758253724397398,"loss":0.40965733229437473,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.08132380625726489,"c_sd":0.0,"c_raw":0.08132380625726489,"t":49.33836566239545,"t_sd":0.0,"auc":0.7672711091547323,"loss":0.4371390228286935,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.017311616521905954,"c_sd":0.0,"c_raw":0.017311616521905954,"t":0.20724729341920822,"t_sd":0.0,"auc":0.84150955080711,"loss":0.37312683309333455,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.01801897263366212,"c_sd":0.0,"c_raw":0.01801897263366212,"t":0.1234621666118213,"t_sd":0.0,"auc":0.8358314035808458,"loss":0.3738341892050907,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.009597745268327558,"c_sd":0.0,"c_raw":0.009597745268327558,"t":20.43918102010233,"t_sd":0.0,"auc":0.8410834864934316,"loss":0.36541296183975613,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.052928386549874064,"c_sd":0.0,"c_raw":0.052928386549874064,"t":0.09922026976718795,"t_sd":0.0,"auc":0.8130738018717304,"loss":0.40874360312130265,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.06264577985734536,"c_sd":0.0,"c_raw":0.06264577985734536,"t":13.848526629079693,"t_sd":0.0,"auc":0.7869401800892395,"loss":0.4184609964287739,"direct":"PSL"},{"model":"l0learn_seqround","label":"L0Learn + sequential rounding","group":"baseline","runs":1,"c":0.007507691775115506,"c_sd":0.0,"c_raw":0.007507691775115506,"t":0.8803393548793718,"t_sd":0.0,"auc":0.843160715475689,"loss":0.36332290834654407,"direct":null},{"model":"okglm_seqround","label":"OKGLM (certified k-sparse) + sequential rounding","group":"baseline","runs":1,"c":0.005089947036350736,"c_sd":0.0,"c_raw":0.005089947036350736,"t":25.337711587408098,"t_sd":0.0,"auc":0.8417287683215576,"loss":0.36090516360777936,"direct":null},{"model":"skscope_seqround","label":"skscope + sequential rounding","group":"baseline","runs":1,"c":0.019249247871961046,"c_sd":0.0,"c_raw":0.019249247871961046,"t":0.22182674295104646,"t_sd":0.0,"auc":0.8372380615111444,"loss":0.3750644644433896,"direct":null},{"model":"riskscores_cd","label":"riskscores (coordinate descent)","group":"baseline","runs":1,"c":0.09178361456962594,"c_sd":0.0,"c_raw":0.09178361456962594,"t":12.716380221215834,"t_sd":0.0,"auc":0.7566905805819607,"loss":0.44759883114105453,"direct":null},{"model":"riskscores","label":"riskscores (annealing)","group":"baseline","runs":1,"c":0.13177351596877643,"c_sd":0.0,"c_raw":0.13177351596877643,"t":38.27495332069355,"t_sd":0.0,"auc":0.7007412009529421,"loss":0.4875887325402049,"direct":null},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.044138632040684724,"c_sd":0.0,"c_raw":0.044138632040684724,"t":0.2602017510172334,"t_sd":0.0,"auc":0.8212424358043419,"loss":0.39995384861211325,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.0537984050475992,"c_sd":0.0,"c_raw":0.0537984050475992,"t":0.06812085167675588,"t_sd":0.0,"auc":0.8119099246868361,"loss":0.40961362161902765,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.07525024409660368,"c_sd":0.0,"c_raw":0.07525024409660368,"t":0.06246824948833679,"t_sd":0.0,"auc":0.8040234988688862,"loss":0.43106546066803225,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.07015104183230092,"c_sd":0.0,"c_raw":0.07015104183230092,"t":0.257997297339979,"t_sd":0.0,"auc":0.7892398384214064,"loss":0.4259662584037296,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":0.0015523495830414764,"c_sd":0.0,"c_raw":0.0015523495830414764,"t":0.867335535210784,"t_sd":0.0,"auc":0.8444061026487082,"loss":0.35736756615446996,"direct":null}]},"hidden":{"points":[{"model":"v3_fastnewton_run1","label":"run 1, v3_fastnewton","group":"run1","runs":1,"c":0.00043165619717812494,"c_sd":0.0,"c_raw":0.00043165619717812494,"t":1.0125023330023604,"t_sd":0.0,"auc":0.7924423451691124,"loss":0.3272216482712522,"direct":null},{"model":"v5_tunetop_run1","label":"run 1, v5_tunetop","group":"run1","runs":1,"c":0.0005609074927011953,"c_sd":0.0,"c_raw":0.0005609074927011953,"t":0.7933140065437001,"t_sd":0.0,"auc":0.792760125596641,"loss":0.32735089956677527,"direct":null},{"model":"v6_numbaray_run1","label":"run 1, v6_numbaray","group":"run1","runs":1,"c":0.0005609074927011969,"c_sd":0.0,"c_raw":0.0005609074927011969,"t":0.7435331326053756,"t_sd":0.0,"auc":0.792760125596641,"loss":0.32735089956677527,"direct":null},{"model":"v9_pool10_run1","label":"run 1, v9_pool10","group":"run1","runs":1,"c":0.00017481660780230404,"c_sd":0.0,"c_raw":0.00017481660780230404,"t":0.57778239360264,"t_sd":0.0,"auc":0.7936215079502204,"loss":0.32696480868187633,"direct":null},{"model":"v11_pooltune_run1","label":"run 1, v11_pooltune","group":"run1","runs":1,"c":0.0001820588787031692,"c_sd":0.0,"c_raw":0.0001820588787031692,"t":0.4342988212311033,"t_sd":0.0,"auc":0.7936786871275537,"loss":0.32697205095277726,"direct":null},{"model":"v24_child5_run1","label":"run 1, v24_child5","group":"run1","runs":1,"c":0.00017003541014500901,"c_sd":0.0,"c_raw":0.00017003541014500901,"t":0.3999592832635217,"t_sd":0.0,"auc":0.7933461061047424,"loss":0.32696002748421904,"direct":null},{"model":"v27_cheap1d_run1","label":"run 1, v27_cheap1d","group":"run1","runs":1,"c":0.00017037395367794017,"c_sd":0.0,"c_raw":0.00017037395367794017,"t":0.3420623251849143,"t_sd":0.0,"auc":0.7932688634667081,"loss":0.326960366027752,"direct":null},{"model":"v28_ray5_run1","label":"run 1, v28_ray5","group":"run1","runs":1,"c":0.00024952285711059584,"c_sd":0.0,"c_raw":0.00024952285711059584,"t":0.30010774087896136,"t_sd":0.0,"auc":0.7931027297388428,"loss":0.32703951493118466,"direct":null},{"model":"v29_tune1_run1","label":"run 1, v29_tune1","group":"run1","runs":1,"c":0.00033240809129178855,"c_sd":0.0,"c_raw":0.00033240809129178855,"t":0.2288486586123713,"t_sd":0.0,"auc":0.7934131122532364,"loss":0.3271224001653658,"direct":null},{"model":"v34_2starts_run1","label":"run 1, v34_2starts","group":"run1","runs":1,"c":0.0003736813713097921,"c_sd":0.0,"c_raw":0.0003736813713097921,"t":0.20154678634478038,"t_sd":0.0,"auc":0.793140210064641,"loss":0.3271636734453839,"direct":null},{"model":"v2_numba_run2","label":"run 2, v2_numba","group":"run2","runs":1,"c":0.0003556434980320974,"c_sd":0.0,"c_raw":0.0003556434980320974,"t":1.1847419284974259,"t_sd":0.0,"auc":0.7928053537938684,"loss":0.3271456355721062,"direct":null},{"model":"v5_nopool_run2","label":"run 2, v5_nopool","group":"run2","runs":1,"c":0.0002519259842402591,"c_sd":0.0,"c_raw":0.0002519259842402591,"t":0.7552853508478035,"t_sd":0.0,"auc":0.7930810073408957,"loss":0.32704191805831434,"direct":null},{"model":"v7_groups_run2","label":"run 2, v7_groups","group":"run2","runs":1,"c":0.0002495006879945752,"c_sd":0.0,"c_raw":0.0002495006879945752,"t":0.22485289580412837,"t_sd":0.0,"auc":0.7930975302267963,"loss":0.3270394927620687,"direct":null},{"model":"v14_numbachild_run2","label":"run 2, v14_numbachild","group":"run2","runs":1,"c":0.00022152718498377904,"c_sd":0.0,"c_raw":0.00022152718498377904,"t":0.13985294614135804,"t_sd":0.0,"auc":0.7931983411620216,"loss":0.3270115192590578,"direct":null},{"model":"v16_swaplast_run2","label":"run 2, v16_swaplast","group":"run2","runs":1,"c":0.00018776733432377735,"c_sd":0.0,"c_raw":0.00018776733432377735,"t":0.12909268575216665,"t_sd":0.0,"auc":0.7935520632045826,"loss":0.32697775940839785,"direct":null},{"model":"v17_calround_run2","label":"run 2, v17_calround","group":"run2","runs":1,"c":0.00018893687268331389,"c_sd":0.0,"c_raw":0.00018893687268331389,"t":0.12666150014580235,"t_sd":0.0,"auc":0.7934587505994907,"loss":0.32697892894675734,"direct":null},{"model":"v18_roundnb_run2","label":"run 2, v18_roundnb","group":"run2","runs":1,"c":0.00018893687268534866,"c_sd":0.0,"c_raw":0.00018893687268534866,"t":0.1167090244468145,"t_sd":0.0,"auc":0.7934587505994907,"loss":0.32697892894675945,"direct":null},{"model":"v24_blasscreen_run2","label":"run 2, v24_blasscreen","group":"run2","runs":1,"c":0.00016076986871541932,"c_sd":0.0,"c_raw":0.00016076986871541932,"t":0.09364422704359683,"t_sd":0.0,"auc":0.7937332682907179,"loss":0.32695076194278944,"direct":null},{"model":"v30_lazycodes_run2","label":"run 2, v30_lazycodes","group":"run2","runs":1,"c":0.00016076986871541992,"c_sd":0.0,"c_raw":0.00016076986871541992,"t":0.0731640774942275,"t_sd":0.0,"auc":0.7937332682907179,"loss":0.32695076194278944,"direct":null},{"model":"v34_gemm_run2","label":"run 2, v34_gemm","group":"run2","runs":1,"c":0.00016425307742091633,"c_sd":0.0,"c_raw":0.00016425307742091633,"t":0.057527707978582414,"t_sd":0.0,"auc":0.7936978417338044,"loss":0.326954245151495,"direct":null},{"model":"imodels_solver_pkg","label":"FastRiskScore (shipped)","group":"run2","runs":1,"c":8.76892478490104e-05,"c_sd":0.0,"c_raw":8.76892478490104e-05,"t":0.014647782382315453,"t_sd":0.0,"auc":0.7939208461921055,"loss":0.32687768132192313,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":3,"c":0.0004111937726185008,"c_sd":5.421010862427522e-20,"c_raw":0.0004111937726185008,"t":3.2763619728639894,"t_sd":0.008466015516731077,"auc":0.7927032232980241,"loss":0.3272011858466926,"direct":"FasterRisk"},{"model":"fasterrisk_wide","label":"FasterRisk, wide search","group":"baseline","runs":1,"c":0.000307851414062256,"c_sd":0.0,"c_raw":0.000307851414062256,"t":47.261960621252506,"t_sd":0.0,"auc":0.792729907274373,"loss":0.32709784348813636,"direct":"FasterRisk, wide"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.07781276464959078,"c_sd":0.0,"c_raw":0.07781276464959078,"t":9.978703605682002,"t_sd":0.0,"auc":0.5681400499804655,"loss":0.4046027567236649,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.04712494398348043,"c_sd":0.0,"c_raw":0.04712494398348043,"t":59.9892549802186,"t_sd":0.0,"auc":0.6666441141391071,"loss":0.37391493605755455,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.0627538907024295,"c_sd":0.0,"c_raw":0.0627538907024295,"t":60.226651748046336,"t_sd":0.0,"auc":0.6416688050066152,"loss":0.38954388277650354,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.0034793465867551834,"c_sd":0.0,"c_raw":0.0034793465867551834,"t":0.511566725288811,"t_sd":0.0,"auc":0.7888501007189695,"loss":0.33026933866082925,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.0034763727832366927,"c_sd":0.0,"c_raw":0.0034763727832366927,"t":0.2066893290780686,"t_sd":0.0,"auc":0.7910554757779091,"loss":0.33026636485731076,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.001767526862772208,"c_sd":0.0,"c_raw":0.001767526862772208,"t":26.532134966744152,"t_sd":0.0,"auc":0.7896254726244603,"loss":0.32855751893684626,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.02782701438170616,"c_sd":0.0,"c_raw":0.02782701438170616,"t":0.23071092770085966,"t_sd":0.0,"auc":0.7439449178252512,"loss":0.3546170064557802,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.035496653907025895,"c_sd":0.0,"c_raw":0.035496653907025895,"t":51.21649080593996,"t_sd":0.0,"auc":0.680684251465697,"loss":0.3622866459811,"direct":"PSL"},{"model":"l0learn_seqround","label":"L0Learn + sequential rounding","group":"baseline","runs":1,"c":0.002184228992942932,"c_sd":0.0,"c_raw":0.002184228992942932,"t":2.841720760948088,"t_sd":0.0,"auc":0.7916736376721459,"loss":0.32897422106701696,"direct":null},{"model":"okglm_seqround","label":"OKGLM (certified k-sparse) + sequential rounding","group":"baseline","runs":1,"c":0.0024632500374661822,"c_sd":0.0,"c_raw":0.0024632500374661822,"t":31.369874230924694,"t_sd":0.0,"auc":0.7916048806722317,"loss":0.3292532421115403,"direct":null},{"model":"skscope_seqround","label":"skscope + sequential rounding","group":"baseline","runs":1,"c":0.004985577270758103,"c_sd":0.0,"c_raw":0.004985577270758103,"t":0.720080368237441,"t_sd":0.0,"auc":0.7911709634113189,"loss":0.33177556934483216,"direct":null},{"model":"riskscores_cd","label":"riskscores (coordinate descent)","group":"baseline","runs":1,"c":0.05494390209294082,"c_sd":0.0,"c_raw":0.05494390209294082,"t":36.564920027801044,"t_sd":0.0,"auc":0.6660282004352887,"loss":0.381733894167015,"direct":null},{"model":"riskscores","label":"riskscores (annealing)","group":"baseline","runs":1,"c":0.08287055838141533,"c_sd":0.0,"c_raw":0.08287055838141533,"t":70.05802450962635,"t_sd":0.0,"auc":0.5852242260467527,"loss":0.40966055045548944,"direct":null},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.019348297137668707,"c_sd":0.0,"c_raw":0.019348297137668707,"t":0.49532925164002184,"t_sd":0.0,"auc":0.7631582794850211,"loss":0.34613828921174283,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.02787668453865631,"c_sd":0.0,"c_raw":0.02787668453865631,"t":0.18034567530224385,"t_sd":0.0,"auc":0.7429862233049997,"loss":0.3546666766127304,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.039691523424329314,"c_sd":0.0,"c_raw":0.039691523424329314,"t":0.17951405065124443,"t_sd":0.0,"auc":0.7322474719152956,"loss":0.36648151549840335,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.03147802220664373,"c_sd":0.0,"c_raw":0.03147802220664373,"t":0.8100761741005241,"t_sd":0.0,"auc":0.7357156077001237,"loss":0.3582680142807178,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":-0.00030783203393577754,"t":1.5567462248818653,"t_sd":0.0,"auc":0.7945515542881856,"loss":0.32648216004013825,"direct":null}]},"full":{"points":[{"model":"imodels_solver_pkg","label":"FastRiskScore (shipped)","group":"run2","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":5.0788501212973556e-06,"t":0.019604271623283487,"t_sd":0.0,"auc":0.7920069679970406,"loss":0.3278933555167879,"direct":"FastRiskScore"},{"model":"fasterrisk","label":"FasterRisk","group":"baseline","runs":1,"c":0.00033798325294587646,"c_sd":0.0,"c_raw":0.00033798325294587646,"t":4.819896029533332,"t_sd":0.0,"auc":0.7904661402494876,"loss":0.32822625991961263,"direct":"FasterRisk"},{"model":"riskslim","label":"RiskSLIM (CPLEX CE)","group":"baseline","runs":1,"c":0.07519504583645328,"c_sd":0.0,"c_raw":0.07519504583645328,"t":16.170251526535495,"t_sd":0.0,"auc":0.5599128941582422,"loss":0.4030833225031199,"direct":"RiskSLIM"},{"model":"cpa_highs","label":"Cutting planes, HiGHS (RiskSLIM's method)","group":"baseline","runs":1,"c":0.03228530486367241,"c_sd":0.0,"c_raw":0.03228530486367241,"t":600.0127924649623,"t_sd":0.0,"auc":0.6950381276509835,"loss":0.360173581530339,"direct":"Cutting planes"},{"model":"slim_milp","label":"SLIM (HiGHS)","group":"baseline","runs":1,"c":0.055571089609703125,"c_sd":0.0,"c_raw":0.055571089609703125,"t":542.1981147999868,"t_sd":0.0,"auc":0.6469181173182484,"loss":0.3834593662763698,"direct":"SLIM"},{"model":"abess_seqround","label":"abess + sequential rounding","group":"baseline","runs":1,"c":0.003812879319923085,"c_sd":0.0,"c_raw":0.003812879319923085,"t":0.7898362987118063,"t_sd":0.0,"auc":0.7883603665041662,"loss":0.3317011559865897,"direct":"abess"},{"model":"fastsparse_seqround","label":"fastSparse + sequential rounding","group":"baseline","runs":1,"c":0.002545361183379443,"c_sd":0.0,"c_raw":0.002545361183379443,"t":0.3035289509935306,"t_sd":0.0,"auc":0.7900523626552867,"loss":0.33043363785004615,"direct":null},{"model":"okridge_seqround","label":"OKRidge + sequential rounding","group":"baseline","runs":1,"c":0.001762351898121326,"c_sd":0.0,"c_raw":0.001762351898121326,"t":214.214131014772,"t_sd":0.0,"auc":0.7864531939816615,"loss":0.32965062856478805,"direct":null},{"model":"l1path_seqround","label":"L1 path + sequential rounding","group":"baseline","runs":1,"c":0.03018715802879251,"c_sd":0.0,"c_raw":0.03018715802879251,"t":0.36964584916189575,"t_sd":0.0,"auc":0.7438943402884967,"loss":0.35807543469545916,"direct":null},{"model":"psl","label":"Probabilistic scoring list","group":"baseline","runs":1,"c":0.008714675235483605,"c_sd":0.0,"c_raw":0.008714675235483605,"t":126.55545584209344,"t_sd":0.0,"auc":0.7625898017570294,"loss":0.33660295190215034,"direct":"PSL"},{"model":"l0learn_seqround","label":"L0Learn + sequential rounding","group":"baseline","runs":1,"c":0.0014518955423139903,"c_sd":0.0,"c_raw":0.0014518955423139903,"t":4.20650146715854,"t_sd":0.0,"auc":0.7903228639705079,"loss":0.3293401722089807,"direct":null},{"model":"okglm_seqround","label":"OKGLM (certified k-sparse) + sequential rounding","group":"baseline","runs":1,"c":0.0017438777881956516,"c_sd":0.0,"c_raw":0.0017438777881956516,"t":174.60636588195416,"t_sd":0.0,"auc":0.7932550799286758,"loss":0.3296321544548623,"direct":null},{"model":"skscope_seqround","label":"skscope + sequential rounding","group":"baseline","runs":1,"c":0.004625802611543922,"c_sd":0.0,"c_raw":0.004625802611543922,"t":1.121150441199486,"t_sd":0.0,"auc":0.791719684159297,"loss":0.33251407927821064,"direct":null},{"model":"riskscores_cd","label":"riskscores (coordinate descent)","group":"baseline","runs":1,"c":0.04344496459604424,"c_sd":0.0,"c_raw":0.04344496459604424,"t":111.4321648934499,"t_sd":0.0,"auc":0.699476438512315,"loss":0.37133324126271094,"direct":null},{"model":"riskscores","label":"riskscores (annealing)","group":"baseline","runs":1,"c":0.05421527429000238,"c_sd":0.0,"c_raw":0.05421527429000238,"t":282.61541437736406,"t_sd":0.0,"auc":0.6654175968913029,"loss":0.38210355095666904,"direct":null},{"model":"autoscore","label":"AutoScore","group":"baseline","runs":1,"c":0.019000235571050697,"c_sd":0.0,"c_raw":0.019000235571050697,"t":0.8692640471498939,"t_sd":0.0,"auc":0.7679285047063744,"loss":0.34688851223771733,"direct":"AutoScore"},{"model":"rounded_lr","label":"Rounded L1 logistic","group":"baseline","runs":1,"c":0.030159485456736808,"c_sd":0.0,"c_raw":0.030159485456736808,"t":0.2919445176296467,"t_sd":0.0,"auc":0.7440282893447614,"loss":0.35804776212340345,"direct":null},{"model":"unit_weighting","label":"Unit weighting","group":"baseline","runs":1,"c":0.03858282830258381,"c_sd":0.0,"c_raw":0.03858282830258381,"t":0.29338090837096675,"t_sd":0.0,"auc":0.7388756652482604,"loss":0.36647110496925045,"direct":null},{"model":"imodels_slim","label":"imodels SLIMClassifier","group":"baseline","runs":1,"c":0.03328550960965681,"c_sd":0.0,"c_raw":0.03328550960965681,"t":1.4156933057070593,"t_sd":0.0,"auc":0.732367577724122,"loss":0.3611737862763235,"direct":null}],"table_only":[{"model":"continuous_beam","label":"real-valued","group":"reference","runs":1,"c":1e-05,"c_sd":0.0,"c_raw":-0.0003985309463005858,"t":2.270590994309173,"t_sd":0.0,"auc":0.7938083027048326,"loss":0.3274897457203661,"direct":null}]}};
+                    (function () {
+                      if (!window.Plotly || !PARETO.dev) return;
+                      var C = {
+                        baseline: '#a09f9a', run1: '#104281', run2: '#3987e5', run1_discard: '#104281', run2_discard: '#3987e5',
+                        ink: '#1b1f23', muted: '#6a737d', grid: '#e3e6e8', axis: '#c3c2b7', surface: '#ffffff'
+                      };
+                      var GROUP = { baseline: 'Baseline', run1: 'Autoresearch run 1, kept', run2: 'Autoresearch run 2, kept',
+                                    run1_discard: 'Autoresearch run 1, discarded', run2_discard: 'Autoresearch run 2, discarded' };
+                      function fmt(v, sd, runs, d) { return v.toFixed(d) + (runs > 1 ? ' ± ' + sd.toFixed(d) : ''); }
+                      function hover(p) {
+                        return ['<b>' + p.label + '</b>', GROUP[p.group],
+                          'time ' + fmt(p.t, p.t_sd, p.runs, 3) + ' s',
+                          'excess loss ' + fmt(p.c_raw, p.c_sd, p.runs, 5),
+                          'mean loss ' + p.loss.toFixed(5) + ' · test AUC ' + p.auc.toFixed(4),
+                          p.runs > 1 ? 'mean of ' + p.runs + ' runs' : 'single run'].join('<br>');
+                      }
+                      function panel(el, D, metric) {
+                        var auc = metric === 'auc';
+                        function yv(p) { return auc ? 1 - p.auc : p.c; }
+                        var pts = D.points, traces = [];
+                        ['run1_discard', 'run2_discard', 'baseline', 'run1', 'run2'].forEach(function (g) {
+                          [false, true].forEach(function (rep) {
+                            var sub = pts.filter(function (p) { return p.model !== 'imodels_solver_pkg' && p.group === g && (p.runs > 1) === rep; });
+                            if (!sub.length) return;
+                            var faded = /_discard$/.test(g);
+                            traces.push({
+                              x: sub.map(function (p) { return p.t; }), y: sub.map(yv),
+                              mode: 'markers', showlegend: false,
+                              marker: { symbol: 'circle', size: rep ? 14 : (faded ? 7 : 9), opacity: faded ? 0.35 : 1,
+                                        color: C[g], line: { color: C.surface, width: faded ? 0 : 1.5 } },
+                              text: sub.map(hover), hovertemplate: '%{text}<extra></extra>'
+                            });
+                          });
+                        });
+                        var ship = pts.filter(function (p) { return p.model === 'imodels_solver_pkg'; });
+                        if (ship.length) traces.push({
+                          x: ship.map(function (p) { return p.t; }), y: ship.map(yv),
+                          mode: 'markers', showlegend: false,
+                          marker: { symbol: 'star', size: 19, color: C.run2, line: { color: C.surface, width: 1.5 } },
+                          text: ship.map(hover), hovertemplate: '%{text}<extra></extra>'
+                        });
+                        // label offsets in px, chosen so the baseline labels do not overlap in any panel
+                        var OFF = { imodels_solver_pkg: [30, 24], fasterrisk: [26, -22], fasterrisk_wide: [-6, -26],
+                                    rounded_lr: [-30, -22], imodels_slim: [36, -16], riskslim: [-24, -20],
+                                    slim_milp: [14, -24], cpa_highs: [-64, 8], psl: [-8, 30], abess_seqround: [44, 14],
+                                    autoscore: [-44, -18] };
+                        var ERR_MAX = 0.275;  // panel D (test error, 1 - AUC) is cropped to the solvers that compete; the rest are listed in the caption
+                        var notes = pts.filter(function (p) { return p.direct && (!auc || 1 - p.auc <= ERR_MAX); }).map(function (p) {
+                          return { x: Math.log10(p.t), y: auc ? 1 - p.auc : Math.log10(p.c), xref: 'x', yref: 'y', text: p.direct,
+                                   showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis,
+                                   ax: (OFF[p.model] || [28, -22])[0], ay: (OFF[p.model] || [28, -22])[1],
+                                   font: { size: 11, color: C.ink }, bgcolor: 'rgba(255,255,255,0.85)', borderpad: 2 };
+                        });
+                        var axis = { gridcolor: C.grid, linecolor: C.axis, zeroline: false, ticks: 'outside', tickcolor: C.axis,
+                                     tickfont: { size: 11, color: C.muted }, titlefont: { size: 12, color: C.ink } };
+                        Plotly.newPlot(el, traces, {
+                          height: 330, margin: { l: 62, r: 20, t: 8, b: 44 }, showlegend: false,
+                          paper_bgcolor: C.surface, plot_bgcolor: C.surface,
+                          font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: C.ink },
+                          xaxis: Object.assign({ type: 'log', title: { text: 'Geometric-mean time per problem (s)' } }, axis),
+                          yaxis: Object.assign(auc ? { range: [0.2, ERR_MAX], title: { text: 'Mean test error (1 − AUC)' } }
+                                                  : { type: 'log', exponentformat: 'power', title: { text: 'Mean excess training loss' } }, axis),
+                          hovermode: 'closest', hoverlabel: { bgcolor: C.surface, bordercolor: C.grid, font: { color: C.ink, size: 12 } },
+                          annotations: notes
+                        }, { displayModeBar: false, responsive: true });
+                      }
+                      panel(document.getElementById('pareto-dev'), PARETO.dev);
+                      panel(document.getElementById('pareto-hidden'), PARETO.hidden);
+                      var full = document.getElementById('pareto-full');
+                      if (PARETO.full) panel(full, PARETO.full);
+                      else full.innerHTML = '<div class="fig-pending">full-size run in progress</div>';
+                      panel(document.getElementById('pareto-test'), PARETO.hidden, 'auc');
+                    })();
+                    </script>
+
+
+                    <details class="collapsible" id="fig1-measurement">
+                      <summary>Extra details on experimental settings</summary>
+                      <p><b>Scoring.</b> The benchmark rejects any answer whose points are not integers, fall outside
+                        [&minus;5, 5] or use more than <code>k</code> features; no solver in the figure had such an answer.
+                        Given the points, the risk curve is fit by Newton's method on the two numbers <i>a</i> and
+                        <i>b</i>, a convex problem. Each solver process first fits a tiny warm-up problem, untimed, so
+                        numba compilation is not counted; FastRiskScore's first fit on a new machine takes about 2 minutes
+                        longer for that reason.</p>
+                      <p><b>Best known losses.</b> The excess loss is measured against the lowest loss any integer
+                        solver reached on the problem in any of these runs, including FasterRisk with every search
+                        width raised (a beam of 50 &times; 50, a pool of 200 and 100 multipliers) and a 20-minute
+                        limit, which takes about 12&times; its default time.</p>
+                      <p><b>RiskSLIM.</b> The free CPLEX Community Edition refuses problems above 1,000 variables or
+                        constraints, and RiskSLIM's cutting planes pass that limit on wider datasets; it returned no
+                        score on 25 of 70 visible problems and 102 of 135 hidden ones, and
+                        is charged the base rate there. With a full CPLEX licence it would do better, but within these time
+                        limits it still certifies optimality only on small problems, as the FasterRisk paper also
+                        found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
+                        near 60 s.</p>
+                      <p><b>C.</b> One run per solver at <code>k</code> = 5 on each of the 27 datasets at full size, 27 at a
+                        time, with a 10-minute limit (killed at 30 minutes). RiskSLIM stops at the CPLEX Community
+                        Edition's size limit on 22 datasets; SLIM passes its limit on 25, since HiGHS finishes its
+                        current step before stopping, and on the remaining 2 returns a proven optimum of its 0-1
+                        loss.</p>
+                    </details>
+                    <details class="collapsible" id="tab1">
+                      <summary>Table 1: loss, test AUC and time of every solver on the three suites</summary>
+                      <p class="caption"><b>Table 1.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) of every solver on the three suites of Fig <a href="#fig1">1</a>. Eight of the baselines
+                        (cutting planes, abess, fastSparse, OKRidge, the L1 path, scoring lists, AutoScore and unit
+                        weighting) were added after a search for baselines that can be run, and five more (L0Learn,
+                        OKGLM, skscope and two versions of riskscores) after a search of papers that cite them
+                        (<a href="#baselines">details</a>). The last row is not a risk score: it is FasterRisk's
+                        real-valued solution before rounding, shown as a reference.</p>
+                      <table class="ranktbl results-table">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- TABLE1 -->
+                          <tr class="ours"><td>FastRiskScore (ours)</td><td>0.3558</td><td>0.842</td><td>0.011</td><td>0.3269</td><td>0.794</td><td>0.015</td><td>0.3279</td><td>0.792</td><td>0.020</td></tr>
+                          <tr><td>FasterRisk</td><td>0.3603</td><td>0.841</td><td>1.51</td><td>0.3272</td><td>0.793</td><td>3.28</td><td>0.3282</td><td>0.790</td><td>4.82</td></tr>
+                          <tr><td>FasterRisk, wide search</td><td>0.3582</td><td>0.841</td><td>18.2</td><td>0.3271</td><td>0.793</td><td>47.3</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
+                          <tr><td>RiskSLIM (CPLEX CE)</td><td>0.4524</td><td>0.718</td><td>13.6</td><td>0.4046</td><td>0.568</td><td>9.98</td><td>0.4031</td><td>0.560</td><td>16.2</td></tr>
+                          <tr><td>Cutting planes, HiGHS (RiskSLIM's method)</td><td>0.4097</td><td>0.776</td><td>57</td><td>0.3739</td><td>0.667</td><td>60</td><td>0.3602</td><td>0.695</td><td>600</td></tr>
+                          <tr><td>SLIM (HiGHS)</td><td>0.4371</td><td>0.767</td><td>49.3</td><td>0.3895</td><td>0.642</td><td>60.2</td><td>0.3835</td><td>0.647</td><td>542</td></tr>
+                          <tr><td>abess + sequential rounding</td><td>0.3731</td><td>0.842</td><td>0.207</td><td>0.3303</td><td>0.789</td><td>0.512</td><td>0.3317</td><td>0.788</td><td>0.790</td></tr>
+                          <tr><td>fastSparse + sequential rounding</td><td>0.3738</td><td>0.836</td><td>0.123</td><td>0.3303</td><td>0.791</td><td>0.207</td><td>0.3304</td><td>0.790</td><td>0.304</td></tr>
+                          <tr><td>OKRidge + sequential rounding</td><td>0.3654</td><td>0.841</td><td>20.4</td><td>0.3286</td><td>0.790</td><td>26.5</td><td>0.3297</td><td>0.786</td><td>214</td></tr>
+                          <tr><td>L1 path + sequential rounding</td><td>0.4087</td><td>0.813</td><td>0.099</td><td>0.3546</td><td>0.744</td><td>0.231</td><td>0.3581</td><td>0.744</td><td>0.370</td></tr>
+                          <tr><td>Probabilistic scoring list</td><td>0.4185</td><td>0.787</td><td>13.8</td><td>0.3623</td><td>0.681</td><td>51.2</td><td>0.3366</td><td>0.763</td><td>127</td></tr>
+                          <tr><td>L0Learn + sequential rounding</td><td>0.3633</td><td>0.843</td><td>0.880</td><td>0.3290</td><td>0.792</td><td>2.84</td><td>0.3293</td><td>0.790</td><td>4.21</td></tr>
+                          <tr><td>OKGLM (certified k-sparse) + sequential rounding</td><td>0.3609</td><td>0.842</td><td>25.3</td><td>0.3293</td><td>0.792</td><td>31.4</td><td>0.3296</td><td>0.793</td><td>175</td></tr>
+                          <tr><td>skscope + sequential rounding</td><td>0.3751</td><td>0.837</td><td>0.222</td><td>0.3318</td><td>0.791</td><td>0.720</td><td>0.3325</td><td>0.792</td><td>1.12</td></tr>
+                          <tr><td>riskscores (coordinate descent)</td><td>0.4476</td><td>0.757</td><td>12.7</td><td>0.3817</td><td>0.666</td><td>36.6</td><td>0.3713</td><td>0.699</td><td>111</td></tr>
+                          <tr><td>riskscores (annealing)</td><td>0.4876</td><td>0.701</td><td>38.3</td><td>0.4097</td><td>0.585</td><td>70.1</td><td>0.3821</td><td>0.665</td><td>283</td></tr>
+                          <tr><td>AutoScore</td><td>0.4000</td><td>0.821</td><td>0.260</td><td>0.3461</td><td>0.763</td><td>0.495</td><td>0.3469</td><td>0.768</td><td>0.869</td></tr>
+                          <tr><td>Rounded L1 logistic</td><td>0.4096</td><td>0.812</td><td>0.068</td><td>0.3547</td><td>0.743</td><td>0.180</td><td>0.3580</td><td>0.744</td><td>0.292</td></tr>
+                          <tr><td>Unit weighting</td><td>0.4311</td><td>0.804</td><td>0.062</td><td>0.3665</td><td>0.732</td><td>0.180</td><td>0.3665</td><td>0.739</td><td>0.293</td></tr>
+                          <tr><td>imodels SLIMClassifier (before)</td><td>0.4260</td><td>0.789</td><td>0.258</td><td>0.3583</td><td>0.736</td><td>0.810</td><td>0.3612</td><td>0.732</td><td>1.42</td></tr>
+                          <tr><td>Real-valued k-sparse (not integer)</td><td>0.3574</td><td>0.844</td><td>0.867</td><td>0.3265</td><td>0.795</td><td>1.56</td><td>0.3275</td><td>0.794</td><td>2.27</td></tr>
+                          <!-- /TABLE1 -->
+                        </tbody>
+                      </table>
+                    </details>
+
+                    <details class="collapsible" id="finer">
+                      <summary>Table 2: six later loops on versions of both suites with 99 thresholds per numeric column instead of 9</summary>
+
+                      <p>The suites above split each numeric column at its 9 deciles. We also built versions of the visible
+                        and hidden suites that split each numeric column at its 99 percentiles, which gives the search many
+                        more features to choose from (990 instead of 90 on magic). The six RiskSLIM datasets were rebuilt
+                        from their raw OpenML sources for this. Six more loops ran on the fine visible suite with the same keep rule. Loops 1 and 2 both
+                        started from FastRiskScore; each later loop started from the best version of the one before. From loop 3 on, a change was also
+                        rejected if it lowered the mean test AUC by more than 0.001. The fine hidden suite (27 datasets
+                        &times; 5 values of <code>k</code>) was not used during the loops. Table <a href="#tab2">2</a>
+                        gives the best version of each loop that kept a change, on both.</p>
+
+                      <p class="caption" id="tab2"><b>Table 2.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) on the fine suites (99 thresholds per numeric column). Run 2's version is the first
+                        release of FastRiskScore; each loop row is that loop's best version and its main change; the last
+                        row is the shipped solver with <code>n_thresholds</code> &gt; 19.</p>
+                      <div style="overflow-x:auto">
+                      <table class="ranktbl results-table t2">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Fine visible (70)</th><th class="grp" colspan="3">Fine hidden (135)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td class="t2-name"><b>FasterRisk</b></td><td>0.34282</td><td>0.848</td><td>2.16</td><td>0.32448</td><td>0.792</td><td>4.62</td></tr>
+                          <tr><td class="t2-name"><b>Run 2's version</b> (first release)</td><td>0.34119</td><td>0.850</td><td>0.068</td><td>0.32416</td><td>0.792</td><td>0.153</td></tr>
+                          <tr><td class="t2-name"><b>Loop 1</b>: wider local search with kicks</td><td>0.33882</td><td>0.847</td><td>0.259</td><td>0.32393</td><td>0.793</td><td>0.322</td></tr>
+                          <tr><td class="t2-name"><b>Loop 2</b>: thresholds of one column handled together</td><td>0.33982</td><td>0.848</td><td>0.032</td><td>0.32400</td><td>0.793</td><td>0.050</td></tr>
+                          <tr><td class="t2-name"><b>Loop 3</b>: minimum support per feature</td><td>0.33998</td><td>0.851</td><td>0.023</td><td>0.32416</td><td>0.793</td><td>0.042</td></tr>
+                          <tr><td class="t2-name"><b>Loop 4</b>: faster</td><td>0.33996</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
+                          <tr><td class="t2-name"><b>Loop 5</b>: exact polish of the best score</td><td>0.33976</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
+                          <tr class="ours"><td class="t2-name"><b>FastRiskScore</b> (shipped, fine settings)</td><td>0.34079</td><td>0.852</td><td>0.011</td><td>0.32414</td><td>0.794</td><td>0.020</td></tr>
+                        </tbody>
+                      </table>
+                      </div>
+                      <style>
+                        table.t2 td.t2-name { min-width: 12em; white-space: normal; }
+                        table.t2 td, table.t2 th { padding-left: 0.5em; padding-right: 0.5em; }
+                      </style>
+                      <p class="tblnote">Versions: loop 1 <code>f31_fastsame</code>, loop 2 <code>g24_fastcol</code>, loop 3
+                        <code>h8_fastbeam</code>, loop 4 <code>i30_final</code>, loop 5 <code>j18_poliso</code>. Hidden-suite AUCs
+                        to four decimals: FasterRisk 0.7917, run 2's version 0.7924, loops 1 and 2 0.7927, loop 3 0.7930, loops
+                        4 and 5 0.7932, shipped 0.7937. Times vary by about 5% between runs; the loop 1 and 2 hidden rows were run while
+                        another loop used the same machine.</p>
+
+                      <ul>
+                        <li><b>Loss.</b> Every loop beats FastRiskScore on the fine visible suite, but on the fine hidden
+                          suite the gains are small: 0.0002 at most. Loop 1 has the lowest loss on both suites, at 6 to
+                          15 times the hidden-suite time of the later loops.</li>
+                        <li><b>Feature handling.</b> Loop 2 found that the 99 indicators of a numeric column are nested
+                          (<code>x &le; t</code> for increasing <code>t</code>), and handled each column's indicators as
+                          one ordered variable. This made the search faster and let the beam pick the best threshold
+                          of a column instead of filling with neighbouring thresholds of one column.</li>
+                        <li><b>AUC.</b> Loop 3 required each chosen indicator to cover at least &radic;<i>N</i> training rows
+                          on each side. Without it, the search picks thresholds that fit a handful of training rows. Against loop 2,
+                          it raised visible AUC by 0.003 for a loss increase of 0.0002, and the AUC gain held on the hidden suite
+                          (0.7927 to 0.7930).</li>
+                        <li><b>Speed.</b> Loop 4 reached about the same loss as loop 3 in half the time: 0.021 s on the hidden
+                          suite, 7&times; faster than FastRiskScore and 220&times; faster than FasterRisk.</li>
+                        <li><b>Saturation.</b> Loop 5's only kept change, an exact polish of the final score, lowered the
+                          visible loss by 0.0002. Almost all of that came from two near-separable problems (ionosphere at
+                          <code>k</code> = 7, mushroom at <code>k</code> = 10), and it changed 2 of the 135 hidden
+                          problems. On the problems where the polish runs, no single change of one feature's points, and no swap
+                          of one feature, lowers the loss of the final score. A sixth loop (30 attempts: new starting
+                          points, tabu walks, pair moves) kept nothing; running its whole search 4 times longer lowered
+                          the mean loss by 0.00001.</li>
+                      </ul>
+                    </details>
+
+                    <details class="collapsible" id="next">
+                      <summary>Table 3: how the shipped version was found (two loops on the decile suites), compared with run 2's version</summary>
+
+                      <p>The fine-track versions are 3&times; faster than run 2's version, but on the decile suites they
+                        lost 0.0014 in visible loss, mostly on spambase and ionosphere. Two causes accounted for most of
+                        it: loop 3's minimum support per feature, and beam rules that kept one threshold per variable and
+                        one child per set of variables, which removed good feature sets on decile data. A loop on the
+                        decile visible suite started from loop 5's version with the minimum support switched off and kept
+                        four changes: candidates whose real-valued coefficient rounds to 0 are ranked last in the beam
+                        (spambase, whose large-scale columns collapsed 3 of 5 final feature sets to 2 features), the
+                        search kernels are compiled before the first fit (about 4 s had been spent compiling inside
+                        a few fits), the beam diversity rules are switched off, and the beam is trimmed back to 8 parents.
+                        A second loop from that version found nothing that held on the hidden suite. The package ships the second
+                        loop's final version (<code>n17_lean</code>, with the same hidden-suite results), and switches to the
+                        fine-track settings when <code>n_thresholds</code> &gt; 19. Table <a href="#tab3">3</a> compares it with
+                        run 2's version.</p>
+
+                      <p class="caption" id="tab3"><b>Table 3.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) of the shipped version and run 2's version on the suites of
+                        Table <a href="#tab1">1</a>.</p>
+                      <table class="ranktbl results-table">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>FasterRisk</td><td>0.36029</td><td>0.841</td><td>1.49</td><td>0.32720</td><td>0.793</td><td>3.27</td><td>0.32823</td><td>0.790</td><td>4.82</td></tr>
+                          <tr><td>Run 2's version (first release)</td><td>0.35592</td><td>0.842</td><td>0.035</td><td>0.32695</td><td>0.794</td><td>0.057</td><td>0.32789</td><td>0.793</td><td>0.079</td></tr>
+                          <tr class="ours"><td>FastRiskScore (shipped)</td><td>0.35583</td><td>0.842</td><td>0.011</td><td>0.32688</td><td>0.794</td><td>0.015</td><td>0.32789</td><td>0.792</td><td>0.020</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">AUCs to four decimals, visible / hidden / full size: run 2's version 0.8424 / 0.7937 / 0.7926,
+                        shipped 0.8421 / 0.7939 / 0.7920. Times vary by about 10% between runs.</p>
+
+                      <p>On the hidden suite the shipped version has a lower loss than run 2's version on 23 of the 135 problems
+                        and a higher one on 10, and it is 3 to 4&times; faster on the three suites. Test AUC is within 0.0006 of
+                        run 2's version on every suite.</p>
+                    </details>
+
+                    <h2 id="methods">3. Methods: FastRiskScore</h2>
+
+                    <details class="collapsible" id="related-work">
+                      <summary>Related work</summary>
+                      <style>
+                        .lit-scroll { overflow-x: auto; margin: 0.4em 0 1em; }
+                        #related-work h4 { margin: 1.1em 0 0.4em; font-size: 1rem; }
+                        #related-work h5 { margin: 1em 0 0.3em; font-size: 0.92rem; }
+                        #related-work table { font-size: 0.8rem; }
+                      </style>
+                      <!-- LITERATURE -->
+                      <p>A scoring system (risk score, point system) is a linear model <code>score = sum_j lambda_j x_j</code> with few nonzero coefficients, each a small integer (typically in {-5..5}). A prediction is a threshold on the score (SLIM) or a logistic map of it, <code>P(y=1) = 1/(1+exp(-(lambda_0 + score)/m))</code> (RiskSLIM, FasterRisk). Work falls into three groups: (1) exact mixed-integer programming (MIP) formulations that can certify optimality but need a commercial solver and scale to tens of features; (2) heuristics that fit a sparse continuous model and then round it (FasterRisk, AutoScore, rounding methods); (3) generic L0 best-subset solvers (L0Learn, abess, fastSparse, OKRidge) that produce the sparse continuous model a rounding step needs. All entries below were checked against the arXiv/publisher page and the code repository in September 2026.</p>
+                      <h4>Methods</h4>
+                      <div class="lit-scroll"><table class="ranktbl dataset-table">
+                      <thead>
+                      <tr>
+                      <th>Work</th>
+                      <th>Formulation</th>
+                      <th>Method</th>
+                      <th>Certifies?</th>
+                      <th>Code / solver</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr>
+                      <td>SLIM: Ustun &amp; Rudin, <em>Machine Learning</em> 102(3), 2016. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1502.04269">arXiv 1502.04269</a>, <a target="_blank" rel="noopener" href="https://doi.org/10.1007/s10994-015-5528-6">DOI 10.1007/s10994-015-5528-6</a></td>
+                      <td>0-1 loss + C0·L0 + small L1 tie-break; coefficients integer in a bounded set; operational constraints as linear constraints</td>
+                      <td>Integer program (MILP)</td>
+                      <td>Yes (MIP gap)</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/ustunb/slim-python">ustunb/slim-python</a> (Python 2.7), MATLAB toolbox; needs CPLEX</td>
+                      </tr>
+                      <tr>
+                      <td>RiskSLIM: Ustun &amp; Rudin, "Optimized Risk Scores", KDD 2017 (<a target="_blank" rel="noopener" href="https://www.berkustun.com/papers/optimized-risk-scores-kdd/ustun2017optimized.pdf">PDF</a>); "Learning Optimized Risk Scores", <em>JMLR</em> 20(150), 2019. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1610.00168">arXiv 1610.00168</a>, <a target="_blank" rel="noopener" href="https://jmlr.org/papers/v20/18-615.html">JMLR</a></td>
+                      <td>Logistic loss + C0·L0; lambda_j in {-5..5}, intercept in {-100..100}; model-size and custom constraints</td>
+                      <td>MINLP solved by the Lattice Cutting Plane Algorithm (LCPA): cutting planes for the loss inside one branch-and-bound tree, plus rounding/polishing heuristics</td>
+                      <td>Yes (optimality gap)</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/ustunb/risk-slim">ustunb/risk-slim</a> (not on PyPI, <code>pip install -e .</code>); needs CPLEX 12.6+. Open-source solver support is on the roadmap but not implemented</td>
+                      </tr>
+                      <tr>
+                      <td>"Supersparse Linear Integer Models for Predictive Scoring Systems": Ustun, Tracà, Rudin, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1306.5860">arXiv 1306.5860</a> (2013)</td>
+                      <td>Early SLIM version; no separate published "supersparse logistic regression" method was found, the logistic-loss version is RiskSLIM</td>
+                      <td>MIP</td>
+                      <td>Yes</td>
+                      <td>CPLEX</td>
+                      </tr>
+                      <tr>
+                      <td>Rounding methods: Chevaleyre, Koriche, Zucker, ICML 2013, PMLR 28:651-659. <a target="_blank" rel="noopener" href="https://proceedings.mlr.press/v28/chevaleyre13.html">PMLR</a>, extended <a target="_blank" rel="noopener" href="https://hal.science/hal-00771012/">HAL hal-00771012</a></td>
+                      <td>Hinge loss over discrete (e.g. binary) weight vectors</td>
+                      <td>Solve LP/convex relaxation, then deterministic or randomized rounding with approximation and generalization bounds</td>
+                      <td>No</td>
+                      <td>No public code</td>
+                      </tr>
+                      <tr>
+                      <td>Bayesian scoring systems: Ertekin &amp; Rudin, <em>Big Data</em> 3(4), 2015. <a target="_blank" rel="noopener" href="https://doi.org/10.1089/big.2015.0033">DOI 10.1089/big.2015.0033</a></td>
+                      <td>Logistic likelihood with priors that pull coefficients to a "natural scale" (few significant digits)</td>
+                      <td>Metropolis-Hastings sampling</td>
+                      <td>No</td>
+                      <td>No public code</td>
+                      </tr>
+                      <tr>
+                      <td>DILSVM: Carrizosa, Nogales-Gómez, Romero Morales, "Strongly agree or strongly disagree? Rating features in SVMs", <em>Information Sciences</em> 329, 2016. <a target="_blank" rel="noopener" href="https://optimization-online.org/2013/10/4082/">Optimization Online 2013</a>, <a target="_blank" rel="noopener" href="https://www.sciencedirect.com/science/article/abs/pii/S0020025515006854">ScienceDirect</a></td>
+                      <td>Hinge loss (SVM) with each coefficient restricted to a small set of discrete "rating levels"</td>
+                      <td>MILP plus heuristics</td>
+                      <td>Yes for small instances</td>
+                      <td>No public code; commercial MIP solver</td>
+                      </tr>
+                      <tr>
+                      <td>Fairness-aware scoring system: Yang et al., <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2109.10053">arXiv 2109.10053</a> (2021)</td>
+                      <td>Welfare / risk minimization with integer coefficients and group-fairness constraints</td>
+                      <td>MIP</td>
+                      <td>Yes (MIP gap)</td>
+                      <td>No public code</td>
+                      </tr>
+                      <tr>
+                      <td>Optimal fair multi-class scoring: Rouzot, Ferry, Huguet, ICTAI 2022. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.05023">arXiv 2304.05023</a>, <a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/10097916/">IEEE</a></td>
+                      <td>SLIM (0-1 loss, L0, integer coefficients) generalized to multi-class with fairness constraints</td>
+                      <td>MILP</td>
+                      <td>Yes (gap)</td>
+                      <td>No code linked; MILP solver</td>
+                      </tr>
+                      <tr>
+                      <td>MISS: Grzeszczyk, Trzciński, Sitek, SIAM SDM 2024, pp. 55-63. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2401.05069">arXiv 2401.05069</a>, <a target="_blank" rel="noopener" href="https://doi.org/10.1137/1.9781611978032.7">DOI 10.1137/1.9781611978032.7</a></td>
+                      <td>Multinomial (softmax) logistic loss + L0; one integer score per class</td>
+                      <td>MINLP via an extension of RiskSLIM/LCPA, with dimensionality reduction and heuristics</td>
+                      <td>Yes (gap)</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/SanoScience/MISS">SanoScience/MISS</a>; bundles risk-slim, <code>requirements.txt</code> pins <code>cplex==22.1.0.0</code> (pip CPLEX Community Edition is size-limited)</td>
+                      </tr>
+                      <tr>
+                      <td>FasterRisk: Liu, Zhong, B. Li, Seltzer, Rudin, NeurIPS 2022. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2210.05846">arXiv 2210.05846</a>, <a target="_blank" rel="noopener" href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/7103444259031cc58051f8c9a4868533-Abstract-Conference.html">NeurIPS</a></td>
+                      <td>Logistic loss s.t. L0 &lt;= k and box-bounded integer coefficients, with a real multiplier m on the score</td>
+                      <td>Beam search (SparseBeamLR) for a pool of sparse continuous solutions with different supports, "star ray" search over multipliers, sequential rounding that greedily limits loss increase (with an upper bound on the rounding loss)</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/interpretml/FasterRisk">interpretml/FasterRisk</a>, <code>pip install fasterrisk</code> (v0.1.10, BSD-3), pure Python/NumPy, no solver</td>
+                      </tr>
+                      <tr>
+                      <td>GroupFasterRisk: Zhu, Tian, Semenova, Liu, Xu, Scarpa, Rudin, <em>JAMIA</em> 32(4), 2025. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2311.13015">arXiv 2311.13015</a>, <a target="_blank" rel="noopener" href="https://academic.oup.com/jamia/article-abstract/32/4/736/7985531">JAMIA</a></td>
+                      <td>FasterRisk with group sparsity (feature groups from thresholded continuous variables), soft/hard sparsity, monotonicity constraints</td>
+                      <td>Beam search + rounding, as FasterRisk</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/MuhangTian/GFR-Experiments">MuhangTian/GFR-Experiments</a>; no solver</td>
+                      </tr>
+                      <tr>
+                      <td>AutoScore: Xie, Chakraborty, Ong, Goldstein, Liu, <em>JMIR Med Inform</em> 8(10):e21798, 2020. <a target="_blank" rel="noopener" href="https://medinform.jmir.org/2020/10/e21798/">JMIR</a></td>
+                      <td>Logistic regression on variables discretized by quantiles, coefficients scaled and rounded to points</td>
+                      <td>Random-forest variable ranking, parsimony plot to pick k, then LR, rounding, fine-tuning of cut points</td>
+                      <td>No</td>
+                      <td>R package <a target="_blank" rel="noopener" href="https://cran.r-project.org/web/packages/AutoScore/">AutoScore on CRAN</a>; ordinal/survival variants from nliulab. (The PyPI package named <code>AutoScore</code> is unrelated)</td>
+                      </tr>
+                      <tr>
+                      <td>fastSparse: Liu, Zhong, Seltzer, Rudin, AISTATS 2022, PMLR 151. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2202.11389">arXiv 2202.11389</a></td>
+                      <td>L0 (+ L2) regularized logistic or exponential loss for sparse GLMs/GAMs (continuous coefficients)</td>
+                      <td>Coordinate descent + local swaps, surrogate-cut feature screening, priority queue</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/interpretml/fastSparse">interpretml/fastSparse</a>, <code>pip install fastsparsegams</code> (C++ core, built on L0Learn)</td>
+                      </tr>
+                      <tr>
+                      <td>L0Learn: Dedieu, Hazimeh, Mazumder, <em>JMLR</em> 22(135), 2021. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2001.06471">arXiv 2001.06471</a>, <a target="_blank" rel="noopener" href="https://jmlr.org/papers/v22/19-1049.html">JMLR</a></td>
+                      <td>L0 + L1/L2 regularized logistic / squared-hinge loss (continuous coefficients)</td>
+                      <td>Cyclic coordinate descent + local combinatorial search; exact variant via "integrality generation" MIPs</td>
+                      <td>Exact variant only</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/hazimehh/L0Learn">hazimehh/L0Learn</a>, R on CRAN, <code>pip install l0learn</code> (MIT); heuristic path needs no solver, exact variant uses Gurobi</td>
+                      </tr>
+                      <tr>
+                      <td>Sparse classification via outer approximation: Bertsimas, Pauphilet, Van Parys, <em>Machine Learning</em> 110, 2021. <a target="_blank" rel="noopener" href="https://doi.org/10.1007/s10994-021-06085-5">DOI 10.1007/s10994-021-06085-5</a></td>
+                      <td>Cardinality-constrained, ridge-regularized logistic loss / hinge loss</td>
+                      <td>Outer approximation (cutting planes) in a MIP; also a Boolean relaxation heuristic</td>
+                      <td>Yes (exact variant)</td>
+                      <td>Julia; exact variant uses a commercial MIP solver</td>
+                      </tr>
+                      <tr>
+                      <td>abess: Zhu et al., <em>JMLR</em> 23(202), 2022. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2110.09697">arXiv 2110.09697</a>, <a target="_blank" rel="noopener" href="https://www.jmlr.org/papers/v23/21-1060.html">JMLR</a></td>
+                      <td>Best-subset (L0-constrained) GLMs incl. logistic (continuous coefficients)</td>
+                      <td>Splicing (adaptive support swaps) with information-criterion or CV choice of k</td>
+                      <td>Recovery guarantee under a linear model, no per-instance certificate</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/abess-team/abess">abess-team/abess</a>, <code>pip install abess</code> (GPL-3), R on CRAN</td>
+                      </tr>
+                      <tr>
+                      <td>OKRidge: Liu, Rosen, Zhong, Rudin, NeurIPS 2023. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.06686">arXiv 2304.06686</a></td>
+                      <td>Least squares + L2 s.t. L0 &lt;= k (continuous)</td>
+                      <td>Branch-and-bound with a saddle-point lower bound (linear system or ADMM), beam-search warm start</td>
+                      <td>Yes</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/jiachangliu/OKRidge">jiachangliu/OKRidge</a>, <code>pip install okridge</code>; no commercial solver</td>
+                      </tr>
+                      <tr>
+                      <td>Certifying optimal k-sparse GLMs: Liu, Shafiee, Lodi, ICML 2025, PMLR 267. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2502.09502">arXiv 2502.09502</a>; extended GPU version <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2603.01306">arXiv 2603.01306</a> (2026)</td>
+                      <td>L0-constrained GLM (incl. logistic), continuous</td>
+                      <td>BnB with first-order proximal method on the perspective relaxation, log-linear prox, GPU-friendly</td>
+                      <td>Yes</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/jiachangliu/OKGLM">jiachangliu/OKGLM</a> (not on PyPI; runs on CPU without its commercial-solver pins); <code>okglm_seqround</code></td>
+                      </tr>
+                      <tr>
+                      <td>Probabilistic scoring lists (PSL): Hanselle, Heid, Fürnkranz, Hüllermeier, Discovery Science 2023 (LNCS) and <em>Machine Learning</em> 114, 2025. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2407.21535">arXiv 2407.21535</a>, <a target="_blank" rel="noopener" href="https://link.springer.com/chapter/10.1007/978-3-031-45275-8_13">Springer DS 2023</a></td>
+                      <td>Ordered list of (feature, integer score) pairs; each prefix maps total score to a calibrated probability; stops early when confident</td>
+                      <td>Greedy stagewise selection of feature and score from a fixed score set, optional lookahead</td>
+                      <td>No</td>
+                      <td><a target="_blank" rel="noopener" href="https://github.com/TRR318/scikit-psl">TRR318/scikit-psl</a>, <code>pip install scikit-psl</code> (MIT, sklearn API; also has a multi-class scoring list)</td>
+                      </tr>
+                      <tr>
+                      <td>Optimal risk scores for continuous predictors: Molero-Río &amp; D'Ambrosio, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2502.08588">arXiv 2502.08588</a>, Springer chapter 2025</td>
+                      <td>Logistic loss + sparsity, jointly choosing thresholds for continuous features and integer points</td>
+                      <td>MINLP</td>
+                      <td>Yes (gap)</td>
+                      <td>No code linked</td>
+                      </tr>
+                      <tr>
+                      <td>RegScore: Grzeszczyk et al., <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2507.19155">arXiv 2507.19155</a> (2025)</td>
+                      <td>Integer-coefficient scoring systems for regression</td>
+                      <td>Beam search + k-sparse ridge (OKRidge style) + rounding</td>
+                      <td>No</td>
+                      <td>Preprint; code not verified</td>
+                      </tr>
+                      <tr>
+                      <td>SHAPoint: Meirman, Shapira, Dagan, Rokach, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2509.23756">arXiv 2509.23756</a> (2025)</td>
+                      <td>Points derived from Shapley values of a fitted model, task-agnostic (classification, survival)</td>
+                      <td>Fit model, aggregate SHAP, discretize to points</td>
+                      <td>No</td>
+                      <td>Compares to FasterRisk, AutoScore; code not verified</td>
+                      </tr>
+                      <tr>
+                      <td>Buffered AUC scoring systems: Shiina, Ikeda, Takano, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2601.05544">arXiv 2601.05544</a> (2026)</td>
+                      <td>Maximize buffered AUC (concave lower bound on AUC) with integer coefficients and group sparsity</td>
+                      <td>MILP</td>
+                      <td>Yes (gap)</td>
+                      <td>MIP solver; no code linked</td>
+                      </tr>
+                      <tr>
+                      <td>AgentScore: Ruhrberg Estévez, Chiu, van der Schaar, ICML 2026. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2601.22324">arXiv 2601.22324</a></td>
+                      <td>Checklist-style clinical scores built from LLM-proposed rules</td>
+                      <td>LLM proposes candidate rules; deterministic data-grounded verification and selection loop</td>
+                      <td>No</td>
+                      <td>Code not verified</td>
+                      </tr>
+                      <tr>
+                      <td>Gradient Boosted Risk Scores: Georgantas &amp; Richiardi, <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2605.02593">arXiv 2605.02593</a> (2026)</td>
+                      <td>Additive point rules with nonlinear feature effects, for regression, classification, survival</td>
+                      <td>Gradient boosting restricted to compact scoring rules</td>
+                      <td>No</td>
+                      <td>C++ with Python/R bindings (per abstract); compared to AutoScore on 12 datasets</td>
+                      </tr>
+                      </tbody>
+                      </table></div>
+                      <!-- /LITERATURE -->
+                    </details>
+
+                    <p>The problem is the one RiskSLIM and FasterRisk solve. Over integer points <i>w</i> with at most
+                      <i>k</i> nonzero entries, each in [&minus;5, 5], minimise</p>
+                    <div class="eq">\[
+                      \min_{w}\;\; \min_{a,\,b\,\in\,\mathbb{R}}\;
+                      \underbrace{\frac{1}{n}\sum_{i=1}^{n} \log\!\left(1 + e^{-\tilde y_i\,(a\, x_i^\top w \,+\, b)}\right)}_{\text{log loss of the risk curve for the total score } x_i^\top w}
+                    \]</div>
+                    <p>with <span>\(\tilde y_i \in \{-1, +1\}\)</span>. The inner minimum over <i>a</i> and <i>b</i> is the
+                      risk curve of <a href="#reading-the-score">Sec 1</a>. FasterRisk first finds good real-valued
+                      coefficients and then rounds them, trying a few multipliers <i>1/a</i> with the intercept fixed by
+                      the rounding. FastRiskScore keeps FasterRisk's first stage, rewritten to run faster, and replaces
+                      the rounding stage with a search over the integer points, where each candidate is scored by the
+                      loss above with <i>a</i> and <i>b</i> fit again. The shipped version has five steps:</p>
+                    <ol>
+                      <li><b>Compress the data.</b> Identical rows (same features and label) are merged into one row with
+                        a count, and the nested thresholds of one numeric column (<code>x &le; t</code> for increasing
+                        <code>t</code>) become one ordered variable, so the counts for every threshold come from one table.</li>
+                      <li><b>Beam search</b> for real-valued solutions (FasterRisk's): grow the set of features one at a
+                        time from the 8 best sets. Each set proposes its 10 most promising features, ranked by a one-step
+                        Newton bound, at most one per threshold band of a variable, and the 20 best proposals are fit by
+                        Newton's method on rows grouped by their values on the chosen features. A set whose coefficient on
+                        a raw numeric column would round to 0 is ranked last.</li>
+                      <li><b>Round</b> each of the 8 best final solutions at 20 scales, and at 4 more where the largest
+                        points are clipped at the bound so the others keep finer ratios, keeping the rounding with the lowest
+                        loss after refitting <i>a</i> and <i>b</i>.</li>
+                      <li><b>Local search</b> on the integer points from the best roundings: change one feature's points or
+                        add a feature, move a threshold along its column, then swap one feature for another; finally try the
+                        best swaps followed by a real-valued refit and rounding. The loss of a move is computed from a table
+                        of (score, feature value) counts; an estimate ranks the moves and the best are checked exactly.</li>
+                      <li><b>Exact polish</b> when the score nearly separates the classes: every single change is checked
+                        exactly, skipping candidates whose lower bound cannot beat the current loss.</li>
+                    </ol>
+                    <p>With more than 19 thresholds per column the search also requires each chosen feature to cover at
+                      least &radic;<i>n</i> rows on each side, keeps one threshold per variable in the beam, and uses 10 sets
+                      in the beam and 5 roundings; these settings come from the fine-threshold loops of
+                      <a href="#finer">Sec 2</a>.</p>
+
+                    <h3 id="found">Loop findings</h3>
+
+                    <details class="collapsible" id="m-lattice">
+                      <summary>Searching the integer points directly, scored by the refit loss (both runs)</summary>
+                      <p>Both runs found this change first, and it lowered the loss more than any other: on the visible set
+                        it moved the mean excess loss from about +0.002 to &minus;0.001 (measured against the original best
+                        known losses) in each run. FasterRisk judges a rounding by its loss at a fixed multiplier, but a
+                        risk score is used with its fitted curve, so a rounding that is worse at the fixed multiplier can
+                        be better once <i>a</i> and <i>b</i> are fit again. On spambase at <code>k</code> = 3, FasterRisk's
+                        rounding sets one of its three features to zero, because at that feature's scale the best integer
+                        point rounds to 0. The local search puts the feature back and lowers the loss by 0.095.</p>
+                      <p>At first the local search added 60 to 80% to the run time, because every candidate move required
+                        fitting <i>a</i> and <i>b</i> again over all rows. Two changes made it cheap. The loss is computed
+                        from the counts of positive and negative rows at each value of the total score (with 5 features
+                        the total takes at most 51 values), and moves are ranked by an estimate so that only the best two
+                        are checked exactly. Run 2 found that its first estimate was too optimistic for moves that change
+                        the spread of the scores (0.58 estimated against 0.63 true on compas at <code>k</code> = 3). It
+                        fixed this by recomputing the cells a move touches after one Newton step in (<i>a</i>,
+                        <i>b</i>).</p>
+                    </details>
+
+                    <details class="collapsible" id="m-speed">
+                      <summary>Speed changes</summary>
+                      <p>A profile of FasterRisk on bank at <code>k</code> = 10 (19.9 s) showed 82% of the time in
+                        coordinate descent, which reads every row for each coordinate step. Merging identical rows and
+                        fitting by Newton's method on the few chosen features made both runs 5&times; faster. Run 2 then
+                        grouped each beam candidate's rows by their values on its features (another 2.5&times;), moved the
+                        creation of each new candidate into one compiled function together with smaller changes
+                        (&minus;34% time), and computed the gradient and swap screens as single matrix products
+                        (&minus;14%, then &minus;12%). After these changes each step reads the data once instead of once
+                        per candidate.</p>
+                      <p>The integer search also made parts of FasterRisk's first stage unnecessary. Run 2 removed FasterRisk's
+                        diverse pool (swapping each feature for up to 50 others) and started the local search from the 10
+                        beam solutions instead, which gave a lower loss. Run 1 kept the pool but reduced it from 50 to 10
+                        solutions and the rounding multipliers from 20 to 5, with no change in loss.</p>
+                    </details>
+
+                    <details class="collapsible" id="m-failed">
+                      <summary>Changes that didn't yield improvements</summary>
+                      <ul>
+                        <li>Local search from an empty score, without the beam search: much worse (excess loss +0.010
+                          against &minus;0.001), so the features chosen by the beam search matter.</li>
+                        <li>Cheaper ways to rank beam candidates before fitting them (a one-step score test, a
+                          one-coordinate fit): all raised the loss by 0.0002 to 0.0007.</li>
+                        <li>Smaller beams: 5 parents instead of 10 raised the loss by 0.003.</li>
+                        <li>Random restarts and perturbations of the local search: large gains on a few problems where it
+                          got stuck (mushroom at <code>k</code> = 7), but less than 0.0001 on average, for 2 to 3 times the
+                          time.
+                          300 random restarts per problem on 15 problems beat the final version on only 4.</li>
+                        <li>More starts, deeper swaps, rescaling all points at once, refitting the best set of features
+                          and rounding again at several resolutions: gains of at most 0.0002, for 20 to 60% more
+                          time, so none passed the keep rule.</li>
+                      </ul>
+                    </details>
+
+                    <details class="collapsible" id="versions">
+                      <summary>Full table of kept versions</summary>
+                      <table class="ranktbl dataset-table vers">
+                        <thead>
+                          <tr><th>version</th><th>what changed</th><th>mean loss</th><th>time (s)</th><th>test AUC</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr class="vgrp"><td colspan="5">Run 1 (lower loss)</td></tr>
+                          <tr><td><code>pyfasterrisk_v1</code></td><td>FasterRisk in one file: beam search, diverse pool, star-ray search with sequential rounding</td><td>0.36029</td><td>1.444</td><td>0.8406</td></tr>
+                          <tr><td><code>v3_fastnewton</code></td><td>the same algorithm on unique (x, y) rows with counts, numba kernels, Newton on the support in place of coordinate descent</td><td>0.35920</td><td>0.279</td><td>0.8415</td></tr>
+                          <tr><td><code>v5_tunetop</code></td><td>beam: fine-tune only the children with the best one-coordinate fit</td><td>0.35924</td><td>0.211</td><td>0.8424</td></tr>
+                          <tr><td><code>v6_numbaray</code></td><td>star-ray search and sequential rounding in one numba kernel</td><td>0.35924</td><td>0.176</td><td>0.8424</td></tr>
+                          <tr><td><code>v9_pool10</code></td><td>integer local search scored by the calibrated loss, on score histograms; rounding pool 50 &rarr; 10</td><td>0.35661</td><td>0.163</td><td>0.8427</td></tr>
+                          <tr><td><code>v11_pooltune</code></td><td>diverse pool: fine-tune only the most promising swaps</td><td>0.35661</td><td>0.143</td><td>0.8427</td></tr>
+                          <tr><td><code>v24_child5</code></td><td>rescale and paired &plusmn;1 moves to polish the best result; beam child size 10 &rarr; 5</td><td>0.35631</td><td>0.142</td><td>0.8426</td></tr>
+                          <tr><td><code>v27_cheap1d</code></td><td>ranking fits capped at 3 Newton steps; 20 swap attempts per feature</td><td>0.35632</td><td>0.122</td><td>0.8425</td></tr>
+                          <tr><td><code>v28_ray5</code></td><td>5 multipliers in the star-ray search instead of 20</td><td>0.35632</td><td>0.105</td><td>0.8425</td></tr>
+                          <tr><td><code>v29_tune1</code></td><td>row deduplication by a random projection; fewer fine-tuned candidates</td><td>0.35636</td><td>0.087</td><td>0.8427</td></tr>
+                          <tr><td><code>v34_2starts</code></td><td>local search in numba on the support; 2 starts instead of 3</td><td>0.35640</td><td>0.074</td><td>0.8431</td></tr>
+                          <tr><td><code>v36_robust</code></td><td>end of run: same points, plus a deadline and kernels compiled at import</td><td>0.35640</td><td>0.071</td><td>0.8431</td></tr>
+                          <tr class="vgrp"><td colspan="5">Run 2 (faster)</td></tr>
+                          <tr><td><code>v2_numba</code></td><td>FasterRisk in numba on unique (x, y) rows; projected Newton in place of coordinate descent</td><td>0.35981</td><td>0.296</td><td>0.8414</td></tr>
+                          <tr><td><code>v5_nopool</code></td><td>integer local search scored by the calibrated loss (value changes, additions, swaps); diverse pool dropped</td><td>0.35637</td><td>0.264</td><td>0.8427</td></tr>
+                          <tr><td><code>v7_groups</code></td><td>beam nodes keep rows grouped by (y, support pattern): at most a few hundred groups instead of all rows</td><td>0.35637</td><td>0.107</td><td>0.8427</td></tr>
+                          <tr><td><code>v14_numbachild</code></td><td>faster data setup, swap screen, score binning by counting, visited-state memory; child creation in one numba call</td><td>0.35639</td><td>0.071</td><td>0.8428</td></tr>
+                          <tr><td><code>v16_swaplast</code></td><td>value changes and additions before swaps; swaps only when those fail</td><td>0.35622</td><td>0.063</td><td>0.8427</td></tr>
+                          <tr><td><code>v17_calround</code></td><td>rounding by the calibrated loss over 20 scales, replacing star-ray sequential rounding</td><td>0.35602</td><td>0.066</td><td>0.8430</td></tr>
+                          <tr><td><code>v18_roundnb</code></td><td>that rounding in one numba kernel</td><td>0.35597</td><td>0.057</td><td>0.8430</td></tr>
+                          <tr><td><code>v24_blasscreen</code></td><td>better move estimate (touched cells exact after a Newton step in (a, b)); swap screen as two BLAS products</td><td>0.35592</td><td>0.049</td><td>0.8428</td></tr>
+                          <tr><td><code>v30_lazycodes</code></td><td>column codes computed lazily; exact checks skipped when the estimate rules a move out</td><td>0.35592</td><td>0.042</td><td>0.8428</td></tr>
+                          <tr><td><code>v34_gemm</code></td><td>swap screens for all k removals, and beam gradients for all parents, as one matrix product each</td><td>0.35592</td><td>0.037</td><td>0.8424</td></tr>
+                          <tr><td><code>v35_scratch</code></td><td>run 2's final version, shipped until the later loops of <a href="#next">Sec 2</a>: same points as v34, plus deadlines at 40/80/90% of the time limit</td><td>0.35592</td><td>0.038</td><td>0.8424</td></tr>
+                        </tbody>
+                      </table>
+                      <style>
+                        table.vers td:not(:nth-child(2)), table.vers th { white-space: nowrap; }
+                        table.vers td:nth-child(n+3), table.vers th:nth-child(n+3) { text-align: right; }
+                        table.vers code { font-size: 0.85em; }
+                        table.vers tr.vgrp td { font-weight: 600; background: var(--surface-alt); }
+                      </style>
+                      <p class="tblnote">Visible set, as recorded by each run. Times vary by about 5% between runs of the
+                        same code. The runs' logs (<code>runs/sep26-run1/notes.md</code>,
+                        <code>runs/sep26-run2/notes.md</code>) list every attempt, kept or not, with its measured effect.</p>
+                    </details>
+
+                    <p>FastRiskScore is a heuristic. Unlike RiskSLIM with a full CPLEX licence, it does not prove that its
+                      score is the best one. It is deterministic and single-threaded. It needs numba, which compiles the
+                      search once per machine (about 2 minutes) and caches the result; set
+                      <code>RISKSCORE_NUMBA_CACHE=0</code> if the package directory is not writable.</p>
+
+                    <h3 id="citation">Citation</h3>
+
+                    <p>FastRiskScore came out of the autoresearch loop described in
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a>. If you use
+                        either, please cite:</p>
+
+                    <pre style="font-size: 0.92em;"><code>@inproceedings{singh2026agenticimodels,
+      title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
+      author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and Weiwei Yang and Michel Galley and Jianfeng Gao},
+      booktitle={The Fortieth Annual Conference on Neural Information Processing Systems},
+      year={2026},
+      url={https://openreview.net/forum?id=EY6O5VNNlV},
+}</code></pre>
+
+                </div>
+            </section>
+            <section>
+            </section>
+        </article>
+<nav id="sidebar">
+<div class="toc">
+<ul>
+<li><a href="index.html#installation">Installation</a></li>
+<li><a href="index.html#supported-models">Supported models</a></li>
+<li><a href="index.html#demo-notebooks">Demo notebooks</a></li>
+<li><a href="index.html#model-categories">Model categories</a></li>
+<li><a href="index.html#extras">Extras</a></li>
+<li><a href="index.html#references">References</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Our favorite methods</h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3>Prediction classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-algebraic"></span>algebraic</li>
+<li><span class="cat-dot cat-rule_list"></span>rule lists</li>
+<li><span class="cat-dot cat-rule_set"></span>rule sets</li>
+<li><span class="cat-dot cat-tree"></span>trees</li>
+<li><span class="cat-dot cat-util"></span>util</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.AutoInterpretableClassifier" href="util/automl.html#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.AutoInterpretableRegressor" href="util/automl.html#imodels.util.automl.AutoInterpretableRegressor">AutoInterpretableRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.BayesianRuleListClassifier" href="rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BayesianRuleSetClassifier" href="rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BoostedRulesRegressor" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.DecisionTreeCCPRegressor" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.DistilledRegressor" href="util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSClassifierCV" href="tree/figs.html#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSRegressor" href="tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSRegressorCV" href="tree/figs.html#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoClassifier" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoRegressor" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPSkopeClassifier" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.FastFrugalTreeClassifier" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.FastRiskScoreClassifier" href="algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.GPGamRegressor" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.GreedyRuleListClassifier" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeRegressor" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSDecisionTreeCCPClassifierCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSDecisionTreeCCPRegressorCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifierCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressor" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressorCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.IRFClassifier" href="tree/iterative_random_forest/index.html#imodels.tree.iterative_random_forest.IRFClassifier">IRFClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.IRFRegressor" href="tree/iterative_random_forest/index.html#imodels.tree.iterative_random_forest.IRFRegressor">IRFRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.OneRClassifier" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SkopeRulesClassifier" href="rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SlipperClassifier" href="rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.TaoTreeRegressor" href="tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.TreeGAMClassifier" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.TreeGAMRegressor" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></li>
+</ul>
+</li>
+<li><h3>Misc classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-clustering"></span>clustering</li>
+<li><span class="cat-dot cat-discretization"></span>discretization</li>
+<li><span class="cat-dot cat-experimental"></span>experimental</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-experimental" title="experimental"></span><a title="imodels.BART" href="experimental/bartpy/index.html#imodels.experimental.bartpy.BART">BART</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BRLDiscretizer" href="discretization/index.html#imodels.discretization.BRLDiscretizer">BRLDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BasicDiscretizer" href="discretization/discretizer.html#imodels.discretization.discretizer.BasicDiscretizer">BasicDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.MDLPDiscretizer" href="discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer">MDLPDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.RFDiscretizer" href="discretization/discretizer.html#imodels.discretization.discretizer.RFDiscretizer">RFDiscretizer</a></li>
+<li><span class="cat-dot cat-clustering" title="clustering"></span><a title="imodels.StableClustering" href="clustering/stableclustering.html#imodels.clustering.stableclustering.StableClustering">StableClustering</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+    </main>
+
+    <footer id="footer">
+    </footer>
+    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
+</body>
+
+</html>

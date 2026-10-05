@@ -70,6 +70,7 @@ from scipy.special import softmax
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments, check_predict_X
+from imodels.util.progress import progress_bar, progress_iter
 from imodels.util.data_util import encode_categories
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.arguments import explicit_get_params
@@ -446,6 +447,10 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
 
         # start the greedy fitting algorithm
         finished = False
+        # one tick per rule added; max_rules bounds the loop, so the bar has a
+        # total whenever the user set one (an unbounded fit gets a plain counter)
+        bar = progress_bar(total=self.max_rules, verbose=verbose,
+                           desc=&#39;fitting rules&#39;)
         while len(potential_splits) &gt; 0 and not finished:
             # print(&#39;potential_splits&#39;, [str(s) for s in potential_splits])
             # get node with max impurity_reduction (since it&#39;s sorted)
@@ -516,8 +521,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
                 budget = &#39;&#39; if self.max_rules is None else f&#39;/{self.max_rules}&#39;
                 condition = (f&#34;X_{split_node.feature} &lt;= {split_node.threshold:0.3f}&#34;
                              if split_node.feature is not None else str(split_node))
-                print(f&#34;rule {self.complexity_}{budget} &#34;
-                      f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
+                bar.write(f&#34;rule {self.complexity_}{budget} &#34;
+                          f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
@@ -571,9 +576,12 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             )
             if verbose &gt;= 2:
                 print(self)
+            bar.update(1)
             if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
                 finished = True
                 break
+
+        bar.close()
 
         # annotate final tree with node_id and value_sklearn, and prepare importance_data_
         importance_data = []
@@ -909,6 +917,7 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
         min_impurity_decrease_list: List[float] = [0],
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs,
     ):
@@ -921,6 +930,7 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
         self.min_impurity_decrease_list = min_impurity_decrease_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
 
 
     @property
@@ -930,7 +940,7 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
     #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
     #: so the parameters are spelled out here instead
     _PARAM_NAMES = (&#34;n_rules_list&#34;, &#34;n_trees_list&#34;, &#34;depth_list&#34;,
-                    &#34;min_impurity_decrease_list&#34;, &#34;cv&#34;, &#34;scoring&#34;)
+                    &#34;min_impurity_decrease_list&#34;, &#34;cv&#34;, &#34;scoring&#34;, &#34;verbose&#34;)
 
     def get_params(self, deep=True):
         return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
@@ -942,7 +952,12 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
 
     def fit(self, X, y):
         self.scores_ = []
-        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(itertools.product(*[self.n_rules_list, self.n_trees_list, self.depth_list, self.min_impurity_decrease_list])):
+        param_grid = list(itertools.product(
+            *[self.n_rules_list, self.n_trees_list, self.depth_list,
+              self.min_impurity_decrease_list]))
+        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(
+                progress_iter(param_grid, verbose=self.verbose,
+                              desc=&#39;cross-validating&#39;)):
             est = self._figs_class(max_rules=n_rules, max_trees=n_trees, max_depth=depth, min_impurity_decrease=min_impurity_decrease)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
@@ -1412,6 +1427,10 @@ when both are given.</p></div>
 
         # start the greedy fitting algorithm
         finished = False
+        # one tick per rule added; max_rules bounds the loop, so the bar has a
+        # total whenever the user set one (an unbounded fit gets a plain counter)
+        bar = progress_bar(total=self.max_rules, verbose=verbose,
+                           desc=&#39;fitting rules&#39;)
         while len(potential_splits) &gt; 0 and not finished:
             # print(&#39;potential_splits&#39;, [str(s) for s in potential_splits])
             # get node with max impurity_reduction (since it&#39;s sorted)
@@ -1482,8 +1501,8 @@ when both are given.</p></div>
                 budget = &#39;&#39; if self.max_rules is None else f&#39;/{self.max_rules}&#39;
                 condition = (f&#34;X_{split_node.feature} &lt;= {split_node.threshold:0.3f}&#34;
                              if split_node.feature is not None else str(split_node))
-                print(f&#34;rule {self.complexity_}{budget} &#34;
-                      f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
+                bar.write(f&#34;rule {self.complexity_}{budget} &#34;
+                          f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
@@ -1537,9 +1556,12 @@ when both are given.</p></div>
             )
             if verbose &gt;= 2:
                 print(self)
+            bar.update(1)
             if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
                 finished = True
                 break
+
+        bar.close()
 
         # annotate final tree with node_id and value_sklearn, and prepare importance_data_
         importance_data = []
@@ -1972,6 +1994,10 @@ are ignored while searching for a split in each node.</p></div>
 
     # start the greedy fitting algorithm
     finished = False
+    # one tick per rule added; max_rules bounds the loop, so the bar has a
+    # total whenever the user set one (an unbounded fit gets a plain counter)
+    bar = progress_bar(total=self.max_rules, verbose=verbose,
+                       desc=&#39;fitting rules&#39;)
     while len(potential_splits) &gt; 0 and not finished:
         # print(&#39;potential_splits&#39;, [str(s) for s in potential_splits])
         # get node with max impurity_reduction (since it&#39;s sorted)
@@ -2042,8 +2068,8 @@ are ignored while searching for a split in each node.</p></div>
             budget = &#39;&#39; if self.max_rules is None else f&#39;/{self.max_rules}&#39;
             condition = (f&#34;X_{split_node.feature} &lt;= {split_node.threshold:0.3f}&#34;
                          if split_node.feature is not None else str(split_node))
-            print(f&#34;rule {self.complexity_}{budget} &#34;
-                  f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
+            bar.write(f&#34;rule {self.complexity_}{budget} &#34;
+                      f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
 
         # update predictions for altered tree
         for tree_num_ in range(len(self.trees_)):
@@ -2097,9 +2123,12 @@ are ignored while searching for a split in each node.</p></div>
         )
         if verbose &gt;= 2:
             print(self)
+        bar.update(1)
         if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
             finished = True
             break
+
+    bar.close()
 
     # annotate final tree with node_id and value_sklearn, and prepare importance_data_
     importance_data = []
@@ -2661,7 +2690,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.figs.FIGSCV"><code class="flex name class">
 <span>class <span class="ident">FIGSCV</span></span>
-<span>(</span><span>figs, n_rules_list: List[int] = [6, 12, 24, 30, 50], n_trees_list: List[int] = [5, 10, 15], depth_list: List[int] = [3, 4], min_impurity_decrease_list: List[float] = [0], cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>figs, n_rules_list: List[int] = [6, 12, 24, 30, 50], n_trees_list: List[int] = [5, 10, 15], depth_list: List[int] = [3, 4], min_impurity_decrease_list: List[float] = [0], cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Both of the above, for tree-based models that support each.</p></div>
@@ -2679,6 +2708,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         min_impurity_decrease_list: List[float] = [0],
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs,
     ):
@@ -2691,6 +2721,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         self.min_impurity_decrease_list = min_impurity_decrease_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
 
 
     @property
@@ -2700,7 +2731,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
     #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
     #: so the parameters are spelled out here instead
     _PARAM_NAMES = (&#34;n_rules_list&#34;, &#34;n_trees_list&#34;, &#34;depth_list&#34;,
-                    &#34;min_impurity_decrease_list&#34;, &#34;cv&#34;, &#34;scoring&#34;)
+                    &#34;min_impurity_decrease_list&#34;, &#34;cv&#34;, &#34;scoring&#34;, &#34;verbose&#34;)
 
     def get_params(self, deep=True):
         return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
@@ -2712,7 +2743,12 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     def fit(self, X, y):
         self.scores_ = []
-        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(itertools.product(*[self.n_rules_list, self.n_trees_list, self.depth_list, self.min_impurity_decrease_list])):
+        param_grid = list(itertools.product(
+            *[self.n_rules_list, self.n_trees_list, self.depth_list,
+              self.min_impurity_decrease_list]))
+        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(
+                progress_iter(param_grid, verbose=self.verbose,
+                              desc=&#39;cross-validating&#39;)):
             est = self._figs_class(max_rules=n_rules, max_trees=n_trees, max_depth=depth, min_impurity_decrease=min_impurity_decrease)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
@@ -2861,7 +2897,12 @@ def trees_(self):
 </summary>
 <pre><code class="python">def fit(self, X, y):
     self.scores_ = []
-    for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(itertools.product(*[self.n_rules_list, self.n_trees_list, self.depth_list, self.min_impurity_decrease_list])):
+    param_grid = list(itertools.product(
+        *[self.n_rules_list, self.n_trees_list, self.depth_list,
+          self.min_impurity_decrease_list]))
+    for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(
+            progress_iter(param_grid, verbose=self.verbose,
+                          desc=&#39;cross-validating&#39;)):
         est = self._figs_class(max_rules=n_rules, max_trees=n_trees, max_depth=depth, min_impurity_decrease=min_impurity_decrease)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         mean_score = np.mean(cv_scores)
@@ -4041,6 +4082,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

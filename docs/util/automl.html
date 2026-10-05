@@ -78,7 +78,7 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
     This is basically a wrapper around GridSearchCV, with some preselected models.
     &#34;&#34;&#34;
 
-    def __init__(self, param_grid=None, refit=True):
+    def __init__(self, param_grid=None, refit=True, verbose=0):
         if param_grid is None:
             if isinstance(self, ClassifierMixin):
                 self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
@@ -87,6 +87,7 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
         else:
             self.param_grid = param_grid
         self.refit = refit
+        self.verbose = verbose
 
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
@@ -99,7 +100,8 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
         elif isinstance(self, RegressorMixin):
             scoring = &#34;r2&#34;
         self.est_ = GridSearchCV(
-            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
+            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit,
+            verbose=self.verbose)
         self.est_.fit(X, y)
         return self
 
@@ -211,7 +213,7 @@ class AutoInterpretableRegressor(AutoInterpretableModel, RegressorMixin):
 <dl>
 <dt id="imodels.util.automl.AutoInterpretableClassifier"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableClassifier</span></span>
-<span>(</span><span>param_grid=None, refit=True)</span>
+<span>(</span><span>param_grid=None, refit=True, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Automatically fit and select a classifier that is interpretable.
@@ -248,7 +250,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 </dd>
 <dt id="imodels.util.automl.AutoInterpretableModel"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableModel</span></span>
-<span>(</span><span>param_grid=None, refit=True)</span>
+<span>(</span><span>param_grid=None, refit=True, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Automatically fit and select a classifier that is interpretable.
@@ -264,7 +266,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     This is basically a wrapper around GridSearchCV, with some preselected models.
     &#34;&#34;&#34;
 
-    def __init__(self, param_grid=None, refit=True):
+    def __init__(self, param_grid=None, refit=True, verbose=0):
         if param_grid is None:
             if isinstance(self, ClassifierMixin):
                 self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
@@ -273,6 +275,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
         else:
             self.param_grid = param_grid
         self.refit = refit
+        self.verbose = verbose
 
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
@@ -285,7 +288,8 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
         elif isinstance(self, RegressorMixin):
             scoring = &#34;r2&#34;
         self.est_ = GridSearchCV(
-            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
+            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit,
+            verbose=self.verbose)
         self.est_.fit(X, y)
         return self
 
@@ -432,7 +436,8 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     elif isinstance(self, RegressorMixin):
         scoring = &#34;r2&#34;
     self.est_ = GridSearchCV(
-        self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
+        self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit,
+        verbose=self.verbose)
     self.est_.fit(X, y)
     return self</code></pre>
 </details>
@@ -590,7 +595,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.util.automl.AutoInterpretableRegressor"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableRegressor</span></span>
-<span>(</span><span>param_grid=None, refit=True)</span>
+<span>(</span><span>param_grid=None, refit=True, verbose=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Automatically fit and select a classifier that is interpretable.
@@ -640,6 +645,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
