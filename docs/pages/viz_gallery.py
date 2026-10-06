@@ -406,9 +406,8 @@ SUPPORTED = [
         ("RidgeClassifier / Perceptron", SK), ("IsotonicRegression", SK), ("TreeGAM", IM), ("GPGam", IM),
         ("MarginalShrinkageLinear", IM)]),
 ]
-SUPPORT_NOTE = ("Pipelines whose earlier steps only scale features (Standard, MinMax, MaxAbs, Robust) are drawn in raw "
-                "units. AutoInterpretable draws the model it selected. Not supported: kNN, kernel SVMs, MLPs and "
-                "other models without readable structure; multiclass linear models, boosting and FIGS.")
+SUPPORT_NOTE = ("Scaling pipelines are drawn in raw units. Not supported: models without readable structure "
+                "(kNN, kernel SVMs, MLPs).")
 
 
 def run_examples():
@@ -522,6 +521,17 @@ POST = """<section id="section-intro">
                       .vz-btn { background: var(--accent); color: #fff !important; padding: 0.35rem 0.8rem; border-radius: 8px; text-decoration: none !important; }
                       .vz-btn:hover { background: var(--accent-dark); }
                       .vz-lb-info pre { margin: 0; font-size: 0.78rem; }
+                      .vz-support { margin: 0.8rem 0 0.3rem; border-top: 1px solid var(--line); }
+                      .vz-srow { display: grid; grid-template-columns: 15.5rem 1fr; gap: 0.2rem 1rem; padding: 0.42rem 0;
+                        border-bottom: 1px solid var(--line-soft); font-size: 0.88rem; line-height: 1.55; }
+                      .vz-srow b { color: var(--ink); font-weight: 600; }
+                      .vz-srow b span { color: var(--muted); font-weight: 400; margin-left: 0.3rem; font-size: 0.8rem; }
+                      .vz-srow code { background: none; padding: 0; font-size: 0.8rem; white-space: nowrap; }
+                      .vz-srow code.sk { color: var(--accent); }
+                      .vz-srow code.im { color: var(--cat-rule-set); }
+                      .vz-srow .sep { color: var(--line); margin: 0 0.25rem; }
+                      @media (max-width: 640px) { .vz-srow { grid-template-columns: 1fr; } }
+                      .vz-support-note { font-size: 0.82rem; color: var(--muted); margin: 0.4rem 0 0; }
                       .vz-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; margin: 1rem 0 0.6rem; }
                       .vz-mcard { border: 1px solid var(--line); border-radius: 12px; padding: 0.85rem 1rem 1rem; background: var(--surface); }
                       .vz-mcard h3 { font-size: 0.98rem; margin: 0 0 0.15rem; border: none; padding: 0; display: flex; justify-content: space-between; }
@@ -564,10 +574,9 @@ viz.interactive(model, X, y).save("figs.html")     # one offline page; also rend
 
                     <h2 id="supported">2. Supported models</h2>
 
-                    <p>Models are grouped by the view they get.
-                        <span class="vz-key"><i class="sk"></i>scikit-learn<i class="im"></i>imodels</span></p>
-                    <div class="vz-models">__SUPPORTED__</div>
-                    <p class="caption" style="text-align:left">__SUPPORT_NOTE__</p>
+                    <div class="vz-support">__SUPPORTED__</div>
+                    <p class="vz-support-note"><span class="vz-key"><i class="sk"></i>scikit-learn<i class="im"></i>imodels</span>
+                        &middot; __SUPPORT_NOTE__</p>
 
                     <h2 id="interactive">3. Interactive mode</h2>
 
@@ -808,11 +817,10 @@ def write_post():
     tabs = [f'<button type="button" class="vz-tab" role="tab" data-slug="{s}" data-cap="{html.escape(c)}" '
             f'aria-selected="{"true" if k == 0 else "false"}">{html.escape(t)}</button>' for k, (s, t, c) in enumerate(DEMOS)]
     mcards = []
-    for view, vblurb, models in SUPPORTED:
-        chips = "".join(f'<span class="vz-chip {"sk" if src == SK else "im"}" title="{src}">{html.escape(m)}</span>'
-                        for m, src in models)
-        mcards.append(f'<div class="vz-mcard"><h3>{html.escape(view)}<span>{len(models)}</span></h3>'
-                      f'<p>{html.escape(vblurb)}</p><div class="vz-chips">{chips}</div></div>')
+    for view, _, models in SUPPORTED:
+        names = '<span class="sep">&middot;</span>'.join(
+            f'<code class="{"sk" if src == SK else "im"}" title="{src}">{html.escape(m)}</code>' for m, src in models)
+        mcards.append(f'<div class="vz-srow"><b>{html.escape(view)}<span>{len(models)}</span></b><div>{names}</div></div>')
     n_models = sum(len(m) for _, _, m in SUPPORTED)
     post = (POST.replace("__CARDS__", "\n".join(cards)).replace("__PILLS__", "".join(pills))
             .replace("__TABS__", "".join(tabs)).replace("__TAB0__", DEMOS[0][0]).replace("__CAP0__", html.escape(DEMOS[0][2]))
