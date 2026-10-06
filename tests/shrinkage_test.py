@@ -88,7 +88,7 @@ class TestShrinkage:
         base_models = [('hs', HSTreeRegressor(DecisionTreeRegressor())),
                        ('dt', DecisionTreeRegressor())]
         comb_model = VotingRegressor(estimators=base_models,
-                                     n_jobs=10,
+                                     n_jobs=2,
                                      verbose=2)
         comb_model.fit(self.X_classification_binary, self.y_regression)
 

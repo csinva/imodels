@@ -21,7 +21,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.progress import progress_iter
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_two_classes
 
 
 class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
@@ -100,6 +100,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.attr_names = []
 
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        check_two_classes(self, y)
         np.random.seed(self.random_state)
 
         # convert to pandas DataFrame
@@ -272,8 +273,12 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             list(itertools.chain.from_iterable([[
                 item_ind_dict[x] for x in rule]
                 for rule in self.rules_])))
+        if not self.rules_:
+            raise ValueError(
+                f"{type(self).__name__} found no candidate rules with supp={self.supp} and "
+                f"maxlen={self.maxlen}; lower supp or raise maxlen")
         len_rules = [len(rule) for rule in self.rules_]
-        indptr = list(_accumulate(len_rules))
+        indptr = list(itertools.accumulate(len_rules))
         indptr.insert(0, 0)
         indptr = np.array(indptr)
         data = np.ones(len(indices))
@@ -432,12 +437,7 @@ def _accumulate(iterable, func=operator.add):
     Ex. _accumulate([1,2,3,4,5]) --> 1 3 6 10 15
     Ex. _accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
     '''
-    it = iter(iterable)
-    total = next(it)
-    yield total
-    for element in it:
-        total = func(total, element)
-        yield total
+    return itertools.accumulate(iterable, func)
 
 
 def _find_lt(a, x):
@@ -488,6 +488,10 @@ def _extract_rules(tree, feature_names):
     left = tree.tree_.children_left
     right = tree.tree_.children_right
     features = [feature_names[i] for i in tree.tree_.feature]
+
+    # a tree that never split is a single leaf, which gives no rule (and has no parent to recurse to)
+    if left[0] == -1:
+        return []
 
     # get ids of child nodes
     idx = np.argwhere(left == -1)[:, 0]

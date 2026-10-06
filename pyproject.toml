@@ -56,6 +56,7 @@ dev = [
     "dvu",
     "gdown",
     "numba>=0.60",
+    "pytest-xdist>=3.8.0",
 ]
 
 # Optional algorithm deps mentioned in setup.py comments

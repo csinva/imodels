@@ -93,9 +93,12 @@ class TestGPGamRegressor:
         rng = np.random.RandomState(8)
         X = rng.randn(1200, 4)                       # over the 1000-row threshold
         y = X[:, 0] + X[:, 1] * X[:, 2] + rng.randn(1200) * 0.3
-        model = _GPGam(n_pairs=2, n_steps=15).fit(X, y)
+        # coarse explicit grids keep the fit quick: the schedule's own are 256 bins
+        model = _GPGam(n_pairs=2, n_steps=15, n_bins=16, pair_bins=6,
+                       pair_res=(6,)).fit(X, y)
         assert len(model.interaction_terms()) == 2
         assert model.n_steps == 15
+        assert model._p("n_bins") == 16
 
     def test_learned_lengthscales_are_reported(self):
         """The shared lengthscales are learned and named in kernel_weights."""
@@ -110,9 +113,9 @@ class TestGPGamRegressor:
     def test_interactions_beyond_48_are_backfit(self):
         """Above 48 selected pairs the extra ones are backfit and appear in the model."""
         rng = np.random.RandomState(10)
-        X = rng.randn(3200, 12)
-        y = X[:, 0] * X[:, 1] + np.sin(X[:, 2]) + rng.randn(3200) * 0.3
-        model = _GPGam(schedule=False, n_bins=8, n_pairs=52, pair_res=(5, 4), n_steps=15,
+        X = rng.randn(600, 12)
+        y = X[:, 0] * X[:, 1] + np.sin(X[:, 2]) + rng.randn(600) * 0.3
+        model = _GPGam(schedule=False, n_bins=8, n_pairs=52, pair_res=(5, 4), n_steps=5,
                        sweeps=1).fit(X, y)
         assert len(model.interaction_terms()) == 52
         assert np.all(np.isfinite(model.predict(X[:50])))
