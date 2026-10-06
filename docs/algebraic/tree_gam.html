@@ -99,8 +99,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         verbose=0,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         n_boosting_rounds : int
             Number of boosting rounds for the cyclic boosting.
         max_leaf_nodes : int
@@ -360,8 +360,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
 
     def predict_proba(self, X, marginal_only=False):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         marginal_only: bool
             If True, only use the marginal effects.
         &#34;&#34;&#34;
@@ -444,44 +444,46 @@ Uses cyclical boosting to fit a GAM with small trees.
 Simplified version of the explainable boosting machine described in <a href="https://github.com/interpretml/interpret">https://github.com/interpretml/interpret</a>
 Only works for binary classification.
 Fits a scalar bias to the mean.</p>
-<h2 id="params">Params</h2>
-<p>n_boosting_rounds : int
-Number of boosting rounds for the cyclic boosting.
-max_leaf_nodes : int
-Maximum number of leaf nodes for the trees in the cyclic boosting.
-reg_param : float
-Regularization parameter for the cyclic boosting.
-learning_rate: float
-Learning rate for the cyclic boosting.
-n_boosting_rounds_marginal : int
-Number of boosting rounds for the marginal boosting.
-max_leaf_nodes_marginal : int
-Maximum number of leaf nodes for the trees in the marginal boosting.
-reg_param_marginal : float
-Regularization parameter for the marginal boosting.
-fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
-Whether to fit a linear model to the marginal effects.
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_boosting_rounds</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of boosting rounds for the cyclic boosting.</dd>
+<dt><strong><code>max_leaf_nodes</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of leaf nodes for the trees in the cyclic boosting.</dd>
+<dt><strong><code>reg_param</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter for the cyclic boosting.</dd>
+<dt><strong><code>learning_rate</code></strong> :&ensp;<code>float</code></dt>
+<dd>Learning rate for the cyclic boosting.</dd>
+<dt><strong><code>n_boosting_rounds_marginal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of boosting rounds for the marginal boosting.</dd>
+<dt><strong><code>max_leaf_nodes_marginal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of leaf nodes for the trees in the marginal boosting.</dd>
+<dt><strong><code>reg_param_marginal</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter for the marginal boosting.</dd>
+<dt><strong><code>fit_linear_marginal</code></strong> :&ensp;<code>str [None, "None", "ridge", "NNLS"]</code></dt>
+<dd>Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
-None for no linear model
-select_linear_marginal: bool
-Whether to restrict features to those with non-negative coefficients in the linear model.
-Requires that fit_linear_marginal is NNLS.
-decay_rate_towards_marginal: float, [0, 1]
-Decay rate for regularizing each shape function towards the marginal shape function after each step
+None for no linear model</dd>
+<dt><strong><code>select_linear_marginal</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to restrict features to those with non-negative coefficients in the linear model.
+Requires that fit_linear_marginal is NNLS.</dd>
+<dt><strong><code>decay_rate_towards_marginal</code></strong> :&ensp;<code>float, [0, 1]</code></dt>
+<dd>Decay rate for regularizing each shape function towards the marginal shape function after each step
 1 means no decay, 0 means only use marginal effects
 shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
-The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
-fit_posthoc_tree_coefs: str [None, "ridge"]
-Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.
-boosting_strategy : str ["cyclic", "greedy"]
-Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
-validation_frac: float
-Fraction of data to use for early stopping.
-random_state : int
-Random seed.
-verbose : int
-If nonzero, show a progress bar over the boosting rounds while fitting.</p></div>
+The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator</dd>
+<dt><strong><code>fit_posthoc_tree_coefs</code></strong> :&ensp;<code>str [None, "ridge"]</code></dt>
+<dd>Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.</dd>
+<dt><strong><code>boosting_strategy</code></strong> :&ensp;<code>str ["cyclic", "greedy"]</code></dt>
+<dd>Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)</dd>
+<dt><strong><code>validation_frac</code></strong> :&ensp;<code>float</code></dt>
+<dd>Fraction of data to use for early stopping.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code></dt>
+<dd>Random seed.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code></dt>
+<dd>If nonzero, show a progress bar over the boosting rounds while fitting.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -513,8 +515,8 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
         verbose=0,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         n_boosting_rounds : int
             Number of boosting rounds for the cyclic boosting.
         max_leaf_nodes : int
@@ -774,8 +776,8 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
 
     def predict_proba(self, X, marginal_only=False):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         marginal_only: bool
             If True, only use the marginal effects.
         &#34;&#34;&#34;
@@ -834,6 +836,7 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
 <ul class="hlist">
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -935,17 +938,19 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X, marginal_only=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="params">Params</h2>
-<p>marginal_only: bool
-If True, only use the marginal effects.</p></div>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>marginal_only</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, only use the marginal effects.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X, marginal_only=False):
     &#34;&#34;&#34;
-    Params
-    ------
+    Parameters
+    ----------
     marginal_only: bool
         If True, only use the marginal effects.
     &#34;&#34;&#34;
@@ -987,300 +992,6 @@ If True, only use the marginal effects.</p></div>
     return np.array([1 - probs1, probs1]).T</code></pre>
 </details>
 </dd>
-<dt id="imodels.algebraic.tree_gam.TreeGAM.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request"><code class="name flex">
-<span>def <span class="ident">set_predict_proba_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, marginal_only: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>predict_proba</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>predict_proba</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict_proba</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>marginal_only</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>marginal_only</code> parameter in <code>predict_proba</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.tree_gam.TreeGAM.set_predict_request"><code class="name flex">
-<span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, marginal_only: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>predict</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>marginal_only</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>marginal_only</code> parameter in <code>predict</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1302,44 +1013,46 @@ Uses cyclical boosting to fit a GAM with small trees.
 Simplified version of the explainable boosting machine described in <a href="https://github.com/interpretml/interpret">https://github.com/interpretml/interpret</a>
 Only works for binary classification.
 Fits a scalar bias to the mean.</p>
-<h2 id="params">Params</h2>
-<p>n_boosting_rounds : int
-Number of boosting rounds for the cyclic boosting.
-max_leaf_nodes : int
-Maximum number of leaf nodes for the trees in the cyclic boosting.
-reg_param : float
-Regularization parameter for the cyclic boosting.
-learning_rate: float
-Learning rate for the cyclic boosting.
-n_boosting_rounds_marginal : int
-Number of boosting rounds for the marginal boosting.
-max_leaf_nodes_marginal : int
-Maximum number of leaf nodes for the trees in the marginal boosting.
-reg_param_marginal : float
-Regularization parameter for the marginal boosting.
-fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
-Whether to fit a linear model to the marginal effects.
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_boosting_rounds</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of boosting rounds for the cyclic boosting.</dd>
+<dt><strong><code>max_leaf_nodes</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of leaf nodes for the trees in the cyclic boosting.</dd>
+<dt><strong><code>reg_param</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter for the cyclic boosting.</dd>
+<dt><strong><code>learning_rate</code></strong> :&ensp;<code>float</code></dt>
+<dd>Learning rate for the cyclic boosting.</dd>
+<dt><strong><code>n_boosting_rounds_marginal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of boosting rounds for the marginal boosting.</dd>
+<dt><strong><code>max_leaf_nodes_marginal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of leaf nodes for the trees in the marginal boosting.</dd>
+<dt><strong><code>reg_param_marginal</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter for the marginal boosting.</dd>
+<dt><strong><code>fit_linear_marginal</code></strong> :&ensp;<code>str [None, "None", "ridge", "NNLS"]</code></dt>
+<dd>Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
-None for no linear model
-select_linear_marginal: bool
-Whether to restrict features to those with non-negative coefficients in the linear model.
-Requires that fit_linear_marginal is NNLS.
-decay_rate_towards_marginal: float, [0, 1]
-Decay rate for regularizing each shape function towards the marginal shape function after each step
+None for no linear model</dd>
+<dt><strong><code>select_linear_marginal</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to restrict features to those with non-negative coefficients in the linear model.
+Requires that fit_linear_marginal is NNLS.</dd>
+<dt><strong><code>decay_rate_towards_marginal</code></strong> :&ensp;<code>float, [0, 1]</code></dt>
+<dd>Decay rate for regularizing each shape function towards the marginal shape function after each step
 1 means no decay, 0 means only use marginal effects
 shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
-The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
-fit_posthoc_tree_coefs: str [None, "ridge"]
-Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.
-boosting_strategy : str ["cyclic", "greedy"]
-Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
-validation_frac: float
-Fraction of data to use for early stopping.
-random_state : int
-Random seed.
-verbose : int
-If nonzero, show a progress bar over the boosting rounds while fitting.</p></div>
+The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator</dd>
+<dt><strong><code>fit_posthoc_tree_coefs</code></strong> :&ensp;<code>str [None, "ridge"]</code></dt>
+<dd>Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.</dd>
+<dt><strong><code>boosting_strategy</code></strong> :&ensp;<code>str ["cyclic", "greedy"]</code></dt>
+<dd>Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)</dd>
+<dt><strong><code>validation_frac</code></strong> :&ensp;<code>float</code></dt>
+<dd>Fraction of data to use for early stopping.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code></dt>
+<dd>Random seed.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code></dt>
+<dd>If nonzero, show a progress bar over the boosting rounds while fitting.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1352,113 +1065,13 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.algebraic.tree_gam.TreeGAMClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></b></code>:
@@ -1466,9 +1079,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict_proba" href="#imodels.algebraic.tree_gam.TreeGAM.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_fit_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request">set_predict_proba_request</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1483,44 +1093,46 @@ Uses cyclical boosting to fit a GAM with small trees.
 Simplified version of the explainable boosting machine described in <a href="https://github.com/interpretml/interpret">https://github.com/interpretml/interpret</a>
 Only works for binary classification.
 Fits a scalar bias to the mean.</p>
-<h2 id="params">Params</h2>
-<p>n_boosting_rounds : int
-Number of boosting rounds for the cyclic boosting.
-max_leaf_nodes : int
-Maximum number of leaf nodes for the trees in the cyclic boosting.
-reg_param : float
-Regularization parameter for the cyclic boosting.
-learning_rate: float
-Learning rate for the cyclic boosting.
-n_boosting_rounds_marginal : int
-Number of boosting rounds for the marginal boosting.
-max_leaf_nodes_marginal : int
-Maximum number of leaf nodes for the trees in the marginal boosting.
-reg_param_marginal : float
-Regularization parameter for the marginal boosting.
-fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
-Whether to fit a linear model to the marginal effects.
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_boosting_rounds</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of boosting rounds for the cyclic boosting.</dd>
+<dt><strong><code>max_leaf_nodes</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of leaf nodes for the trees in the cyclic boosting.</dd>
+<dt><strong><code>reg_param</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter for the cyclic boosting.</dd>
+<dt><strong><code>learning_rate</code></strong> :&ensp;<code>float</code></dt>
+<dd>Learning rate for the cyclic boosting.</dd>
+<dt><strong><code>n_boosting_rounds_marginal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of boosting rounds for the marginal boosting.</dd>
+<dt><strong><code>max_leaf_nodes_marginal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of leaf nodes for the trees in the marginal boosting.</dd>
+<dt><strong><code>reg_param_marginal</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter for the marginal boosting.</dd>
+<dt><strong><code>fit_linear_marginal</code></strong> :&ensp;<code>str [None, "None", "ridge", "NNLS"]</code></dt>
+<dd>Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
-None for no linear model
-select_linear_marginal: bool
-Whether to restrict features to those with non-negative coefficients in the linear model.
-Requires that fit_linear_marginal is NNLS.
-decay_rate_towards_marginal: float, [0, 1]
-Decay rate for regularizing each shape function towards the marginal shape function after each step
+None for no linear model</dd>
+<dt><strong><code>select_linear_marginal</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to restrict features to those with non-negative coefficients in the linear model.
+Requires that fit_linear_marginal is NNLS.</dd>
+<dt><strong><code>decay_rate_towards_marginal</code></strong> :&ensp;<code>float, [0, 1]</code></dt>
+<dd>Decay rate for regularizing each shape function towards the marginal shape function after each step
 1 means no decay, 0 means only use marginal effects
 shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
-The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
-fit_posthoc_tree_coefs: str [None, "ridge"]
-Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.
-boosting_strategy : str ["cyclic", "greedy"]
-Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
-validation_frac: float
-Fraction of data to use for early stopping.
-random_state : int
-Random seed.
-verbose : int
-If nonzero, show a progress bar over the boosting rounds while fitting.</p></div>
+The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator</dd>
+<dt><strong><code>fit_posthoc_tree_coefs</code></strong> :&ensp;<code>str [None, "ridge"]</code></dt>
+<dd>Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.</dd>
+<dt><strong><code>boosting_strategy</code></strong> :&ensp;<code>str ["cyclic", "greedy"]</code></dt>
+<dd>Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)</dd>
+<dt><strong><code>validation_frac</code></strong> :&ensp;<code>float</code></dt>
+<dd>Fraction of data to use for early stopping.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code></dt>
+<dd>Random seed.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code></dt>
+<dd>If nonzero, show a progress bar over the boosting rounds while fitting.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1533,113 +1145,13 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.algebraic.tree_gam.TreeGAMRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></b></code>:
@@ -1647,9 +1159,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict_proba" href="#imodels.algebraic.tree_gam.TreeGAM.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_fit_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request">set_predict_proba_request</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 </ul>

@@ -80,12 +80,19 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
 
     Parameters
     ----------
-        tree : Decision Tree Classifier/Regressor
-        feature_names: list of variable names
+    tree : DecisionTreeClassifier or DecisionTreeRegressor
+        A fitted scikit-learn tree.
+    feature_names : list of str
+        Names of the features.
+    prediction_values : bool, default=False
+        Whether to append each leaf&#39;s prediction to its rule.
+    round_thresholds : bool, default=True
+        Whether to round thresholds when writing the rules.
 
     Returns
     -------
-    rules : list of rules.
+    rules : list of str
+        One rule per leaf.
     &#34;&#34;&#34;
     # XXX todo: check the case where tree is build on subset of features,
     # ie max_features != None
@@ -310,11 +317,21 @@ true for something exposing a Booster.</p></div>
 <dd>
 <div class="desc"><p>Return a list of rules from a tree</p>
 <h2 id="parameters">Parameters</h2>
-<pre><code>tree : Decision Tree Classifier/Regressor
-feature_names: list of variable names
-</code></pre>
+<dl>
+<dt><strong><code>tree</code></strong> :&ensp;<code>DecisionTreeClassifier</code> or <code>DecisionTreeRegressor</code></dt>
+<dd>A fitted scikit-learn tree.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>Names of the features.</dd>
+<dt><strong><code>prediction_values</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Whether to append each leaf's prediction to its rule.</dd>
+<dt><strong><code>round_thresholds</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to round thresholds when writing the rules.</dd>
+</dl>
 <h2 id="returns">Returns</h2>
-<p>rules : list of rules.</p></div>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>One rule per leaf.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -327,12 +344,19 @@ feature_names: list of variable names
 
     Parameters
     ----------
-        tree : Decision Tree Classifier/Regressor
-        feature_names: list of variable names
+    tree : DecisionTreeClassifier or DecisionTreeRegressor
+        A fitted scikit-learn tree.
+    feature_names : list of str
+        Names of the features.
+    prediction_values : bool, default=False
+        Whether to append each leaf&#39;s prediction to its rule.
+    round_thresholds : bool, default=True
+        Whether to round thresholds when writing the rules.
 
     Returns
     -------
-    rules : list of rules.
+    rules : list of str
+        One rule per leaf.
     &#34;&#34;&#34;
     # XXX todo: check the case where tree is build on subset of features,
     # ie max_features != None

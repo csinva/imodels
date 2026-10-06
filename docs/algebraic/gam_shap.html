@@ -66,10 +66,16 @@ class ShapGAM(BaseEstimator):
         &#34;&#34;&#34;
         Initialize the ensemble EBM classifier.
 
-        Parameters:
-        - n_estimators: Number of EBM classifiers to create with different random subsets of features.
-        - feature_fraction: Fraction of features to use for each EBM classifier.
-        - random_state: Seed for random number generator to ensure reproducibility.
+        Parameters
+        ----------
+        n_estimators : int, default=10
+            Number of EBM classifiers to create with different random subsets of features.
+        feature_fraction : float or &#34;uniform&#34;, default=0.7
+            Fraction of features to use for each EBM classifier (&#34;uniform&#34;: a random fraction each time).
+        random_state : int, optional
+            Seed for the random number generator, for reproducibility.
+        ebm_kwargs : dict, optional
+            Keyword arguments passed to each ExplainableBoostingMachine.
         &#34;&#34;&#34;
         require_optional_dependency(
             &#39;interpret&#39;, type(self).__name__,
@@ -250,10 +256,17 @@ array([2, 2, 2])
 array([3, 3, 3])
 </code></pre>
 <p>Initialize the ensemble EBM classifier.</p>
-<p>Parameters:
-- n_estimators: Number of EBM classifiers to create with different random subsets of features.
-- feature_fraction: Fraction of features to use for each EBM classifier.
-- random_state: Seed for random number generator to ensure reproducibility.</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of EBM classifiers to create with different random subsets of features.</dd>
+<dt><strong><code>feature_fraction</code></strong> :&ensp;<code>float</code> or <code>"uniform"</code>, default=<code>0.7</code></dt>
+<dd>Fraction of features to use for each EBM classifier ("uniform": a random fraction each time).</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Seed for the random number generator, for reproducibility.</dd>
+<dt><strong><code>ebm_kwargs</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Keyword arguments passed to each ExplainableBoostingMachine.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -263,10 +276,16 @@ array([3, 3, 3])
         &#34;&#34;&#34;
         Initialize the ensemble EBM classifier.
 
-        Parameters:
-        - n_estimators: Number of EBM classifiers to create with different random subsets of features.
-        - feature_fraction: Fraction of features to use for each EBM classifier.
-        - random_state: Seed for random number generator to ensure reproducibility.
+        Parameters
+        ----------
+        n_estimators : int, default=10
+            Number of EBM classifiers to create with different random subsets of features.
+        feature_fraction : float or &#34;uniform&#34;, default=0.7
+            Fraction of features to use for each EBM classifier (&#34;uniform&#34;: a random fraction each time).
+        random_state : int, optional
+            Seed for the random number generator, for reproducibility.
+        ebm_kwargs : dict, optional
+            Keyword arguments passed to each ExplainableBoostingMachine.
         &#34;&#34;&#34;
         require_optional_dependency(
             &#39;interpret&#39;, type(self).__name__,
@@ -626,10 +645,17 @@ array([2, 2, 2])
 array([3, 3, 3])
 </code></pre>
 <p>Initialize the ensemble EBM classifier.</p>
-<p>Parameters:
-- n_estimators: Number of EBM classifiers to create with different random subsets of features.
-- feature_fraction: Fraction of features to use for each EBM classifier.
-- random_state: Seed for random number generator to ensure reproducibility.</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of EBM classifiers to create with different random subsets of features.</dd>
+<dt><strong><code>feature_fraction</code></strong> :&ensp;<code>float</code> or <code>"uniform"</code>, default=<code>0.7</code></dt>
+<dd>Fraction of features to use for each EBM classifier ("uniform": a random fraction each time).</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Seed for the random number generator, for reproducibility.</dd>
+<dt><strong><code>ebm_kwargs</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Keyword arguments passed to each ExplainableBoostingMachine.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -645,107 +671,6 @@ array([3, 3, 3])
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.algebraic.gam_shap.ShapGAMClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></b></code>:
@@ -801,10 +726,17 @@ array([2, 2, 2])
 array([3, 3, 3])
 </code></pre>
 <p>Initialize the ensemble EBM classifier.</p>
-<p>Parameters:
-- n_estimators: Number of EBM classifiers to create with different random subsets of features.
-- feature_fraction: Fraction of features to use for each EBM classifier.
-- random_state: Seed for random number generator to ensure reproducibility.</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of EBM classifiers to create with different random subsets of features.</dd>
+<dt><strong><code>feature_fraction</code></strong> :&ensp;<code>float</code> or <code>"uniform"</code>, default=<code>0.7</code></dt>
+<dd>Fraction of features to use for each EBM classifier ("uniform": a random fraction each time).</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Seed for the random number generator, for reproducibility.</dd>
+<dt><strong><code>ebm_kwargs</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Keyword arguments passed to each ExplainableBoostingMachine.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -820,107 +752,6 @@ array([3, 3, 3])
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.algebraic.gam_shap.ShapGAMRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></b></code>:

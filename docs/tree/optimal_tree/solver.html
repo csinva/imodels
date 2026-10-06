@@ -1379,14 +1379,18 @@ class BitDataset:
 
     Parameters
     ----------
-    Xb : (n, m) bool array of binary split features.
-    y : (n,) int array of class indices in ``[0, n_classes)``.
-    n_classes : number of classes.
-    costs : optional (K, K) matrix; ``costs[i, j]`` is the cost of predicting
-        class ``i`` when the true class is ``j``.  Defaults to ``1/n`` off the
-        diagonal (unweighted misclassification rate).
-    balance : if True and ``costs`` is None, use ``1 / (K * count_j)`` so every
-        class carries the same total weight (the reference ``balance`` flag).
+    Xb : ndarray of shape (n, m), bool
+        Binary split features.
+    y : ndarray of shape (n,), int
+        Class indices in ``[0, n_classes)``.
+    n_classes : int
+        Number of classes.
+    costs : ndarray of shape (K, K), optional
+        ``costs[i, j]`` is the cost of predicting class ``i`` when the true class is ``j``.
+        Defaults to ``1/n`` off the diagonal (unweighted misclassification rate).
+    balance : bool, default=False
+        If True and ``costs`` is None, use ``1 / (K * count_j)`` so every class carries the
+        same total weight (the reference ``balance`` flag).
     &#34;&#34;&#34;
 
     def __init__(self, Xb: np.ndarray, y: np.ndarray, n_classes: int,
@@ -7048,15 +7052,18 @@ def n_binary_features(self) -&gt; int:
 <div class="desc"><p>Binary features, class targets and misclassification costs as bitsets.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt>Xb : (n, m) bool array of binary split features.</dt>
-<dt>y : (n,) int array of class indices in <code>[0, n_classes)</code>.</dt>
-<dt>n_classes : number of classes.</dt>
-<dt><strong><code>costs</code></strong> :&ensp;<code>optional (K, K) matrix; ``costs[i, j]`` is the cost</code> of <code>predicting</code></dt>
-<dd>class <code>i</code> when the true class is <code>j</code>.
-Defaults to <code>1/n</code> off the
-diagonal (unweighted misclassification rate).</dd>
-<dt><strong><code>balance</code></strong> :&ensp;<code>if True and ``costs`` is None, use ``1 / (K * count_j)`` so every</code></dt>
-<dd>class carries the same total weight (the reference <code>balance</code> flag).</dd>
+<dt><strong><code>Xb</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n, m), bool</code></dt>
+<dd>Binary split features.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n,), int</code></dt>
+<dd>Class indices in <code>[0, n_classes)</code>.</dd>
+<dt><strong><code>n_classes</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of classes.</dd>
+<dt><strong><code>costs</code></strong> :&ensp;<code>ndarray</code> of <code>shape (K, K)</code>, optional</dt>
+<dd><code>costs[i, j]</code> is the cost of predicting class <code>i</code> when the true class is <code>j</code>.
+Defaults to <code>1/n</code> off the diagonal (unweighted misclassification rate).</dd>
+<dt><strong><code>balance</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>If True and <code>costs</code> is None, use <code>1 / (K * count_j)</code> so every class carries the
+same total weight (the reference <code>balance</code> flag).</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -7067,14 +7074,18 @@ diagonal (unweighted misclassification rate).</dd>
 
     Parameters
     ----------
-    Xb : (n, m) bool array of binary split features.
-    y : (n,) int array of class indices in ``[0, n_classes)``.
-    n_classes : number of classes.
-    costs : optional (K, K) matrix; ``costs[i, j]`` is the cost of predicting
-        class ``i`` when the true class is ``j``.  Defaults to ``1/n`` off the
-        diagonal (unweighted misclassification rate).
-    balance : if True and ``costs`` is None, use ``1 / (K * count_j)`` so every
-        class carries the same total weight (the reference ``balance`` flag).
+    Xb : ndarray of shape (n, m), bool
+        Binary split features.
+    y : ndarray of shape (n,), int
+        Class indices in ``[0, n_classes)``.
+    n_classes : int
+        Number of classes.
+    costs : ndarray of shape (K, K), optional
+        ``costs[i, j]`` is the cost of predicting class ``i`` when the true class is ``j``.
+        Defaults to ``1/n`` off the diagonal (unweighted misclassification rate).
+    balance : bool, default=False
+        If True and ``costs`` is None, use ``1 / (K * count_j)`` so every class carries the
+        same total weight (the reference ``balance`` flag).
     &#34;&#34;&#34;
 
     def __init__(self, Xb: np.ndarray, y: np.ndarray, n_classes: int,

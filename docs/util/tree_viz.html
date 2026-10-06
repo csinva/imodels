@@ -76,8 +76,12 @@ def shadow_tree(model, X, y, feature_names=None, target_name=&#39;target&#39;,
     ----------
     model
         A fitted tree-based imodels model (FIGS, hierarchical shrinkage, CART,
-        TAO, boosted rules, ...).
-    X, y : the data to annotate the tree with, as dtreeviz requires.
+        TAO, C4.5, FastSmallTree, IRF, boosted rules, ...). Single trees and IRF
+        are drawn through their exact scikit-learn export (`imodels.to_sklearn`).
+    X : array-like of shape (n_samples, n_features)
+        Data to annotate the tree with, as dtreeviz requires.
+    y : array-like of shape (n_samples,)
+        Targets for ``X``.
     feature_names : list of str, optional
         Defaults to the names the model was fitted with, else X0, X1, ... .
     target_name : str
@@ -115,7 +119,7 @@ def shadow_tree(model, X, y, feature_names=None, target_name=&#39;target&#39;,
             &#34;(&#39;pip install dtreeviz&#39;). It is not a dependency of imodels.&#34;
         ) from error
 
-    trees = sklearn_trees(model)
+    trees = _trees(model, X)
     if trees is None:
         raise ValueError(
             f&#34;Don&#39;t know how to draw {type(model).__name__}. dtreeviz support &#34;
@@ -134,6 +138,25 @@ def shadow_tree(model, X, y, feature_names=None, target_name=&#39;target&#39;,
 
     return ShadowSKDTree(trees[tree_num], X, np.asarray(y),
                          list(feature_names), target_name, class_names)
+
+
+def _trees(model, X):
+    &#34;&#34;&#34;The model&#39;s trees as scikit-learn trees, via `imodels.to_sklearn` where it applies.
+
+    FIGS keeps its class-count trees (dtreeviz shows class distributions from them);
+    models `to_sklearn` does not cover (e.g. boosted rules) fall back to the trees
+    they are built from.
+    &#34;&#34;&#34;
+    if hasattr(model, &#39;trees_&#39;) or hasattr(getattr(model, &#39;figs&#39;, None), &#39;trees_&#39;):
+        return sklearn_trees(model)
+    from imodels.util.sklearn_export import to_sklearn
+    try:
+        exported = to_sklearn(model, X)
+    except (TypeError, NotImplementedError):
+        return sklearn_trees(model)
+    if hasattr(exported, &#39;estimators_&#39;):
+        return [getattr(e, &#39;estimator_&#39;, e) for e in exported.estimators_]
+    return [exported]
 
 
 def _feature_names(model, n_features):
@@ -168,8 +191,12 @@ def _class_names(model):
 <dl>
 <dt><strong><code>model</code></strong></dt>
 <dd>A fitted tree-based imodels model (FIGS, hierarchical shrinkage, CART,
-TAO, boosted rules, &hellip;).</dd>
-<dt>X, y : the data to annotate the tree with, as dtreeviz requires.</dt>
+TAO, C4.5, FastSmallTree, IRF, boosted rules, &hellip;). Single trees and IRF
+are drawn through their exact scikit-learn export (<code><a title="imodels.to_sklearn" href="../index.html#imodels.to_sklearn">to_sklearn()</a></code>).</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Data to annotate the tree with, as dtreeviz requires.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>Targets for <code>X</code>.</dd>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
 <dd>Defaults to the names the model was fitted with, else X0, X1, &hellip; .</dd>
 <dt><strong><code>target_name</code></strong> :&ensp;<code>str</code></dt>
@@ -211,8 +238,12 @@ TAO, boosted rules, &hellip;).</dd>
     ----------
     model
         A fitted tree-based imodels model (FIGS, hierarchical shrinkage, CART,
-        TAO, boosted rules, ...).
-    X, y : the data to annotate the tree with, as dtreeviz requires.
+        TAO, C4.5, FastSmallTree, IRF, boosted rules, ...). Single trees and IRF
+        are drawn through their exact scikit-learn export (`imodels.to_sklearn`).
+    X : array-like of shape (n_samples, n_features)
+        Data to annotate the tree with, as dtreeviz requires.
+    y : array-like of shape (n_samples,)
+        Targets for ``X``.
     feature_names : list of str, optional
         Defaults to the names the model was fitted with, else X0, X1, ... .
     target_name : str
@@ -250,7 +281,7 @@ TAO, boosted rules, &hellip;).</dd>
             &#34;(&#39;pip install dtreeviz&#39;). It is not a dependency of imodels.&#34;
         ) from error
 
-    trees = sklearn_trees(model)
+    trees = _trees(model, X)
     if trees is None:
         raise ValueError(
             f&#34;Don&#39;t know how to draw {type(model).__name__}. dtreeviz support &#34;

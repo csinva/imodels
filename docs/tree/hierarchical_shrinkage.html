@@ -120,8 +120,8 @@ class HSTree(RuleInspectionMixin, BaseEstimator):
         Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
         https://arxiv.org/abs/2202.00858
 
-        Params
-        ------
+        Parameters
+        ----------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
             Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
@@ -355,43 +355,6 @@ class HSTree(RuleInspectionMixin, BaseEstimator):
             return np.where(totals &gt; 0, normalized, 1 / probs.shape[1])
         else:
             return NotImplemented
-
-    def __str__(self):
-        # check if fitted
-        if not checks.check_is_fitted(self.estimator_):
-            s = self.__class__.__name__
-            s += &#34;(&#34;
-            s += &#34;est=&#34;
-            s += repr(self.estimator_)
-            s += &#34;, &#34;
-            s += &#34;reg_param=&#34;
-            s += str(self.reg_param)
-            s += &#34;)&#34;
-            return s
-        elif not hasattr(self.estimator_, &#34;tree_&#34;):
-            # an ensemble: export_text only renders a single tree, so summarize
-            n_trees = len(getattr(self.estimator_, &#34;estimators_&#34;, []))
-            s = &#34;&gt; ------------------------------\n&#34;
-            s += &#34;&gt; Tree ensemble with Hierarchical Shrinkage\n&#34;
-            s += &#34;&gt; \tPrediction is made by combining the predictions of each shrunk tree\n&#34;
-            s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
-            s += f&#34;&gt; {type(self.estimator_).__name__} of {n_trees} trees, &#34;
-            s += f&#34;reg_param={self.reg_param}\n&#34;
-            if hasattr(self, &#34;complexity_&#34;):
-                s += f&#34;&gt; {self.complexity_} total non-leaf nodes\n&#34;
-            return s
-        else:
-            s = &#34;&gt; ------------------------------\n&#34;
-            s += &#34;&gt; Decision Tree with Hierarchical Shrinkage\n&#34;
-            s += &#34;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#34;
-            s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
-
-            if hasattr(self, &#34;feature_names&#34;) and self.feature_names is not None:
-                return s + export_text(
-                    self.estimator_, feature_names=self.feature_names, show_weights=True
-                )
-            else:
-                return s + export_text(self.estimator_, show_weights=True)
 
     def __repr__(self):
         # s = self.__class__.__name__
@@ -560,8 +523,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
     ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used
@@ -677,8 +640,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
     ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used
@@ -790,19 +753,21 @@ Hierarchical shinkage is an extremely fast post-hoc regularization method which 
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
 Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
-<h2 id="params">Params</h2>
-<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-Defaults to CART Classification Tree with 20 max leaf nodes
-Note: this estimator will be directly modified</p>
-<p>reg_param: float
-Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
-<p>shrinkage_scheme: str
-Experimental: Used to experiment with different forms of shrinkage. options are:
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>estimator_</code></strong> :&ensp;<code>sklearn tree</code> or <code>tree ensemble model (e.g. RandomForest</code> or <code>GradientBoosting)</code></dt>
+<dd>Defaults to CART Classification Tree with 20 max leaf nodes
+Note: this estimator will be directly modified</dd>
+<dt><strong><code>reg_param</code></strong> :&ensp;<code>float</code></dt>
+<dd>Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</dd>
+<dt><strong><code>shrinkage_scheme</code></strong> :&ensp;<code>str</code></dt>
+<dd>Experimental: Used to experiment with different forms of shrinkage. options are:
 (i) node_based shrinks based on number of samples in parent node
 (ii) leaf_based only shrinks leaf nodes based on number of leaf samples
-(iii) constant shrinks every node by a constant lambda</p>
-<p>max_leaf_nodes: int
-If estimator is None, then max_leaf_nodes is passed to the default decision tree</p></div>
+(iii) constant shrinks every node by a constant lambda</dd>
+<dt><strong><code>max_leaf_nodes</code></strong> :&ensp;<code>int</code></dt>
+<dd>If estimator is None, then max_leaf_nodes is passed to the default decision tree</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -844,8 +809,8 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
         https://arxiv.org/abs/2202.00858
 
-        Params
-        ------
+        Parameters
+        ----------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
             Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
@@ -1080,43 +1045,6 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         else:
             return NotImplemented
 
-    def __str__(self):
-        # check if fitted
-        if not checks.check_is_fitted(self.estimator_):
-            s = self.__class__.__name__
-            s += &#34;(&#34;
-            s += &#34;est=&#34;
-            s += repr(self.estimator_)
-            s += &#34;, &#34;
-            s += &#34;reg_param=&#34;
-            s += str(self.reg_param)
-            s += &#34;)&#34;
-            return s
-        elif not hasattr(self.estimator_, &#34;tree_&#34;):
-            # an ensemble: export_text only renders a single tree, so summarize
-            n_trees = len(getattr(self.estimator_, &#34;estimators_&#34;, []))
-            s = &#34;&gt; ------------------------------\n&#34;
-            s += &#34;&gt; Tree ensemble with Hierarchical Shrinkage\n&#34;
-            s += &#34;&gt; \tPrediction is made by combining the predictions of each shrunk tree\n&#34;
-            s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
-            s += f&#34;&gt; {type(self.estimator_).__name__} of {n_trees} trees, &#34;
-            s += f&#34;reg_param={self.reg_param}\n&#34;
-            if hasattr(self, &#34;complexity_&#34;):
-                s += f&#34;&gt; {self.complexity_} total non-leaf nodes\n&#34;
-            return s
-        else:
-            s = &#34;&gt; ------------------------------\n&#34;
-            s += &#34;&gt; Decision Tree with Hierarchical Shrinkage\n&#34;
-            s += &#34;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#34;
-            s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
-
-            if hasattr(self, &#34;feature_names&#34;) and self.feature_names is not None:
-                return s + export_text(
-                    self.estimator_, feature_names=self.feature_names, show_weights=True
-                )
-            else:
-                return s + export_text(self.estimator_, show_weights=True)
-
     def __repr__(self):
         # s = self.__class__.__name__
         # s += &#34;(&#34;
@@ -1142,6 +1070,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 <ul class="hlist">
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -1295,104 +1224,6 @@ contained subobjects that are estimators.</dd>
         return NotImplemented</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1473,6 +1304,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -1483,107 +1315,6 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <li><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV" href="cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></b></code>:
@@ -1592,7 +1323,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_" href="#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1618,7 +1348,7 @@ sees the shrunk model: the SHAP values differ from the unshrunk tree's and
 sum, with the expected value, to <code>model.predict_proba(X)</code>. This reproduces the SHAP
 summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p>
 <p>Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p>
-<h2 id="params">Params</h2>
+<h2 id="parameters">Parameters</h2>
 <p>estimator_
 Sklearn estimator (already initialized).
 If no estimator_ is passed, sklearn decision tree is used</p>
@@ -1667,8 +1397,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used
@@ -1753,6 +1483,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -1802,8 +1533,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.feature_importances_" href="#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1881,6 +1610,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -1891,107 +1621,6 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <li><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV" href="cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></b></code>:
@@ -2000,7 +1629,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_" href="#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2026,7 +1654,7 @@ sees the shrunk model: the SHAP values differ from the unshrunk tree's and
 sum, with the expected value, to <code>model.predict(X)</code>. This reproduces the SHAP
 summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p>
 <p>Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p>
-<h2 id="params">Params</h2>
+<h2 id="parameters">Parameters</h2>
 <p>estimator_
 Sklearn estimator (already initialized).
 If no estimator_ is passed, sklearn decision tree is used</p>
@@ -2075,8 +1703,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used
@@ -2160,6 +1788,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -2208,8 +1837,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.feature_importances_" href="#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>

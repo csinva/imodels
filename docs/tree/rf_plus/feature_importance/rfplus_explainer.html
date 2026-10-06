@@ -60,7 +60,7 @@ class LMDIPlus():
     &#34;&#34;&#34;
     Local MDI+ (LMDI+) Explainer for tree-based models.
 
-    Parameters:
+    Parameters
     ----------
     rf_plus_model : RFPlusModel
         A trained RF+ model.
@@ -91,7 +91,7 @@ class LMDIPlus():
         If `y` is provided, the evaluation is assumed to be on the training set, and if `y` is None, 
         it assumes LFI computation is being performed on unseen test data.
 
-        Parameters:
+        Parameters
         ----------
         X : np.ndarray
             Input feature matrix of shape (n_samples, n_features).
@@ -102,7 +102,7 @@ class LMDIPlus():
         ranking : bool
             If True, converts the LFI scores to feature rankings per sample.
 
-        Returns:
+        Returns
         -------
         local_feature_importances : np.ndarray
             Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores across trees.
@@ -152,14 +152,14 @@ class LMDIPlus():
         &#34;&#34;&#34;
         Compute per-tree LMDI+ scores for each sample in X.
 
-        Parameters:
+        Parameters
         ----------
         X : np.ndarray
             Input feature matrix of shape (n_samples, n_features).
         njobs : int
             Number of parallel jobs to use for prediction (if supported).
 
-        Returns:
+        Returns
         -------
         LFIs : np.ndarray
             Matrix of shape (n_samples, n_features, n_trees) containing the per-tree
@@ -192,14 +192,16 @@ class LMDIPlus():
 </code></dt>
 <dd>
 <div class="desc"><p>Local MDI+ (LMDI+) Explainer for tree-based models.</p>
-<h2 id="parameters">Parameters:</h2>
-<p>rf_plus_model : RFPlusModel
-A trained RF+ model.
-evaluate_on : str
-Specifies which samples to use when computing local importances:
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rf_plus_model</code></strong> :&ensp;<code>RFPlusModel</code></dt>
+<dd>A trained RF+ model.</dd>
+<dt><strong><code>evaluate_on</code></strong> :&ensp;<code>str</code></dt>
+<dd>Specifies which samples to use when computing local importances:
 - 'all' (default): evaluate on all samples.
 - 'oob': only on out-of-bag samples per tree.
-- 'inbag': only on in-bag samples per tree.</p></div>
+- 'inbag': only on in-bag samples per tree.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -208,7 +210,7 @@ Specifies which samples to use when computing local importances:
     &#34;&#34;&#34;
     Local MDI+ (LMDI+) Explainer for tree-based models.
 
-    Parameters:
+    Parameters
     ----------
     rf_plus_model : RFPlusModel
         A trained RF+ model.
@@ -239,7 +241,7 @@ Specifies which samples to use when computing local importances:
         If `y` is provided, the evaluation is assumed to be on the training set, and if `y` is None, 
         it assumes LFI computation is being performed on unseen test data.
 
-        Parameters:
+        Parameters
         ----------
         X : np.ndarray
             Input feature matrix of shape (n_samples, n_features).
@@ -250,7 +252,7 @@ Specifies which samples to use when computing local importances:
         ranking : bool
             If True, converts the LFI scores to feature rankings per sample.
 
-        Returns:
+        Returns
         -------
         local_feature_importances : np.ndarray
             Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores across trees.
@@ -300,14 +302,14 @@ Specifies which samples to use when computing local importances:
         &#34;&#34;&#34;
         Compute per-tree LMDI+ scores for each sample in X.
 
-        Parameters:
+        Parameters
         ----------
         X : np.ndarray
             Input feature matrix of shape (n_samples, n_features).
         njobs : int
             Number of parallel jobs to use for prediction (if supported).
 
-        Returns:
+        Returns
         -------
         LFIs : np.ndarray
             Matrix of shape (n_samples, n_features, n_trees) containing the per-tree
@@ -333,18 +335,22 @@ Specifies which samples to use when computing local importances:
 <div class="desc"><p>Compute LMDI+ scores for each sample in X.</p>
 <p>If <code>y</code> is provided, the evaluation is assumed to be on the training set, and if <code>y</code> is None,
 it assumes LFI computation is being performed on unseen test data.</p>
-<h2 id="parameters">Parameters:</h2>
-<p>X : np.ndarray
-Input feature matrix of shape (n_samples, n_features).
-y : np.ndarray or None
-Target values for the training set or None for test data.
-njobs : int
-Number of parallel jobs to use for prediction (if supported).
-ranking : bool
-If True, converts the LFI scores to feature rankings per sample.</p>
-<h2 id="returns">Returns:</h2>
-<p>local_feature_importances : np.ndarray
-Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores across trees.</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Input feature matrix of shape (n_samples, n_features).</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>np.ndarray</code> or <code>None</code></dt>
+<dd>Target values for the training set or None for test data.</dd>
+<dt><strong><code>njobs</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of parallel jobs to use for prediction (if supported).</dd>
+<dt><strong><code>ranking</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, converts the LFI scores to feature rankings per sample.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>local_feature_importances</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores across trees.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -356,7 +362,7 @@ Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores acr
     If `y` is provided, the evaluation is assumed to be on the training set, and if `y` is None, 
     it assumes LFI computation is being performed on unseen test data.
 
-    Parameters:
+    Parameters
     ----------
     X : np.ndarray
         Input feature matrix of shape (n_samples, n_features).
@@ -367,7 +373,7 @@ Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores acr
     ranking : bool
         If True, converts the LFI scores to feature rankings per sample.
 
-    Returns:
+    Returns
     -------
     local_feature_importances : np.ndarray
         Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores across trees.

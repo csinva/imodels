@@ -231,6 +231,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -243,7 +244,6 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -385,6 +385,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -484,104 +485,6 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     return self.est_.score(X, y)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.automl.AutoInterpretableModel.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a>, *, cv: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>cv</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>cv</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -613,6 +516,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -625,7 +529,6 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>

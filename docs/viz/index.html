@@ -69,6 +69,11 @@ interactive(model, X, y).save(&quot;figs.html&quot;)        # interactive page, 
 </code></pre>
 <p>Both functions show inline in Jupyter. See the <a href="https://csinva.io/imodels/viz.html">gallery post</a>
 for examples of every kind of model.</p>
+<p>Tree-based imodels models (the trees above, FIGS and IRF) are drawn through their exact scikit-learn
+export, <code><a title="imodels.to_sklearn" href="../index.html#imodels.to_sklearn">to_sklearn()</a></code>, so this package only reads scikit-learn trees. The same export makes
+every tree-based imodels model drawable by any tool that reads scikit-learn trees, such as
+<a href="https://github.com/parrt/dtreeviz">dtreeviz</a> (<code>dtreeviz.model(<a title="imodels.to_sklearn" href="../index.html#imodels.to_sklearn">to_sklearn()</a>(model), X, y)</code>) or
+<code>sklearn.tree.plot_tree</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -100,12 +105,19 @@ interactive(model, X, y).save(&#34;figs.html&#34;)        # interactive page, on
 
 Both functions show inline in Jupyter. See the [gallery post](https://csinva.io/imodels/viz.html)
 for examples of every kind of model.
+
+Tree-based imodels models (the trees above, FIGS and IRF) are drawn through their exact scikit-learn
+export, `imodels.to_sklearn`, so this package only reads scikit-learn trees. The same export makes
+every tree-based imodels model drawable by any tool that reads scikit-learn trees, such as
+[dtreeviz](https://github.com/parrt/dtreeviz) (`dtreeviz.model(imodels.to_sklearn(model), X, y)`) or
+`sklearn.tree.plot_tree`.
 &#34;&#34;&#34;
 
 from ._interactive import InteractiveTree, interactive
 from ._static import TreeFigure, draw
+from ._textview import text
 
-__all__ = [&#34;draw&#34;, &#34;interactive&#34;, &#34;TreeFigure&#34;, &#34;InteractiveTree&#34;]</code></pre>
+__all__ = [&#34;draw&#34;, &#34;interactive&#34;, &#34;text&#34;, &#34;TreeFigure&#34;, &#34;InteractiveTree&#34;]</code></pre>
 </details>
 </section>
 <section>
@@ -116,52 +128,123 @@ __all__ = [&#34;draw&#34;, &#34;interactive&#34;, &#34;TreeFigure&#34;, &#34;Int
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.viz.draw"><code class="name flex">
-<span>def <span class="ident">draw</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, x=None, max_depth=None, orientation='TB', theme='light', style='auto', title=None, subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None)</span>
+<span>def <span class="ident">draw</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, x=None, max_depth=None, orientation='auto', theme='light', style='auto', title=None, subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Render a fitted sklearn decision tree as a static, publication-quality SVG.</p>
+<div class="desc"><p>Draw a fitted model as a static figure.</p>
+<p>Returns a <code><a title="imodels.viz.TreeFigure" href="#imodels.viz.TreeFigure">TreeFigure</a></code>, which shows inline in Jupyter and saves to .svg, .png, .pdf or .html
+(<code><a title="imodels.viz.TreeFigure.save" href="#imodels.viz.TreeFigure.save">TreeFigure.save()</a></code>). PNG and PDF need cairosvg.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>model</code></strong> :&ensp;<code>fitted DecisionTreeClassifier / DecisionTreeRegressor / ExtraTree*, a Pipeline</code></dt>
-<dd>ending in one, or a single tree from an ensemble (<code>forest.estimators_[0]</code>).</dd>
-<dt><strong><code>X</code></strong>, <strong><code>y</code></strong> :&ensp;<code>optional training (or held-out) data. When given, each split node shows the</code></dt>
-<dd>distribution of its split feature (stacked class histogram or feature/target
-scatter) and split thresholds on binary / integer features read naturally.</dd>
-<dt>x : optional single sample; its decision path is highlighted.</dt>
-<dt>max_depth : draw only the top <code>max_depth</code> levels; deeper subtrees are shown as stacked cards.</dt>
-<dt>orientation : "TB" (top to bottom) or "LR" (left to right).</dt>
-<dt>theme : "light" or "dark".</dt>
-<dt>style : "detailed", "compact" or "auto" (compact for trees with more than 24 leaves).</dt>
-<dt>precision : significant digits for thresholds and values.</dt>
-<dt><strong><code>simple</code></strong> :&ensp;<code><a title="imodels.viz.draw" href="#imodels.viz.draw">draw()</a> each node as a plain box filled by its class proportions (or predicted</code></dt>
-<dd>value) instead of the detailed card with charts.</dd>
+<dt><strong><code>model</code></strong> :&ensp;<code>estimator</code></dt>
+<dd>A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+isotonic model, or a Pipeline whose earlier steps only scale features.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code>, optional</dt>
+<dd>Training (or held-out) data. With it, split nodes show their feature's distribution,
+rules show their coverage, and thresholds on binary or integer features read naturally.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, optional</dt>
+<dd>Targets for <code>X</code>, used for class mixes and target ranges.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>Feature names. Default: the columns of <code>X</code>, else the names the model was fitted with.</dd>
+<dt><strong><code>class_names</code></strong> :&ensp;<code>list</code> or <code>dict</code>, optional</dt>
+<dd>Class names, as a list or as a dict from class label to name. Default: the model's classes.</dd>
+<dt><strong><code>target_name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of the target (regression). Default: the name of <code>y</code>, else "target".</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_features,)</code>, optional</dt>
+<dd>A single sample whose path through the model is highlighted.</dd>
+<dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Draw only the top <code>max_depth</code> levels; deeper subtrees are drawn as stacked cards.</dd>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>{"auto", "LR", "TB"}</code>, default=<code>"auto"</code></dt>
+<dd>Left to right, or top to bottom. "auto" lays a single tree out left to right and
+several trees (forests, boosting, FIGS) top to bottom.</dd>
+<dt><strong><code>theme</code></strong> :&ensp;<code>{"light", "dark"}</code>, default=<code>"light"</code></dt>
+<dd>Color theme.</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>{"auto", "detailed", "compact"}</code>, default=<code>"auto"</code></dt>
+<dd>Card style; "auto" is compact for trees with more than 24 leaves.</dd>
+<dt><strong><code>title</code></strong>, <strong><code>subtitle</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Figure title, and a subtitle (default: a one-line summary of the model).</dd>
+<dt><strong><code>legend</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to draw the legend.</dd>
+<dt><strong><code>background</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to fill the background (False gives a transparent figure).</dd>
+<dt><strong><code>precision</code></strong> :&ensp;<code>int</code>, default=<code>3</code></dt>
+<dd>Significant digits for thresholds and values.</dd>
+<dt><strong><code>simple</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Draw each node as a plain box filled by its class mix (or predicted value) instead of
+the detailed card with a chart.</dd>
+<dt><strong><code>output</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>For multi-output trees, which output to draw.</dd>
+<dt><strong><code>max_trees</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>For ensembles (forests, boosting, FIGS), how many trees to draw (default 6).
+Predictions always use every tree.</dd>
 </dl>
-<p>max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6).</p></div>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="imodels.viz.TreeFigure" href="#imodels.viz.TreeFigure">TreeFigure</a></code></dt>
+<dd>The figure, with <code>.svg</code> (the SVG text) and <code>.save(path)</code>.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-         x=None, max_depth=None, orientation=&#34;TB&#34;, theme=&#34;light&#34;, style=&#34;auto&#34;, title=None,
+         x=None, max_depth=None, orientation=&#34;auto&#34;, theme=&#34;light&#34;, style=&#34;auto&#34;, title=None,
          subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None):
-    &#34;&#34;&#34;Render a fitted sklearn decision tree as a static, publication-quality SVG.
+    &#34;&#34;&#34;Draw a fitted model as a static figure.
+
+    Returns a `TreeFigure`, which shows inline in Jupyter and saves to .svg, .png, .pdf or .html
+    (`TreeFigure.save`). PNG and PDF need cairosvg.
 
     Parameters
     ----------
-    model : fitted DecisionTreeClassifier / DecisionTreeRegressor / ExtraTree*, a Pipeline
-        ending in one, or a single tree from an ensemble (``forest.estimators_[0]``).
-    X, y : optional training (or held-out) data. When given, each split node shows the
-        distribution of its split feature (stacked class histogram or feature/target
-        scatter) and split thresholds on binary / integer features read naturally.
-    x : optional single sample; its decision path is highlighted.
-    max_depth : draw only the top ``max_depth`` levels; deeper subtrees are shown as stacked cards.
-    orientation : &#34;TB&#34; (top to bottom) or &#34;LR&#34; (left to right).
-    theme : &#34;light&#34; or &#34;dark&#34;.
-    style : &#34;detailed&#34;, &#34;compact&#34; or &#34;auto&#34; (compact for trees with more than 24 leaves).
-    precision : significant digits for thresholds and values.
-    simple : draw each node as a plain box filled by its class proportions (or predicted
-        value) instead of the detailed card with charts.
-    max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6).
+    model : estimator
+        A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+        system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+        isotonic model, or a Pipeline whose earlier steps only scale features.
+    X : array-like of shape (n_samples, n_features), optional
+        Training (or held-out) data. With it, split nodes show their feature&#39;s distribution,
+        rules show their coverage, and thresholds on binary or integer features read naturally.
+    y : array-like of shape (n_samples,), optional
+        Targets for ``X``, used for class mixes and target ranges.
+    feature_names : list of str, optional
+        Feature names. Default: the columns of ``X``, else the names the model was fitted with.
+    class_names : list or dict, optional
+        Class names, as a list or as a dict from class label to name. Default: the model&#39;s classes.
+    target_name : str, optional
+        Name of the target (regression). Default: the name of ``y``, else &#34;target&#34;.
+    x : array-like of shape (n_features,), optional
+        A single sample whose path through the model is highlighted.
+    max_depth : int, optional
+        Draw only the top ``max_depth`` levels; deeper subtrees are drawn as stacked cards.
+    orientation : {&#34;auto&#34;, &#34;LR&#34;, &#34;TB&#34;}, default=&#34;auto&#34;
+        Left to right, or top to bottom. &#34;auto&#34; lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
+    theme : {&#34;light&#34;, &#34;dark&#34;}, default=&#34;light&#34;
+        Color theme.
+    style : {&#34;auto&#34;, &#34;detailed&#34;, &#34;compact&#34;}, default=&#34;auto&#34;
+        Card style; &#34;auto&#34; is compact for trees with more than 24 leaves.
+    title, subtitle : str, optional
+        Figure title, and a subtitle (default: a one-line summary of the model).
+    legend : bool, default=True
+        Whether to draw the legend.
+    background : bool, default=True
+        Whether to fill the background (False gives a transparent figure).
+    precision : int, default=3
+        Significant digits for thresholds and values.
+    simple : bool, default=False
+        Draw each node as a plain box filled by its class mix (or predicted value) instead of
+        the detailed card with a chart.
+    output : int, default=0
+        For multi-output trees, which output to draw.
+    max_trees : int, optional
+        For ensembles (forests, boosting, FIGS), how many trees to draw (default 6).
+        Predictions always use every tree.
+
+    Returns
+    -------
+    TreeFigure
+        The figure, with ``.svg`` (the SVG text) and ``.save(path)``.
     &#34;&#34;&#34;
     info = to_view(model, X, y, feature_names, class_names, target_name, output)
     if isinstance(info, AdditiveView):
@@ -181,45 +264,130 @@ scatter) and split thresholds on binary / integer features read naturally.</dd>
         path = instance_path(info, x)
         pred = prediction_text(info, path[-1], precision)
     artist.set_path(path)
-    fig = Figure(info, artist, P, orientation=orientation, max_depth=max_depth, title=title,
+    fig = Figure(info, artist, P, orientation=resolve_orientation(orientation, info), max_depth=max_depth, title=title,
                  subtitle=subtitle, legend=legend, background=background, prediction=pred)
     return TreeFigure(fig.svg())</code></pre>
 </details>
 </dd>
 <dt id="imodels.viz.interactive"><code class="name flex">
-<span>def <span class="ident">interactive</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, title=None, subtitle=None, theme='auto', orientation='TB', style='auto', initial_depth=None, precision=3, max_samples=400, simple='auto', output=0, height=720, max_trees=None)</span>
+<span>def <span class="ident">interactive</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, title=None, subtitle=None, theme='light', orientation='auto', style='auto', initial_depth=None, precision=3, max_samples=400, simple='auto', output=0, height=720, max_trees=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Build an interactive, self-contained HTML view of a fitted sklearn decision tree.</p>
-<p>Click a split to collapse or expand it, drag to pan, scroll to zoom, hover for the full
-decision rule, and use the Predict panel to route a custom or sampled input through the tree.</p>
-<p>theme : "auto" (follows the viewer's OS), "light" or "dark".
-initial_depth : levels expanded on load (default: all if the tree has &lt;= 63 nodes, else 3).
-max_samples : rows of X embedded for the "random sample" button (0 to embed none).
-simple : start in simple mode (plain boxes filled by class proportions). "auto" (default) does so
-for trees with more than 32 leaves; the page has a toggle either way.
-max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6). Predictions
-always use every tree.</p></div>
+<div class="desc"><p>Build an interactive page for a fitted model: one self-contained HTML file.</p>
+<p>Click a split to fold it, drag to pan, scroll to zoom, and hover for the full rule. The Predict
+panel routes a typed or sampled input through the model, shows how its prediction is built,
+and lists the smallest changes that would flip it. The Features panel shows each feature's
+importance and highlights where it is used. Shows inline in Jupyter; save with <code>.save(path)</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>estimator</code></dt>
+<dd>A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+isotonic model, or a Pipeline whose earlier steps only scale features.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code>, optional</dt>
+<dd>Training (or held-out) data. With it, split nodes show their feature's distribution,
+rules show their coverage, and thresholds on binary or integer features read naturally.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, optional</dt>
+<dd>Targets for <code>X</code>, used for class mixes and target ranges.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>Feature names. Default: the columns of <code>X</code>, else the names the model was fitted with.</dd>
+<dt><strong><code>class_names</code></strong> :&ensp;<code>list</code> or <code>dict</code>, optional</dt>
+<dd>Class names, as a list or as a dict from class label to name. Default: the model's classes.</dd>
+<dt><strong><code>target_name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of the target (regression). Default: the name of <code>y</code>, else "target".</dd>
+<dt><strong><code>title</code></strong>, <strong><code>subtitle</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Page title, and a subtitle (default: a one-line summary of the model).</dd>
+<dt><strong><code>theme</code></strong> :&ensp;<code>{"light", "dark", "auto"}</code>, default=<code>"light"</code></dt>
+<dd>Color theme; "auto" follows the viewer's OS. The page has a toggle either way.</dd>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>{"auto", "LR", "TB"}</code>, default=<code>"auto"</code></dt>
+<dd>Left to right, or top to bottom. "auto" lays a single tree out left to right and
+several trees (forests, boosting, FIGS) top to bottom.</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>{"auto", "detailed", "compact"}</code>, default=<code>"auto"</code></dt>
+<dd>Card style for trees.</dd>
+<dt><strong><code>initial_depth</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Levels expanded on load (default: all if the tree has at most 63 nodes, else 3).</dd>
+<dt><strong><code>precision</code></strong> :&ensp;<code>int</code>, default=<code>3</code></dt>
+<dd>Significant digits for thresholds and values.</dd>
+<dt><strong><code>max_samples</code></strong> :&ensp;<code>int</code>, default=<code>400</code></dt>
+<dd>Rows of <code>X</code> embedded for the "random sample" button (0 embeds none).</dd>
+<dt><strong><code>simple</code></strong> :&ensp;<code>bool</code> or <code>"auto"</code>, default=<code>"auto"</code></dt>
+<dd>Start in simple mode (plain boxes filled by class mix); "auto" does so for trees with
+more than 32 leaves. The page has a toggle either way.</dd>
+<dt><strong><code>output</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>For multi-output trees, which output to show.</dd>
+<dt><strong><code>height</code></strong> :&ensp;<code>int</code>, default=<code>720</code></dt>
+<dd>Height in pixels when shown inline in Jupyter.</dd>
+<dt><strong><code>max_trees</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>For ensembles (forests, boosting, FIGS), how many trees to draw (default 6).
+Predictions always use every tree.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="imodels.viz.InteractiveTree" href="#imodels.viz.InteractiveTree">InteractiveTree</a></code></dt>
+<dd>The page, with <code>.html</code> (the HTML text) and <code>.save(path)</code>.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-                title=None, subtitle=None, theme=&#34;auto&#34;, orientation=&#34;TB&#34;, style=&#34;auto&#34;,
+                title=None, subtitle=None, theme=&#34;light&#34;, orientation=&#34;auto&#34;, style=&#34;auto&#34;,
                 initial_depth=None, precision=3, max_samples=400, simple=&#34;auto&#34;, output=0, height=720,
                 max_trees=None):
-    &#34;&#34;&#34;Build an interactive, self-contained HTML view of a fitted sklearn decision tree.
+    &#34;&#34;&#34;Build an interactive page for a fitted model: one self-contained HTML file.
 
-    Click a split to collapse or expand it, drag to pan, scroll to zoom, hover for the full
-    decision rule, and use the Predict panel to route a custom or sampled input through the tree.
+    Click a split to fold it, drag to pan, scroll to zoom, and hover for the full rule. The Predict
+    panel routes a typed or sampled input through the model, shows how its prediction is built,
+    and lists the smallest changes that would flip it. The Features panel shows each feature&#39;s
+    importance and highlights where it is used. Shows inline in Jupyter; save with ``.save(path)``.
 
-    theme : &#34;auto&#34; (follows the viewer&#39;s OS), &#34;light&#34; or &#34;dark&#34;.
-    initial_depth : levels expanded on load (default: all if the tree has &lt;= 63 nodes, else 3).
-    max_samples : rows of X embedded for the &#34;random sample&#34; button (0 to embed none).
-    simple : start in simple mode (plain boxes filled by class proportions). &#34;auto&#34; (default) does so
-        for trees with more than 32 leaves; the page has a toggle either way.
-    max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6). Predictions
-        always use every tree.
+    Parameters
+    ----------
+    model : estimator
+        A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+        system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+        isotonic model, or a Pipeline whose earlier steps only scale features.
+    X : array-like of shape (n_samples, n_features), optional
+        Training (or held-out) data. With it, split nodes show their feature&#39;s distribution,
+        rules show their coverage, and thresholds on binary or integer features read naturally.
+    y : array-like of shape (n_samples,), optional
+        Targets for ``X``, used for class mixes and target ranges.
+    feature_names : list of str, optional
+        Feature names. Default: the columns of ``X``, else the names the model was fitted with.
+    class_names : list or dict, optional
+        Class names, as a list or as a dict from class label to name. Default: the model&#39;s classes.
+    target_name : str, optional
+        Name of the target (regression). Default: the name of ``y``, else &#34;target&#34;.
+    title, subtitle : str, optional
+        Page title, and a subtitle (default: a one-line summary of the model).
+    theme : {&#34;light&#34;, &#34;dark&#34;, &#34;auto&#34;}, default=&#34;light&#34;
+        Color theme; &#34;auto&#34; follows the viewer&#39;s OS. The page has a toggle either way.
+    orientation : {&#34;auto&#34;, &#34;LR&#34;, &#34;TB&#34;}, default=&#34;auto&#34;
+        Left to right, or top to bottom. &#34;auto&#34; lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
+    style : {&#34;auto&#34;, &#34;detailed&#34;, &#34;compact&#34;}, default=&#34;auto&#34;
+        Card style for trees.
+    initial_depth : int, optional
+        Levels expanded on load (default: all if the tree has at most 63 nodes, else 3).
+    precision : int, default=3
+        Significant digits for thresholds and values.
+    max_samples : int, default=400
+        Rows of ``X`` embedded for the &#34;random sample&#34; button (0 embeds none).
+    simple : bool or &#34;auto&#34;, default=&#34;auto&#34;
+        Start in simple mode (plain boxes filled by class mix); &#34;auto&#34; does so for trees with
+        more than 32 leaves. The page has a toggle either way.
+    output : int, default=0
+        For multi-output trees, which output to show.
+    height : int, default=720
+        Height in pixels when shown inline in Jupyter.
+    max_trees : int, optional
+        For ensembles (forests, boosting, FIGS), how many trees to draw (default 6).
+        Predictions always use every tree.
+
+    Returns
+    -------
+    InteractiveTree
+        The page, with ``.html`` (the HTML text) and ``.save(path)``.
     &#34;&#34;&#34;
     info = to_view(model, X, y, feature_names, class_names, target_name, output)
     from ._views import AdditiveView
@@ -339,7 +507,7 @@ always use every tree.</p></div>
         nodes=nodes, feats=feats, samples=samples, task=info.task,
         classes=[dict(name=n, col=P.cls(k)) for k, n in enumerate(info.class_names or [])],
         legend=legend, impNote=imp_note, fileName=info.model_name,
-        target=info.target_name, orientation=orientation.upper(),
+        target=info.target_name, orientation=resolve_orientation(orientation, info),
         initialDepth=initial_depth if initial_depth is not None else (99 if len(nodes) &lt;= 63 else 3),
         maxDepth=info.max_depth, simple=bool(info.n_leaves &gt; 32 if simple == &#34;auto&#34; else simple),
         defs=defs(uid, P), sig=precision, bandMax=BAND,
@@ -348,6 +516,89 @@ always use every tree.</p></div>
     page_title = title or f&#34;{info.model_name} ({info.n_leaves} leaves)&#34;
     out = build_page(&#34;tree&#34;, title=page_title, subtitle=sub, theme=theme, data=data)
     return InteractiveTree(out, height)</code></pre>
+</details>
+</dd>
+<dt id="imodels.viz.text"><code class="name flex">
+<span>def <span class="ident">text</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, precision=4, max_trees=3)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write a fitted model out as readable text: what <code>print(model)</code> shows for imodels estimators.</p>
+<p>Trees print their conditions and leaf outcomes, rule lists their IF / ELSE IF rows, rule sets
+their rules ranked by effect, scorecards their points and the risk of each total, and additive
+models a sparkline of each shape function.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>estimator</code></dt>
+<dd>A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+isotonic model, or a Pipeline whose earlier steps only scale features.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code>, optional</dt>
+<dd>Training (or held-out) data. With it, split nodes show their feature's distribution,
+rules show their coverage, and thresholds on binary or integer features read naturally.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, optional</dt>
+<dd>Targets for <code>X</code>, used for class mixes and target ranges.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>Feature names. Default: the columns of <code>X</code>, else the names the model was fitted with.</dd>
+<dt><strong><code>class_names</code></strong> :&ensp;<code>list</code> or <code>dict</code>, optional</dt>
+<dd>Class names, as a list or as a dict from class label to name. Default: the model's classes.</dd>
+<dt><strong><code>target_name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of the target (regression). Default: the name of <code>y</code>, else "target".</dd>
+<dt><strong><code>precision</code></strong> :&ensp;<code>int</code>, default=<code>4</code></dt>
+<dd>Significant digits for values. Thresholds get more digits where two would print alike.</dd>
+<dt><strong><code>max_trees</code></strong> :&ensp;<code>int</code>, default=<code>3</code></dt>
+<dd>For ensembles, how many trees to write out.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>The model as text.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def text(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, precision=4, max_trees=3):
+    &#34;&#34;&#34;Write a fitted model out as readable text: what ``print(model)`` shows for imodels estimators.
+
+    Trees print their conditions and leaf outcomes, rule lists their IF / ELSE IF rows, rule sets
+    their rules ranked by effect, scorecards their points and the risk of each total, and additive
+    models a sparkline of each shape function.
+
+    Parameters
+    ----------
+    model : estimator
+        A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+        system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+        isotonic model, or a Pipeline whose earlier steps only scale features.
+    X : array-like of shape (n_samples, n_features), optional
+        Training (or held-out) data. With it, split nodes show their feature&#39;s distribution,
+        rules show their coverage, and thresholds on binary or integer features read naturally.
+    y : array-like of shape (n_samples,), optional
+        Targets for ``X``, used for class mixes and target ranges.
+    feature_names : list of str, optional
+        Feature names. Default: the columns of ``X``, else the names the model was fitted with.
+    class_names : list or dict, optional
+        Class names, as a list or as a dict from class label to name. Default: the model&#39;s classes.
+    target_name : str, optional
+        Name of the target (regression). Default: the name of ``y``, else &#34;target&#34;.
+    precision : int, default=4
+        Significant digits for values. Thresholds get more digits where two would print alike.
+    max_trees : int, default=3
+        For ensembles, how many trees to write out.
+
+    Returns
+    -------
+    str
+        The model as text.
+    &#34;&#34;&#34;
+    from ._adapt import to_view
+
+    view = to_view(model, X, y, feature_names, class_names, target_name)
+    extra = None
+    if hasattr(model, &#34;optimal_&#34;) and hasattr(model, &#34;objective_&#34;):  # FastSmallTree
+        status = &#34;certified optimal&#34; if model.optimal_ else &#34;not certified optimal (the time limit was reached)&#34;
+        extra = f&#34;{status}, objective {model.objective_:.4g}&#34;
+    return model_text(view, precision, max_trees, extra)</code></pre>
 </details>
 </dd>
 </dl>
@@ -360,19 +611,48 @@ always use every tree.</p></div>
 <span>(</span><span>html_text, height=720)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Self-contained interactive page. Displays inline in Jupyter; <code>save</code> writes .html.</p></div>
+<div class="desc"><p>An interactive page for a model, returned by <code><a title="imodels.viz.interactive" href="#imodels.viz.interactive">interactive()</a></code>: one self-contained HTML file.
+Displays inline in Jupyter.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>html</code></strong> :&ensp;<code>str</code></dt>
+<dd>The page as HTML text.</dd>
+<dt><strong><code>height</code></strong> :&ensp;<code>int</code></dt>
+<dd>Height in pixels when shown inline in Jupyter.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class InteractiveTree:
-    &#34;&#34;&#34;Self-contained interactive page. Displays inline in Jupyter; ``save`` writes .html.&#34;&#34;&#34;
+    &#34;&#34;&#34;An interactive page for a model, returned by `interactive`: one self-contained HTML file.
+    Displays inline in Jupyter.
+
+    Attributes
+    ----------
+    html : str
+        The page as HTML text.
+    height : int
+        Height in pixels when shown inline in Jupyter.
+    &#34;&#34;&#34;
 
     def __init__(self, html_text, height=720):
         self.html = html_text
         self.height = height
 
     def save(self, path):
+        &#34;&#34;&#34;Write the page to an .html file.
+
+        Parameters
+        ----------
+        path : str or path-like
+            Output file, ending in .html or .htm.
+
+        Returns
+        -------
+        path : str or path-like
+            The path written.
+        &#34;&#34;&#34;
         if os.path.splitext(str(path))[1].lower() not in (&#34;.html&#34;, &#34;.htm&#34;):
             raise ValueError(&#34;Interactive trees save to .html&#34;)
         with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
@@ -389,12 +669,34 @@ always use every tree.</p></div>
 <span>def <span class="ident">save</span></span>(<span>self, path)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Write the page to an .html file.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code> or <code>path-like</code></dt>
+<dd>Output file, ending in .html or .htm.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code> or <code>path-like</code></dt>
+<dd>The path written.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save(self, path):
+    &#34;&#34;&#34;Write the page to an .html file.
+
+    Parameters
+    ----------
+    path : str or path-like
+        Output file, ending in .html or .htm.
+
+    Returns
+    -------
+    path : str or path-like
+        The path written.
+    &#34;&#34;&#34;
     if os.path.splitext(str(path))[1].lower() not in (&#34;.html&#34;, &#34;.htm&#34;):
         raise ValueError(&#34;Interactive trees save to .html&#34;)
     with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
@@ -409,13 +711,24 @@ always use every tree.</p></div>
 <span>(</span><span>svg)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A rendered tree. Displays inline in Jupyter; <code>save</code> writes .svg/.png/.pdf/.html.</p></div>
+<div class="desc"><p>A static figure of a model, returned by <code><a title="imodels.viz.draw" href="#imodels.viz.draw">draw()</a></code>. Displays inline in Jupyter.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>svg</code></strong> :&ensp;<code>str</code></dt>
+<dd>The figure as SVG text.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TreeFigure:
-    &#34;&#34;&#34;A rendered tree. Displays inline in Jupyter; ``save`` writes .svg/.png/.pdf/.html.&#34;&#34;&#34;
+    &#34;&#34;&#34;A static figure of a model, returned by `draw`. Displays inline in Jupyter.
+
+    Attributes
+    ----------
+    svg : str
+        The figure as SVG text.
+    &#34;&#34;&#34;
 
     def __init__(self, svg):
         self.svg = svg
@@ -427,6 +740,21 @@ always use every tree.</p></div>
         return self.svg
 
     def save(self, path, scale=2.0):
+        &#34;&#34;&#34;Write the figure to a file.
+
+        Parameters
+        ----------
+        path : str or path-like
+            Output file; its extension picks the format: .svg, .png, .pdf or .html.
+            PNG and PDF need cairosvg.
+        scale : float, default=2.0
+            Resolution multiplier for PNG (PDF is vector, so it is unaffected).
+
+        Returns
+        -------
+        path : str or path-like
+            The path written.
+        &#34;&#34;&#34;
         ext = os.path.splitext(str(path))[1].lower()
         if ext == &#34;.svg&#34;:
             with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
@@ -443,7 +771,7 @@ always use every tree.</p></div>
             fn(bytestring=svg.encode(&#34;utf-8&#34;), write_to=str(path), scale=scale if ext == &#34;.png&#34; else 1.0)
         elif ext in (&#34;.html&#34;, &#34;.htm&#34;):
             with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
-                f.write(&#34;&lt;!doctype html&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;title&gt;Decision tree&lt;/title&gt;&#34;
+                f.write(&#34;&lt;!doctype html&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;title&gt;Model&lt;/title&gt;&#34;
                         &#34;&lt;body style=&#39;margin:0;display:flex;justify-content:center&#39;&gt;&#34; + self.svg + &#34;&lt;/body&gt;&#34;)
         else:
             raise ValueError(f&#34;Unsupported extension {ext!r}; use .svg, .png, .pdf or .html&#34;)
@@ -455,12 +783,40 @@ always use every tree.</p></div>
 <span>def <span class="ident">save</span></span>(<span>self, path, scale=2.0)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Write the figure to a file.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code> or <code>path-like</code></dt>
+<dd>Output file; its extension picks the format: .svg, .png, .pdf or .html.
+PNG and PDF need cairosvg.</dd>
+<dt><strong><code>scale</code></strong> :&ensp;<code>float</code>, default=<code>2.0</code></dt>
+<dd>Resolution multiplier for PNG (PDF is vector, so it is unaffected).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code> or <code>path-like</code></dt>
+<dd>The path written.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save(self, path, scale=2.0):
+    &#34;&#34;&#34;Write the figure to a file.
+
+    Parameters
+    ----------
+    path : str or path-like
+        Output file; its extension picks the format: .svg, .png, .pdf or .html.
+        PNG and PDF need cairosvg.
+    scale : float, default=2.0
+        Resolution multiplier for PNG (PDF is vector, so it is unaffected).
+
+    Returns
+    -------
+    path : str or path-like
+        The path written.
+    &#34;&#34;&#34;
     ext = os.path.splitext(str(path))[1].lower()
     if ext == &#34;.svg&#34;:
         with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
@@ -477,7 +833,7 @@ always use every tree.</p></div>
         fn(bytestring=svg.encode(&#34;utf-8&#34;), write_to=str(path), scale=scale if ext == &#34;.png&#34; else 1.0)
     elif ext in (&#34;.html&#34;, &#34;.htm&#34;):
         with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
-            f.write(&#34;&lt;!doctype html&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;title&gt;Decision tree&lt;/title&gt;&#34;
+            f.write(&#34;&lt;!doctype html&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;title&gt;Model&lt;/title&gt;&#34;
                     &#34;&lt;body style=&#39;margin:0;display:flex;justify-content:center&#39;&gt;&#34; + self.svg + &#34;&lt;/body&gt;&#34;)
     else:
         raise ValueError(f&#34;Unsupported extension {ext!r}; use .svg, .png, .pdf or .html&#34;)
@@ -494,6 +850,11 @@ always use every tree.</p></div>
 <ul></ul>
 </div>
 <ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels" href="../index.html">imodels</a></code></li>
+</ul>
+</li>
 <li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/viz.html" title="Static and interactive figures of fitted models">imodels.viz</a><span class="post-date">Oct '26</span></li>

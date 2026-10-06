@@ -136,8 +136,8 @@ def notify_first_compile(module_file, model_name, duration, cache_enabled=True, 
     &#34;&#34;&#34;Print a notice to stderr before the first fit of ``model_name`` in this process compiles its
     numba search, unless the compiled code is already cached on disk.
 
-    Params
-    ------
+    Parameters
+    ----------
     module_file: str
         ``__file__`` of the module that defines the kernels
     model_name: str
@@ -176,17 +176,19 @@ def notify_first_compile(module_file, model_name, duration, cache_enabled=True, 
 <dd>
 <div class="desc"><p>Print a notice to stderr before the first fit of <code>model_name</code> in this process compiles its
 numba search, unless the compiled code is already cached on disk.</p>
-<h2 id="params">Params</h2>
-<p>module_file: str
-<code>__file__</code> of the module that defines the kernels
-model_name: str
-the estimator's name, e.g. 'FastRiskScoreClassifier'
-duration: str
-how long the compilation takes, e.g. 'about 2 minutes'
-cache_enabled: bool
-whether the kernels are cached on disk
-cache_env: str
-the environment variable that turns the cache off, named in the notice</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>module_file</code></strong> :&ensp;<code>str</code></dt>
+<dd><code>__file__</code> of the module that defines the kernels</dd>
+<dt><strong><code>model_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>the estimator's name, e.g. 'FastRiskScoreClassifier'</dd>
+<dt><strong><code>duration</code></strong> :&ensp;<code>str</code></dt>
+<dd>how long the compilation takes, e.g. 'about 2 minutes'</dd>
+<dt><strong><code>cache_enabled</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether the kernels are cached on disk</dd>
+<dt><strong><code>cache_env</code></strong> :&ensp;<code>str</code></dt>
+<dd>the environment variable that turns the cache off, named in the notice</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -195,8 +197,8 @@ the environment variable that turns the cache off, named in the notice</p></div>
     &#34;&#34;&#34;Print a notice to stderr before the first fit of ``model_name`` in this process compiles its
     numba search, unless the compiled code is already cached on disk.
 
-    Params
-    ------
+    Parameters
+    ----------
     module_file: str
         ``__file__`` of the module that defines the kernels
     model_name: str

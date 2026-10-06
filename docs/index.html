@@ -69,7 +69,7 @@ All sklearn-compatible and easy to use. <br/>
 </p>
 <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
-<pre><code class="language-python">from imodels import get_clean_dataset, HSTreeClassifierCV, viz # import any imodels model here
+<pre><code class="language-python">from imodels import get_clean_dataset, viz, HSTreeClassifierCV # import any imodels model here
 from sklearn.model_selection import train_test_split
 
 # prepare data (a sample clinical dataset)
@@ -83,9 +83,9 @@ model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 viz.draw(model, X_train, y_train, feature_names=feature_names, class_names=[&quot;no CSI&quot;, &quot;CSI&quot;],
-         title=&quot;Cervical spine injury&quot;).save(&quot;model.svg&quot;)  # draw the model (or print(model) for text)
+         title=&quot;Cervical spine injury&quot;, orientation=&quot;LR&quot;).save(&quot;model.svg&quot;)  # draw the model (or print(model) for text, viz.interactive(model) for interaction)
 </code></pre>
-<p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="55%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
+<p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="85%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
 <h3 id="installation">Installation</h3>
 <p>Install with <code>pip install <a title="imodels" href="#imodels">imodels</a></code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help).</p>
 <h3 id="supported-models">Supported models</h3>
@@ -574,6 +574,7 @@ from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.get_rules import get_rules
 from .util.tree_viz import shadow_tree
+from .util.sklearn_export import to_sklearn
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 from .clustering.stableclustering import StableClustering
@@ -652,6 +653,7 @@ __all__ = [
     &#34;TaoTreeRegressor&#34;, &#34;TreeGAMClassifier&#34;, &#34;TreeGAMRegressor&#34;,
     &#34;explain_classification_errors&#34;, &#34;get_clean_dataset&#34;, &#34;get_rules&#34;,
     &#34;shadow_tree&#34;,
+    &#34;to_sklearn&#34;,
 ]
 
 

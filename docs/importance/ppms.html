@@ -169,7 +169,8 @@ class PartialPredictionModelBase(ABC):
 
         Returns
         -------
-        List of length n_features of partial predictions for each feature.
+        list
+            Partial predictions for each feature (length n_features).
         &#34;&#34;&#34;
         n_blocks = blocked_data.n_blocks
         partial_preds = {}
@@ -644,8 +645,8 @@ def huber_loss(y, preds, epsilon=1.35):
 
     Returns
     -------
-    Scalar value, quantifying the Huber loss. Lower loss
-    indicates better fit.
+    float
+        The Huber loss. Lower loss indicates a better fit.
 
     &#34;&#34;&#34;
     total_loss = 0
@@ -715,10 +716,9 @@ and absolute loss in Huber loss function.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>Scalar value, quantifying the Huber loss. Lower loss</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<p>indicates better fit.</p></div>
+<dt><code>float</code></dt>
+<dd>The Huber loss. Lower loss indicates a better fit.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -739,8 +739,8 @@ and absolute loss in Huber loss function.</dd>
 
     Returns
     -------
-    Scalar value, quantifying the Huber loss. Lower loss
-    indicates better fit.
+    float
+        The Huber loss. Lower loss indicates a better fit.
 
     &#34;&#34;&#34;
     total_loss = 0
@@ -1253,7 +1253,8 @@ imputing the mean of each feature not in block k.)</p>
 
         Returns
         -------
-        List of length n_features of partial predictions for each feature.
+        list
+            Partial predictions for each feature (length n_features).
         &#34;&#34;&#34;
         n_blocks = blocked_data.n_blocks
         partial_preds = {}
@@ -1384,7 +1385,10 @@ for each feature under study. Used to get partial predictions in MDI+.</p>
 in block k, "keep_rest" imputes the mean of each feature in block k</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>List of length n_features of partial predictions for each feature.</p></div>
+<dl>
+<dt><code>list</code></dt>
+<dd>Partial predictions for each feature (length n_features).</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1404,7 +1408,8 @@ in block k, "keep_rest" imputes the mean of each feature in block k</dd>
 
     Returns
     -------
-    List of length n_features of partial predictions for each feature.
+    list
+        Partial predictions for each feature (length n_features).
     &#34;&#34;&#34;
     n_blocks = blocked_data.n_blocks
     partial_preds = {}

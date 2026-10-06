@@ -6,7 +6,7 @@ import numpy as np
 
 from ._adapt import to_view
 from ._views import AdditiveView
-from ._render import Artist, Figure
+from ._render import Artist, Figure, resolve_orientation
 from ._text import new_uid, fmt
 from ._theme import Paint
 
@@ -44,7 +44,13 @@ def prediction_text(info, leaf, sig=3):
 
 
 class TreeFigure:
-    """A rendered tree. Displays inline in Jupyter; ``save`` writes .svg/.png/.pdf/.html."""
+    """A static figure of a model, returned by `draw`. Displays inline in Jupyter.
+
+    Attributes
+    ----------
+    svg : str
+        The figure as SVG text.
+    """
 
     def __init__(self, svg):
         self.svg = svg
@@ -56,6 +62,21 @@ class TreeFigure:
         return self.svg
 
     def save(self, path, scale=2.0):
+        """Write the figure to a file.
+
+        Parameters
+        ----------
+        path : str or path-like
+            Output file; its extension picks the format: .svg, .png, .pdf or .html.
+            PNG and PDF need cairosvg.
+        scale : float, default=2.0
+            Resolution multiplier for PNG (PDF is vector, so it is unaffected).
+
+        Returns
+        -------
+        path : str or path-like
+            The path written.
+        """
         ext = os.path.splitext(str(path))[1].lower()
         if ext == ".svg":
             with open(path, "w", encoding="utf-8") as f:
@@ -72,7 +93,7 @@ class TreeFigure:
             fn(bytestring=svg.encode("utf-8"), write_to=str(path), scale=scale if ext == ".png" else 1.0)
         elif ext in (".html", ".htm"):
             with open(path, "w", encoding="utf-8") as f:
-                f.write("<!doctype html><meta charset='utf-8'><title>Decision tree</title>"
+                f.write("<!doctype html><meta charset='utf-8'><title>Model</title>"
                         "<body style='margin:0;display:flex;justify-content:center'>" + self.svg + "</body>")
         else:
             raise ValueError(f"Unsupported extension {ext!r}; use .svg, .png, .pdf or .html")
@@ -80,7 +101,7 @@ class TreeFigure:
 
 
 def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-         x=None, max_depth=None, orientation="TB", theme="light", style="auto", title=None,
+         x=None, max_depth=None, orientation="auto", theme="light", style="auto", title=None,
          subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None):
     """Draw a fitted model as a static figure.
 
@@ -108,8 +129,9 @@ def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_
         A single sample whose path through the model is highlighted.
     max_depth : int, optional
         Draw only the top ``max_depth`` levels; deeper subtrees are drawn as stacked cards.
-    orientation : {"TB", "LR"}, default="TB"
-        Top to bottom, or left to right.
+    orientation : {"auto", "LR", "TB"}, default="auto"
+        Left to right, or top to bottom. "auto" lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
     theme : {"light", "dark"}, default="light"
         Color theme.
     style : {"auto", "detailed", "compact"}, default="auto"
@@ -154,6 +176,6 @@ def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_
         path = instance_path(info, x)
         pred = prediction_text(info, path[-1], precision)
     artist.set_path(path)
-    fig = Figure(info, artist, P, orientation=orientation, max_depth=max_depth, title=title,
+    fig = Figure(info, artist, P, orientation=resolve_orientation(orientation, info), max_depth=max_depth, title=title,
                  subtitle=subtitle, legend=legend, background=background, prediction=pred)
     return TreeFigure(fig.svg())

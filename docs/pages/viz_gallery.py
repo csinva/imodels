@@ -4,8 +4,11 @@ Each example's code string is executed verbatim, so the code shown under a figur
 produced it. Figures go to docs/viz_gallery/{static,interactive}; the article body goes to
 docs/pages/viz.html, which build_pages.py wraps in the site shell. Run from docs/:
 
-    uv run python pages/viz_gallery.py               # figures, interactive pages and the article
-    uv run python pages/viz_gallery.py --post-only   # only the article, from the existing figures
+    uv run python pages/viz_gallery.py                             # figures and interactive pages only
+    uv run python pages/viz_gallery.py --write-post                # also regenerate the article
+    uv run python pages/viz_gallery.py --post-only --write-post    # only the article
+
+The article (docs/pages/viz.html) is edited by hand: --write-post overwrites those edits.
     uv run python build_pages.py
 """
 
@@ -137,7 +140,7 @@ X, y = d.data, d.target
 clf = DecisionTreeClassifier(random_state=0).fit(X, y)   # unrestricted depth
 fig = viz.draw(clf, X, y, class_names=d.target_names, max_depth=2, title="Breast cancer diagnosis")
 """, interactive="viz.interactive(clf, X, y, class_names=d.target_names, title='Breast cancer diagnosis (full tree)')"),
-    dict(slug="digits_compact", crop=1300, focus=(0.5, 0), title="Many classes, compact style",
+    dict(slug="digits_compact", crop=1300, title="Many classes, compact style",
          note="Trees with more than 24 leaves switch to compact cards automatically. Ten classes use the "
               "eight validated hues plus four extras, so the legend carries identity.",
          code="""
@@ -786,9 +789,12 @@ def _thumb_style(path, focus, crop=None):
 
 
 def _default_focus(ex):
-    """Trees crop around their root (top center); tables and panels from their labels (top left)."""
+    """Single trees (drawn left to right) crop around their root at the left middle; rule lists
+    around their first rule (top center); tables and panels from their labels (top left)."""
     table = ex["group"] in ("sets", "scores", "additive") or ex["slug"] in ("sk_logreg", "sk_isotonic")
-    return (0.0, 0.0) if table else (0.5, 0.0)
+    if table:
+        return (0.0, 0.0)
+    return (0.0, 0.45) if ex["group"] in ("sktrees", "trees") else (0.5, 0.0)
 
 
 def _model_class(code):
@@ -899,7 +905,9 @@ def write_post():
 
 
 if __name__ == "__main__":
-    if "--post-only" not in sys.argv:  # --post-only: rewrite the article from the existing figures
+    # docs/pages/viz.html is edited by hand, so it is only regenerated on request (--write-post)
+    if "--post-only" not in sys.argv:
         run_examples()
-    write_post()
-    print("wrote", os.path.join(HERE, "viz.html"))
+    if "--write-post" in sys.argv:
+        write_post()
+        print("wrote", os.path.join(HERE, "viz.html"))

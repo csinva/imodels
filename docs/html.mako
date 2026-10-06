@@ -1,3 +1,12 @@
+<%!
+    def _sklearn_plumbing(d):
+        """scikit-learn's own estimator plumbing (get/set_params, the generated set_*_request
+        metadata-routing methods), which would repeat on every model page."""
+        name = getattr(d, 'name', '')
+        if name.startswith('set_') and name.endswith('_request') or name == 'get_metadata_routing':
+            return True
+        return (getattr(getattr(d, 'obj', None), '__module__', '') or '').startswith('sklearn')
+%>
 <%
   import os
   import re
@@ -159,7 +168,7 @@
       class_vars = c.class_variables(show_inherited_members, sort=sort_identifiers)
       smethods = c.functions(show_inherited_members, sort=sort_identifiers)
       inst_vars = c.instance_variables(show_inherited_members, sort=sort_identifiers)
-      methods = c.methods(show_inherited_members, sort=sort_identifiers)
+      methods = [f for f in c.methods(show_inherited_members, sort=sort_identifiers) if not _sklearn_plumbing(f)]
       mro = c.mro()
       subclasses = c.subclasses()
       params = ', '.join(c.params(annotate=show_type_annotations, link=link))
@@ -234,7 +243,9 @@
                   <li><code><b>${link(cls)}</b></code>:
                       <ul class="hlist">
                           % for m in mems:
+                              % if not _sklearn_plumbing(m):
                               <li><code>${link(m, name=m.name)}</code></li>
+                              % endif
                           % endfor
                       </ul>
                   </li>

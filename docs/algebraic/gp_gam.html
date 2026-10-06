@@ -109,6 +109,7 @@ the grid resolution chosen by marginal likelihood; the first 48 are fit jointly.
 Reference implementation: https://github.com/csinva/imodels
 &#34;&#34;&#34;
 
+from imodels.util.introspection import TextMixin
 from itertools import combinations
 
 import numpy as np
@@ -120,7 +121,7 @@ from imodels.util.arguments import check_predict_X, set_feature_names_in
 from imodels.util.progress import progress_iter
 
 
-class GPGamRegressor(RegressorMixin, BaseEstimator):
+class GPGamRegressor(TextMixin, RegressorMixin, BaseEstimator):
     &#34;&#34;&#34;A GAM with pairwise interactions, fit as a Gaussian process.
 
     The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``. Every
@@ -1190,7 +1191,7 @@ resolution for speed.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GPGamRegressor(RegressorMixin, BaseEstimator):
+<pre><code class="python">class GPGamRegressor(TextMixin, RegressorMixin, BaseEstimator):
     &#34;&#34;&#34;A GAM with pairwise interactions, fit as a Gaussian process.
 
     The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``. Every
@@ -2145,6 +2146,7 @@ resolution for speed.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li>sklearn.base.RegressorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -2415,202 +2417,6 @@ amplitude near zero, which is how irrelevant features drop out.</p></div>
     out = self.y_mean_ + self.y_std_ * out + self.bias_
     out = np.clip(out, self.clip_[0], self.clip_[1])
     return np.exp(out) if self.log_target_ else out</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.gp_gam.GPGamRegressor.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.gp_gam.GPGamRegressor" href="#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gp_gam.GPGamRegressor" href="#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.gp_gam.GPGamRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gp_gam.GPGamRegressor" href="#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gp_gam.GPGamRegressor" href="#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.gp_gam.GPGamRegressor.shape_function"><code class="name flex">

@@ -90,44 +90,56 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     Parameters
     ----------
-    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
-                    this will be the mean number of terminal nodes.
-    sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
-                    FP 2004 (Sec. 2)
-    max_rules:      total number of terms included in the final model (both linear and rules)
-                    approximate total number of candidate rules generated for fitting also is based on this
-                    Note that actual number of candidate rules will usually be lower than this due to duplicates.
-    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
-                    sequentially induced. FP 2004 (Sec. 2)
-    lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
-                    by multiplying the winsorised variable by 0.4/stdev.
-    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
-                    terms before standardisation.
-    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                    terminal nodes based on an exponential distribution about tree_size. 
-                    (Friedman Sec 3.3)
-    include_linear: Include linear terms as opposed to only rules
-    alpha:          Regularization strength, will override max_rules parameter
-    cv:             Whether to use cross-validation scores to select the regularization strength 
-                    the final regularization value out of all that satisfy max_rules. If False, the
-                    least regularization possible is used.
-    random_state:   Integer to initialise random objects and provide repeatability.
-    tree_generator: Optional: this object will be used as provided to generate the rules. 
-                    This will override almost all the other properties above. 
-                    Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
-                    A copy is fitted on the training data, so the object passed in is left
-                    untouched (and any previous fit of it is not reused). Note that
-                    n_estimators, max_leaf_nodes and random_state are set on that copy while
-                    the trees are grown, so tuning them on the generator has no effect.
+    n_estimators : int, default=100
+        Number of trees grown to generate candidate rules.
+    tree_size : int, default=4
+        Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
+        this is the mean number of terminal nodes.
+    sample_fract : float or &#34;default&#34;, default=&#34;default&#34;
+        Fraction of randomly chosen training observations used to produce each tree
+        (Friedman and Popescu 2004, Sec. 2).
+    max_rules : int, default=30
+        Total number of terms included in the final model (both linear terms and rules).
+        The approximate number of candidate rules generated is also based on this; the
+        actual number is usually lower because of duplicates.
+    memory_par : float, default=0.01
+        Scale multiplier (shrinkage factor) applied to each new tree when sequentially
+        induced (Friedman and Popescu 2004, Sec. 2).
+    tree_generator : estimator, optional
+        Used as provided to generate the rules, overriding most of the parameters above.
+        Must be GradientBoostingRegressor(), GradientBoostingClassifier() or
+        RandomForestRegressor(). A copy is fitted on the training data, so the object
+        passed in is left untouched (and any previous fit of it is not reused).
+        n_estimators, max_leaf_nodes and random_state are set on that copy while the
+        trees are grown, so tuning them on the generator has no effect.
+    lin_trim_quantile : float, default=0.025
+        If lin_standardise is True, this quantile is used to trim linear terms before
+        standardisation.
+    lin_standardise : bool, default=True
+        If True, linear terms are standardised as in Friedman and Popescu (Sec. 3.2), by
+        multiplying the winsorised variable by 0.4 / stdev.
+    exp_rand_tree_size : bool, default=True
+        If True, each boosted tree has a different maximum number of terminal nodes, drawn
+        from an exponential distribution about tree_size (Sec. 3.3).
+    include_linear : bool, default=True
+        Include linear terms as well as rules.
+    alpha : float, optional
+        Regularization strength; overrides max_rules.
+    cv : bool, default=True
+        Whether to use cross-validation scores to select the regularization strength, out
+        of all values that satisfy max_rules. If False, the least regularization possible
+        is used.
+    random_state : int, optional
+        Seed for the random objects, for repeatability.
+    verbose : int, default=0
+        Verbosity.
 
     Attributes
     ----------
-    rule_ensemble: RuleEnsemble
-        The rule ensemble
-
-    feature_names: list of strings, optional (default=None)
-        The names of the features (columns)
-
+    rule_ensemble : RuleEnsemble
+        The rule ensemble.
+    feature_names : list of str, optional
+        The names of the features (columns).
     &#34;&#34;&#34;
 
     def __init__(self,
@@ -328,21 +340,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
         pd.set_option(&#39;display.max_colwidth&#39;, None)
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
-
-    def __str__(self):
-        if not hasattr(self, &#39;coef&#39;):
-            s = self.__class__.__name__
-            s += &#34;(&#34;
-            s += &#34;max_rules=&#34;
-            s += repr(self.max_rules)
-            s += &#34;)&#34;
-            return s
-        else:
-            s = &#39;&gt; ------------------------------\n&#39;
-            s += &#39;&gt; RuleFit:\n&#39;
-            s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
-            s += &#39;&gt; ------------------------------\n&#39;
-            return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
     def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
@@ -423,50 +420,56 @@ class RuleFitClassifier(RuleFit, ClassifierMixin):
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>tree_size</code></strong> :&ensp;<code>
-Number</code> of <code>terminal nodes in generated trees. If exp_rand_tree_size=True,</code></dt>
-<dd>this will be the mean number of terminal nodes.</dd>
-<dt><strong><code>sample_fract</code></strong> :&ensp;<code>
-fraction</code> of <code>randomly chosen training observations used to produce each tree. </code></dt>
-<dd>FP 2004 (Sec. 2)</dd>
-<dt><strong><code>max_rules</code></strong> :&ensp;<code>
-total number</code> of <code>terms included in the final model (both linear and rules)</code></dt>
-<dd>approximate total number of candidate rules generated for fitting also is based on this
-Note that actual number of candidate rules will usually be lower than this due to duplicates.</dd>
-<dt><strong><code>memory_par</code></strong> :&ensp;<code>
-scale multiplier (shrinkage factor) applied to each new tree when </code></dt>
-<dd>sequentially induced. FP 2004 (Sec. 2)</dd>
-<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>If True, the linear terms will be standardised as per Friedman Sec 3.2</code></dt>
-<dd>by multiplying the winsorised variable by 0.4/stdev.</dd>
-<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>If lin_standardise is True, this quantile will be used to trim linear </code></dt>
-<dd>terms before standardisation.</dd>
-<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>If True, each boosted tree will have a different maximum number</code> of</dt>
-<dd>terminal nodes based on an exponential distribution about tree_size.
-(Friedman Sec 3.3)</dd>
-<dt><strong><code>include_linear</code></strong> :&ensp;<code>Include linear terms as opposed to only rules</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>alpha</code></strong> :&ensp;<code>
-Regularization strength, will override max_rules parameter</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>cv</code></strong> :&ensp;<code>Whether to use cross-validation scores to select the regularization strength</code></dt>
-<dd>the final regularization value out of all that satisfy max_rules. If False, the
-least regularization possible is used.</dd>
-<dt>random_state:
-Integer to initialise random objects and provide repeatability.</dt>
-<dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
-<dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
-A copy is fitted on the training data, so the object passed in is left
-untouched (and any previous fit of it is not reused). Note that
-n_estimators, max_leaf_nodes and random_state are set on that copy while
-the trees are grown, so tuning them on the generator has no effect.</dd>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Number of trees grown to generate candidate rules.</dd>
+<dt><strong><code>tree_size</code></strong> :&ensp;<code>int</code>, default=<code>4</code></dt>
+<dd>Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
+this is the mean number of terminal nodes.</dd>
+<dt><strong><code>sample_fract</code></strong> :&ensp;<code>float</code> or <code>"default"</code>, default=<code>"default"</code></dt>
+<dd>Fraction of randomly chosen training observations used to produce each tree
+(Friedman and Popescu 2004, Sec. 2).</dd>
+<dt><strong><code>max_rules</code></strong> :&ensp;<code>int</code>, default=<code>30</code></dt>
+<dd>Total number of terms included in the final model (both linear terms and rules).
+The approximate number of candidate rules generated is also based on this; the
+actual number is usually lower because of duplicates.</dd>
+<dt><strong><code>memory_par</code></strong> :&ensp;<code>float</code>, default=<code>0.01</code></dt>
+<dd>Scale multiplier (shrinkage factor) applied to each new tree when sequentially
+induced (Friedman and Popescu 2004, Sec. 2).</dd>
+<dt><strong><code>tree_generator</code></strong> :&ensp;<code>estimator</code>, optional</dt>
+<dd>Used as provided to generate the rules, overriding most of the parameters above.
+Must be GradientBoostingRegressor(), GradientBoostingClassifier() or
+RandomForestRegressor(). A copy is fitted on the training data, so the object
+passed in is left untouched (and any previous fit of it is not reused).
+n_estimators, max_leaf_nodes and random_state are set on that copy while the
+trees are grown, so tuning them on the generator has no effect.</dd>
+<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>float</code>, default=<code>0.025</code></dt>
+<dd>If lin_standardise is True, this quantile is used to trim linear terms before
+standardisation.</dd>
+<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, linear terms are standardised as in Friedman and Popescu (Sec. 3.2), by
+multiplying the winsorised variable by 0.4 / stdev.</dd>
+<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, each boosted tree has a different maximum number of terminal nodes, drawn
+from an exponential distribution about tree_size (Sec. 3.3).</dd>
+<dt><strong><code>include_linear</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Include linear terms as well as rules.</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Regularization strength; overrides max_rules.</dd>
+<dt><strong><code>cv</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to use cross-validation scores to select the regularization strength, out
+of all values that satisfy max_rules. If False, the least regularization possible
+is used.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Seed for the random objects, for repeatability.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Verbosity.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>rule_ensemble</code></strong> :&ensp;<code>RuleEnsemble</code></dt>
-<dd>The rule ensemble</dd>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional <code>(default=None)</code></dt>
-<dd>The names of the features (columns)</dd>
+<dd>The rule ensemble.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>The names of the features (columns).</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -478,44 +481,56 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 
     Parameters
     ----------
-    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
-                    this will be the mean number of terminal nodes.
-    sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
-                    FP 2004 (Sec. 2)
-    max_rules:      total number of terms included in the final model (both linear and rules)
-                    approximate total number of candidate rules generated for fitting also is based on this
-                    Note that actual number of candidate rules will usually be lower than this due to duplicates.
-    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
-                    sequentially induced. FP 2004 (Sec. 2)
-    lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
-                    by multiplying the winsorised variable by 0.4/stdev.
-    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
-                    terms before standardisation.
-    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                    terminal nodes based on an exponential distribution about tree_size. 
-                    (Friedman Sec 3.3)
-    include_linear: Include linear terms as opposed to only rules
-    alpha:          Regularization strength, will override max_rules parameter
-    cv:             Whether to use cross-validation scores to select the regularization strength 
-                    the final regularization value out of all that satisfy max_rules. If False, the
-                    least regularization possible is used.
-    random_state:   Integer to initialise random objects and provide repeatability.
-    tree_generator: Optional: this object will be used as provided to generate the rules. 
-                    This will override almost all the other properties above. 
-                    Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
-                    A copy is fitted on the training data, so the object passed in is left
-                    untouched (and any previous fit of it is not reused). Note that
-                    n_estimators, max_leaf_nodes and random_state are set on that copy while
-                    the trees are grown, so tuning them on the generator has no effect.
+    n_estimators : int, default=100
+        Number of trees grown to generate candidate rules.
+    tree_size : int, default=4
+        Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
+        this is the mean number of terminal nodes.
+    sample_fract : float or &#34;default&#34;, default=&#34;default&#34;
+        Fraction of randomly chosen training observations used to produce each tree
+        (Friedman and Popescu 2004, Sec. 2).
+    max_rules : int, default=30
+        Total number of terms included in the final model (both linear terms and rules).
+        The approximate number of candidate rules generated is also based on this; the
+        actual number is usually lower because of duplicates.
+    memory_par : float, default=0.01
+        Scale multiplier (shrinkage factor) applied to each new tree when sequentially
+        induced (Friedman and Popescu 2004, Sec. 2).
+    tree_generator : estimator, optional
+        Used as provided to generate the rules, overriding most of the parameters above.
+        Must be GradientBoostingRegressor(), GradientBoostingClassifier() or
+        RandomForestRegressor(). A copy is fitted on the training data, so the object
+        passed in is left untouched (and any previous fit of it is not reused).
+        n_estimators, max_leaf_nodes and random_state are set on that copy while the
+        trees are grown, so tuning them on the generator has no effect.
+    lin_trim_quantile : float, default=0.025
+        If lin_standardise is True, this quantile is used to trim linear terms before
+        standardisation.
+    lin_standardise : bool, default=True
+        If True, linear terms are standardised as in Friedman and Popescu (Sec. 3.2), by
+        multiplying the winsorised variable by 0.4 / stdev.
+    exp_rand_tree_size : bool, default=True
+        If True, each boosted tree has a different maximum number of terminal nodes, drawn
+        from an exponential distribution about tree_size (Sec. 3.3).
+    include_linear : bool, default=True
+        Include linear terms as well as rules.
+    alpha : float, optional
+        Regularization strength; overrides max_rules.
+    cv : bool, default=True
+        Whether to use cross-validation scores to select the regularization strength, out
+        of all values that satisfy max_rules. If False, the least regularization possible
+        is used.
+    random_state : int, optional
+        Seed for the random objects, for repeatability.
+    verbose : int, default=0
+        Verbosity.
 
     Attributes
     ----------
-    rule_ensemble: RuleEnsemble
-        The rule ensemble
-
-    feature_names: list of strings, optional (default=None)
-        The names of the features (columns)
-
+    rule_ensemble : RuleEnsemble
+        The rule ensemble.
+    feature_names : list of str, optional
+        The names of the features (columns).
     &#34;&#34;&#34;
 
     def __init__(self,
@@ -717,21 +732,6 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
         pd.set_option(&#39;display.max_colwidth&#39;, None)
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
 
-    def __str__(self):
-        if not hasattr(self, &#39;coef&#39;):
-            s = self.__class__.__name__
-            s += &#34;(&#34;
-            s += &#34;max_rules=&#34;
-            s += repr(self.max_rules)
-            s += &#34;)&#34;
-            return s
-        else:
-            s = &#39;&gt; ------------------------------\n&#39;
-            s += &#39;&gt; RuleFit:\n&#39;
-            s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
-            s += &#39;&gt; ------------------------------\n&#39;
-            return s + self.visualize().to_string(index=False) + &#39;\n&#39;
-
     def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
@@ -788,6 +788,7 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -889,202 +890,6 @@ For classification, returns discrete output.</p></div>
     return softmax(logits, axis=1)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFit.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.rule_fit.RuleFit.set_transform_request"><code class="name flex">
-<span>def <span class="ident">set_transform_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a>, *, rules: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>transform</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>transform</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>transform</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>rules</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>rules</code> parameter in <code>transform</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 <dt id="imodels.rule_set.rule_fit.RuleFit.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X=None, rules=None)</span>
 </code></dt>
@@ -1169,50 +974,56 @@ efficiency.</dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>tree_size</code></strong> :&ensp;<code>
-Number</code> of <code>terminal nodes in generated trees. If exp_rand_tree_size=True,</code></dt>
-<dd>this will be the mean number of terminal nodes.</dd>
-<dt><strong><code>sample_fract</code></strong> :&ensp;<code>
-fraction</code> of <code>randomly chosen training observations used to produce each tree. </code></dt>
-<dd>FP 2004 (Sec. 2)</dd>
-<dt><strong><code>max_rules</code></strong> :&ensp;<code>
-total number</code> of <code>terms included in the final model (both linear and rules)</code></dt>
-<dd>approximate total number of candidate rules generated for fitting also is based on this
-Note that actual number of candidate rules will usually be lower than this due to duplicates.</dd>
-<dt><strong><code>memory_par</code></strong> :&ensp;<code>
-scale multiplier (shrinkage factor) applied to each new tree when </code></dt>
-<dd>sequentially induced. FP 2004 (Sec. 2)</dd>
-<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>If True, the linear terms will be standardised as per Friedman Sec 3.2</code></dt>
-<dd>by multiplying the winsorised variable by 0.4/stdev.</dd>
-<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>If lin_standardise is True, this quantile will be used to trim linear </code></dt>
-<dd>terms before standardisation.</dd>
-<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>If True, each boosted tree will have a different maximum number</code> of</dt>
-<dd>terminal nodes based on an exponential distribution about tree_size.
-(Friedman Sec 3.3)</dd>
-<dt><strong><code>include_linear</code></strong> :&ensp;<code>Include linear terms as opposed to only rules</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>alpha</code></strong> :&ensp;<code>
-Regularization strength, will override max_rules parameter</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>cv</code></strong> :&ensp;<code>Whether to use cross-validation scores to select the regularization strength</code></dt>
-<dd>the final regularization value out of all that satisfy max_rules. If False, the
-least regularization possible is used.</dd>
-<dt>random_state:
-Integer to initialise random objects and provide repeatability.</dt>
-<dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
-<dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
-A copy is fitted on the training data, so the object passed in is left
-untouched (and any previous fit of it is not reused). Note that
-n_estimators, max_leaf_nodes and random_state are set on that copy while
-the trees are grown, so tuning them on the generator has no effect.</dd>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Number of trees grown to generate candidate rules.</dd>
+<dt><strong><code>tree_size</code></strong> :&ensp;<code>int</code>, default=<code>4</code></dt>
+<dd>Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
+this is the mean number of terminal nodes.</dd>
+<dt><strong><code>sample_fract</code></strong> :&ensp;<code>float</code> or <code>"default"</code>, default=<code>"default"</code></dt>
+<dd>Fraction of randomly chosen training observations used to produce each tree
+(Friedman and Popescu 2004, Sec. 2).</dd>
+<dt><strong><code>max_rules</code></strong> :&ensp;<code>int</code>, default=<code>30</code></dt>
+<dd>Total number of terms included in the final model (both linear terms and rules).
+The approximate number of candidate rules generated is also based on this; the
+actual number is usually lower because of duplicates.</dd>
+<dt><strong><code>memory_par</code></strong> :&ensp;<code>float</code>, default=<code>0.01</code></dt>
+<dd>Scale multiplier (shrinkage factor) applied to each new tree when sequentially
+induced (Friedman and Popescu 2004, Sec. 2).</dd>
+<dt><strong><code>tree_generator</code></strong> :&ensp;<code>estimator</code>, optional</dt>
+<dd>Used as provided to generate the rules, overriding most of the parameters above.
+Must be GradientBoostingRegressor(), GradientBoostingClassifier() or
+RandomForestRegressor(). A copy is fitted on the training data, so the object
+passed in is left untouched (and any previous fit of it is not reused).
+n_estimators, max_leaf_nodes and random_state are set on that copy while the
+trees are grown, so tuning them on the generator has no effect.</dd>
+<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>float</code>, default=<code>0.025</code></dt>
+<dd>If lin_standardise is True, this quantile is used to trim linear terms before
+standardisation.</dd>
+<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, linear terms are standardised as in Friedman and Popescu (Sec. 3.2), by
+multiplying the winsorised variable by 0.4 / stdev.</dd>
+<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, each boosted tree has a different maximum number of terminal nodes, drawn
+from an exponential distribution about tree_size (Sec. 3.3).</dd>
+<dt><strong><code>include_linear</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Include linear terms as well as rules.</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Regularization strength; overrides max_rules.</dd>
+<dt><strong><code>cv</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to use cross-validation scores to select the regularization strength, out
+of all values that satisfy max_rules. If False, the least regularization possible
+is used.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Seed for the random objects, for repeatability.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Verbosity.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>rule_ensemble</code></strong> :&ensp;<code>RuleEnsemble</code></dt>
-<dd>The rule ensemble</dd>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional <code>(default=None)</code></dt>
-<dd>The names of the features (columns)</dd>
+<dd>The rule ensemble.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>The names of the features (columns).</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1234,109 +1045,9 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.rule_set.rule_fit.RuleFitClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
@@ -1344,8 +1055,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 </ul>
 </li>
@@ -1359,50 +1068,56 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>tree_size</code></strong> :&ensp;<code>
-Number</code> of <code>terminal nodes in generated trees. If exp_rand_tree_size=True,</code></dt>
-<dd>this will be the mean number of terminal nodes.</dd>
-<dt><strong><code>sample_fract</code></strong> :&ensp;<code>
-fraction</code> of <code>randomly chosen training observations used to produce each tree. </code></dt>
-<dd>FP 2004 (Sec. 2)</dd>
-<dt><strong><code>max_rules</code></strong> :&ensp;<code>
-total number</code> of <code>terms included in the final model (both linear and rules)</code></dt>
-<dd>approximate total number of candidate rules generated for fitting also is based on this
-Note that actual number of candidate rules will usually be lower than this due to duplicates.</dd>
-<dt><strong><code>memory_par</code></strong> :&ensp;<code>
-scale multiplier (shrinkage factor) applied to each new tree when </code></dt>
-<dd>sequentially induced. FP 2004 (Sec. 2)</dd>
-<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>If True, the linear terms will be standardised as per Friedman Sec 3.2</code></dt>
-<dd>by multiplying the winsorised variable by 0.4/stdev.</dd>
-<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>If lin_standardise is True, this quantile will be used to trim linear </code></dt>
-<dd>terms before standardisation.</dd>
-<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>If True, each boosted tree will have a different maximum number</code> of</dt>
-<dd>terminal nodes based on an exponential distribution about tree_size.
-(Friedman Sec 3.3)</dd>
-<dt><strong><code>include_linear</code></strong> :&ensp;<code>Include linear terms as opposed to only rules</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>alpha</code></strong> :&ensp;<code>
-Regularization strength, will override max_rules parameter</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>cv</code></strong> :&ensp;<code>Whether to use cross-validation scores to select the regularization strength</code></dt>
-<dd>the final regularization value out of all that satisfy max_rules. If False, the
-least regularization possible is used.</dd>
-<dt>random_state:
-Integer to initialise random objects and provide repeatability.</dt>
-<dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
-<dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
-A copy is fitted on the training data, so the object passed in is left
-untouched (and any previous fit of it is not reused). Note that
-n_estimators, max_leaf_nodes and random_state are set on that copy while
-the trees are grown, so tuning them on the generator has no effect.</dd>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>100</code></dt>
+<dd>Number of trees grown to generate candidate rules.</dd>
+<dt><strong><code>tree_size</code></strong> :&ensp;<code>int</code>, default=<code>4</code></dt>
+<dd>Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
+this is the mean number of terminal nodes.</dd>
+<dt><strong><code>sample_fract</code></strong> :&ensp;<code>float</code> or <code>"default"</code>, default=<code>"default"</code></dt>
+<dd>Fraction of randomly chosen training observations used to produce each tree
+(Friedman and Popescu 2004, Sec. 2).</dd>
+<dt><strong><code>max_rules</code></strong> :&ensp;<code>int</code>, default=<code>30</code></dt>
+<dd>Total number of terms included in the final model (both linear terms and rules).
+The approximate number of candidate rules generated is also based on this; the
+actual number is usually lower because of duplicates.</dd>
+<dt><strong><code>memory_par</code></strong> :&ensp;<code>float</code>, default=<code>0.01</code></dt>
+<dd>Scale multiplier (shrinkage factor) applied to each new tree when sequentially
+induced (Friedman and Popescu 2004, Sec. 2).</dd>
+<dt><strong><code>tree_generator</code></strong> :&ensp;<code>estimator</code>, optional</dt>
+<dd>Used as provided to generate the rules, overriding most of the parameters above.
+Must be GradientBoostingRegressor(), GradientBoostingClassifier() or
+RandomForestRegressor(). A copy is fitted on the training data, so the object
+passed in is left untouched (and any previous fit of it is not reused).
+n_estimators, max_leaf_nodes and random_state are set on that copy while the
+trees are grown, so tuning them on the generator has no effect.</dd>
+<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>float</code>, default=<code>0.025</code></dt>
+<dd>If lin_standardise is True, this quantile is used to trim linear terms before
+standardisation.</dd>
+<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, linear terms are standardised as in Friedman and Popescu (Sec. 3.2), by
+multiplying the winsorised variable by 0.4 / stdev.</dd>
+<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, each boosted tree has a different maximum number of terminal nodes, drawn
+from an exponential distribution about tree_size (Sec. 3.3).</dd>
+<dt><strong><code>include_linear</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Include linear terms as well as rules.</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Regularization strength; overrides max_rules.</dd>
+<dt><strong><code>cv</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to use cross-validation scores to select the regularization strength, out
+of all values that satisfy max_rules. If False, the least regularization possible
+is used.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Seed for the random objects, for repeatability.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Verbosity.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>rule_ensemble</code></strong> :&ensp;<code>RuleEnsemble</code></dt>
-<dd>The rule ensemble</dd>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional <code>(default=None)</code></dt>
-<dd>The names of the features (columns)</dd>
+<dd>The rule ensemble.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>The names of the features (columns).</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1424,109 +1139,9 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
@@ -1534,8 +1149,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 </ul>
 </li>

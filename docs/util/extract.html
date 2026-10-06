@@ -261,8 +261,8 @@ def extract_marginal_curves(clf, X, max_evals=100):
     Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
     For GAM, this returns the shape functions
 
-    Params
-    ------
+    Parameters
+    ----------
     clf : classifier
         A classifier with a predict_proba method
     X : array-like
@@ -337,13 +337,15 @@ def extract_marginal_curves(clf, X, max_evals=100):
 <div class="desc"><p>Uses predict_proba to compute marginal curves.
 Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
 For GAM, this returns the shape functions</p>
-<h2 id="params">Params</h2>
-<p>clf : classifier
-A classifier with a predict_proba method
-X : array-like
-The data to compute the marginal curves on (used to calculate unique feature vals)
-max_evals : int
-The maximum number of evaluations to make for each feature</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>clf</code></strong> :&ensp;<code>classifier</code></dt>
+<dd>A classifier with a predict_proba method</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code></dt>
+<dd>The data to compute the marginal curves on (used to calculate unique feature vals)</dd>
+<dt><strong><code>max_evals</code></strong> :&ensp;<code>int</code></dt>
+<dd>The maximum number of evaluations to make for each feature</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>feature_vals_list</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
@@ -360,8 +362,8 @@ The maximum number of evaluations to make for each feature</p>
     Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
     For GAM, this returns the shape functions
 
-    Params
-    ------
+    Parameters
+    ----------
     clf : classifier
         A classifier with a predict_proba method
     X : array-like

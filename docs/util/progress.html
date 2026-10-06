@@ -126,8 +126,8 @@ def _tqdm(iterable=None, total=None, desc=None, leave=False):
 def progress_iter(iterable, verbose=False, desc=None, total=None, leave=False):
     &#34;&#34;&#34;Wrap `iterable` in a progress bar when `verbose` is truthy.
 
-    Params
-    ------
+    Parameters
+    ----------
     iterable
         what the fit loop iterates over
     verbose: bool or int
@@ -192,17 +192,19 @@ falsy it is a do-nothing stand-in, so the call site needs no branch.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Wrap <code>iterable</code> in a progress bar when <code>verbose</code> is truthy.</p>
-<h2 id="params">Params</h2>
-<p>iterable
-what the fit loop iterates over
-verbose: bool or int
-the model's verbosity; the bar is shown when this is truthy
-desc: str
-label shown to the left of the bar, e.g. 'fitting rules'
-total: int
-number of iterations, when <code>iterable</code> has no length
-leave: bool
-whether to keep the finished bar on screen</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>iterable</code></strong></dt>
+<dd>what the fit loop iterates over</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code> or <code>int</code></dt>
+<dd>the model's verbosity; the bar is shown when this is truthy</dd>
+<dt><strong><code>desc</code></strong> :&ensp;<code>str</code></dt>
+<dd>label shown to the left of the bar, e.g. 'fitting rules'</dd>
+<dt><strong><code>total</code></strong> :&ensp;<code>int</code></dt>
+<dd>number of iterations, when <code>iterable</code> has no length</dd>
+<dt><strong><code>leave</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to keep the finished bar on screen</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -210,8 +212,8 @@ whether to keep the finished bar on screen</p></div>
 <pre><code class="python">def progress_iter(iterable, verbose=False, desc=None, total=None, leave=False):
     &#34;&#34;&#34;Wrap `iterable` in a progress bar when `verbose` is truthy.
 
-    Params
-    ------
+    Parameters
+    ----------
     iterable
         what the fit loop iterates over
     verbose: bool or int

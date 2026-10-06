@@ -72,9 +72,9 @@ def tauAP_b(x, y, decreasing=True):
 
     Returns
     -------
-    Scalar value between -1 and 1, quantifying how much the
-    rankings of x and y agree with each other. A higher
-    values indicates greater similarity.
+    float
+        A value between -1 and 1, quantifying how much the rankings of x and y
+        agree with each other. Higher values indicate greater similarity.
 
     &#34;&#34;&#34;
     if decreasing:
@@ -126,9 +126,9 @@ def rbo(s, t, p, k=None, side=&#34;top&#34;, uneven_lengths=True):
 
     Returns
     -------
-    Scalar value between 0 and 1, quantifying how much the
-    rankings of x and y agree with each other. A higher
-    values indicates greater similarity.
+    float
+        A value between 0 and 1, quantifying how much the rankings of s and t
+        agree with each other. Higher values indicate greater similarity.
 
     &#34;&#34;&#34;
     assert side in [&#34;top&#34;, &#34;bottom&#34;]
@@ -212,12 +212,10 @@ ranked lists.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>Scalar value between 0 and 1, quantifying how much the</code></dt>
-<dd>&nbsp;</dd>
-<dt><code>rankings</code> of <code>x and y agree with each other. A higher</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<p>values indicates greater similarity.</p></div>
+<dt><code>float</code></dt>
+<dd>A value between 0 and 1, quantifying how much the rankings of s and t
+agree with each other. Higher values indicate greater similarity.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -248,9 +246,9 @@ ranked lists.</dd>
 
     Returns
     -------
-    Scalar value between 0 and 1, quantifying how much the
-    rankings of x and y agree with each other. A higher
-    values indicates greater similarity.
+    float
+        A value between 0 and 1, quantifying how much the rankings of s and t
+        agree with each other. Higher values indicate greater similarity.
 
     &#34;&#34;&#34;
     assert side in [&#34;top&#34;, &#34;bottom&#34;]
@@ -284,12 +282,10 @@ of ircor::tauAP_b from R.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>Scalar value between -1 and 1, quantifying how much the</code></dt>
-<dd>&nbsp;</dd>
-<dt><code>rankings</code> of <code>x and y agree with each other. A higher</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<p>values indicates greater similarity.</p></div>
+<dt><code>float</code></dt>
+<dd>A value between -1 and 1, quantifying how much the rankings of x and y
+agree with each other. Higher values indicate greater similarity.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -312,9 +308,9 @@ of ircor::tauAP_b from R.</p>
 
     Returns
     -------
-    Scalar value between -1 and 1, quantifying how much the
-    rankings of x and y agree with each other. A higher
-    values indicates greater similarity.
+    float
+        A value between -1 and 1, quantifying how much the rankings of x and y
+        agree with each other. Higher values indicate greater similarity.
 
     &#34;&#34;&#34;
     if decreasing:
