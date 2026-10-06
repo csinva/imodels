@@ -20,8 +20,7 @@ from imodels import to_sklearn
 cancer = load_breast_cancer(return_X_y=True, as_frame=True)
 diabetes = load_diabetes(return_X_y=True, as_frame=True)
 iris = load_iris(return_X_y=True, as_frame=True)
-_X, _y, _names = imodels.get_clean_dataset("csi_pecarn_pred")
-csi = (_X, _y)
+csi = "csi_pecarn_pred"  # loaded when its test runs: parallel workers would race to download it at import
 
 CASES = {
     "GreedyTreeClassifier": (lambda: imodels.GreedyTreeClassifier(max_depth=3), cancer),
@@ -47,7 +46,8 @@ _fitted = {}
 
 def fitted(name):
     if name not in _fitted:
-        make, (X, y) = CASES[name]
+        make, data = CASES[name]
+        X, y = imodels.get_clean_dataset(data)[:2] if isinstance(data, str) else data
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             _fitted[name] = (make().fit(X, y), X, y)

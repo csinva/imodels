@@ -34,32 +34,37 @@ class ViewPainter:
         return f"raises {v.target_name}", f"lowers {v.target_name}"
 
     def header(self, width, title, subtitle):
+        """Title, subtitle and legend. The legend sits on the subtitle's line when there is room."""
         P, parts, y = self.P, [], 0
         if title:
             parts.append(_text(0, 18, title, 18, P("ink"), 650))
-            y = 28
+            y = 26
+        sub_top = y
         if subtitle:
             parts.append(_text(0, y + 13, subtitle, 12, P("ink2")))
-            y += 22
-        y += 6
-        x = 0.0
+            y += 19
         if self.v.is_clf:
             items = [(self.P.cls(k), n) for k, n in enumerate(self.v.class_names)]
+            note = "bars are colored by the class a term favors"
         else:
             up, down = self.direction_words()
             items = [(self.pos, up), (self.neg, down)]
+            note = None
+        leg_w = sum(text_width(lab, 11.5) + 26 for _, lab in items) + (text_width(note, 11.5) + 6 if note else 0)
+        inline = bool(subtitle) and text_width(subtitle, 12) + 28 + leg_w <= width
+        x, ly = (text_width(subtitle, 12) + 28, sub_top + 3) if inline else (0.0, y + 3)
         for col, lab in items:
-            parts.append(f'<circle cx="{_n(x + 5)}" cy="{_n(y + 6)}" r="5" style="{_st(col)}"/>')
-            parts.append(_text(x + 15, y + 10, lab, 11.5, P("ink2")))
+            parts.append(f'<circle cx="{_n(x + 5)}" cy="{_n(ly + 6)}" r="5" style="{_st(col)}"/>')
+            parts.append(_text(x + 15, ly + 10, lab, 11.5, P("ink2")))
             x += text_width(lab, 11.5) + 26
-        if self.v.is_clf:
-            parts.append(_text(x + 6, y + 10, "bars are colored by the class a term favors", 11.5, P("muted")))
-        y += 18
+        if note:
+            parts.append(_text(x + 6, ly + 10, note, 11.5, P("muted")))
+        y = max(y, ly + 17)
         if self.x is not None:
-            y += 6
+            y += 4
             parts.append(_text(0, y + 11, self.prediction_text(), 12, P("ink"), 600))
             y += 18
-        return "".join(parts), y + 18
+        return "".join(parts), y + 12
 
     def prediction_text(self):
         v = self.v
@@ -177,7 +182,7 @@ def ruleset_body(vp, max_rows=30):
         # row content is drawn at local coordinates; the group's transform places it
         _, h = vp.chips(c_rule, 10, [v.cond_text(f, op, val, sig) for f, op, val in t.conds] if t.kind == "rule"
                         else ["x"], rule_w)
-        rh = max(h, 22) + 12
+        rh = max(h, 22) + 8
         kind = "term rule" if t.kind == "rule" else "term"
         row = [f'<g class="{kind}" data-t="{v.terms.index(t)}" data-rank="{rank}" data-y="{_n(y)}" data-h="{_n(rh)}" '
                f'transform="translate(0,{_n(y)})" style="transform:translate(0px,{_n(y)}px)">',
@@ -349,7 +354,7 @@ def gam_body(vp, cols=3, max_panels=24):
         by_f.setdefault(t.feature, []).append(t)
     feats = sorted(by_f, key=lambda f: -float(np.std(sum(t.contribution(v.X) for t in by_f[f])))
                    if v.X is not None else -sum(v.importance(t) for t in by_f[f]))[:max_panels]
-    pw, ph, gx, gy = 250, 128, 16, 24
+    pw, ph, gx, gy = 250, 112, 16, 18
     cols = min(cols, max(1, len(feats)))
     W = cols * pw + (cols - 1) * gx + 2 * M
     grids, curves = {}, {}

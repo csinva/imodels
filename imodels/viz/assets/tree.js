@@ -8,7 +8,7 @@
   const svg = document.getElementById("canvas"), vp = document.getElementById("vp");
   const gRib = document.getElementById("g-rib"), gNode = document.getElementById("g-node"), gLab = document.getElementById("g-lab");
   const stage = document.getElementById("stage");
-  const GAP = 14, LEVEL_TB = 50, LEVEL_LR = 96, DUR = 380;
+  const GAP = 14, LEVEL_TB = 44, LEVEL_LR = 96, DUR = 380;
   let orient = D.orientation === "LR" ? "LR" : "TB";
   let collapsed = new Set(), view = {k: 1, x: 0, y: 0}, cur = {}, path = new Set();
   const els = {}, ribs = {}, pills = {};
@@ -162,7 +162,7 @@
       let rh = n.h;
       out[i] = [(colW - n.w) / 2, y, n.w, n.h];
       if (sd != null) { const m = N[sd]; out[sd] = [sx, m.h < n.h ? y + (n.h - m.h) / 2 : y, m.w, m.h]; rh = Math.max(rh, m.h); }
-      y += rh + 46;
+      y += rh + 40;
     }
     return out;
   }

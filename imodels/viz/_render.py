@@ -8,7 +8,7 @@ from ._text import FONT_STACK, esc, fmt, fmt_count, text_width, truncate
 PAD = 10
 RADIUS = 10
 CHART_W = 160
-CHART_H = 44
+CHART_H = 38
 BAND = 120.0  # ribbon width (px) carrying all root samples
 MAX_CARD_W = 240
 
@@ -306,7 +306,7 @@ class Artist:
         else:
             label = node.label or (info.feature_names[node.feature] if node.simple else info.split_text(node.id, self.sig))
         label = truncate(label, 11.5, 200, True)
-        h = 34.0
+        h = 30.0
         w = max(64.0, text_width(label, 11.5, True) + 34)
         cid = f"{self.uid}-cs{node.id}"
         out = []
@@ -324,8 +324,8 @@ class Artist:
             x += avail * f + gap
         out.append("</g>")
         pw = text_width(label, 11.5, True) + 16
-        out.append(f'<rect x="{_n((w - pw) / 2)}" y="7" width="{_n(pw)}" height="20" rx="10" style="{_st(P("card"), fo=0.94)}"/>')
-        out.append(_text(w / 2, 21, label, 11.5, P("ink"), 600, "middle"))
+        out.append(f'<rect x="{_n((w - pw) / 2)}" y="5" width="{_n(pw)}" height="20" rx="10" style="{_st(P("card"), fo=0.94)}"/>')
+        out.append(_text(w / 2, 19, label, 11.5, P("ink"), 600, "middle"))
         if self.x is not None and self._on_path(node.id):
             out.append(f'<rect x="-3" y="-3" width="{_n(w + 6)}" height="{_n(h + 6)}" rx="12" style="{_st("none", P("hl"), 2)}"/>')
         tip = f"{label}\n{self._footer_text(node)}"
@@ -561,12 +561,12 @@ class Figure:
         breadth = {n: (c["h"] if H else c["w"]) for n, c in cards.items()}
         dsize = {n: (c["w"] if H else c["h"]) for n, c in cards.items()}
         depth = {n: info.nodes[n].depth for n in vis}
-        gap, lvl = (16, 96) if H else (14, 50)
+        gap, lvl = (16, 96) if H else (14, 44)
         roots = info.shown_roots or info.roots
         multi = len(info.roots) > 1
         trees = [tidy(r, kids, breadth, depth, dsize, gap=gap, level_gap=lvl) for r in roots]
         per_row = 1 if H else min(3, len(roots))
-        label_h = 24 if multi else 0
+        label_h = 20 if multi else 0
         boxes, glyphs = {}, []
         row_top, tot_w, tot_h = 0.0, 0.0, 0.0
         for start in range(0, len(roots), per_row):
@@ -588,8 +588,8 @@ class Figure:
                 off += (td if H else tb) + 44
             row_d = max((trees[k][2] if H else trees[k][3]) for k in row)
             tot_w = max(tot_w, off - 44)
-            row_top += label_h + row_d + 40
-            tot_h = row_top - 40
+            row_top += label_h + row_d + 32
+            tot_h = row_top - 32
         horiz = {n: H for n in boxes}
         w, h = (max(t[3] for t in trees), tot_h) if H else (tot_w, tot_h)
         return boxes, horiz, glyphs, w, h
@@ -622,55 +622,59 @@ class Figure:
                 horiz[side] = True
                 row_h = max(row_h, s["h"])
                 side_w = max(side_w, s["w"])
-            y += row_h + 46
-        return boxes, horiz, [], side_x + side_w if side_w else col_w, y - 46
+            y += row_h + 40
+        return boxes, horiz, [], side_x + side_w if side_w else col_w, y - 40
 
     def header(self, width):
+        """Title, subtitle and legend. The legend sits on the subtitle's line when there is room."""
         P, info = self.P, self.info
         parts, y = [], 0
         if self.title:
             parts.append(_text(0, 18, self.title, 18, P("ink"), 650))
-            y = 28
-        sub = self.subtitle
-        if sub is None:
-            sub = info.summary()
+            y = 26
+        sub = self.subtitle if self.subtitle is not None else info.summary()
+        sub_top = y
         if sub:
             parts.append(_text(0, y + 13, sub, 12, P("ink2")))
-            y += 22
+            y += 19
         if self.legend:
-            y += 6
+            note = {"sum": "leaf values add up to the log-odds", "mean": "the trees' predictions are averaged"}.get(info.combine)
             if info.is_clf:
-                x = 0.0
+                widths = [text_width(n, 11.5) + 26 for n in info.class_names]
+                leg_w = sum(widths) + (text_width(note, 11.5) + 6 if note else 0)
+            else:
+                lo, hi = info.value_range
+                label = "leaf value, added across trees" if info.combine == "sum" else f"predicted {info.target_name}"
+                leg_w = text_width(label, 11.5) + 10 + text_width(fmt(lo), 10.5) + 152 + text_width(fmt(hi), 10.5)
+            inline = bool(sub) and text_width(sub, 12) + 28 + leg_w <= width
+            x0, ly = (text_width(sub, 12) + 28, sub_top + 3) if inline else (0.0, y + 3)
+            if info.is_clf:
+                x = x0
                 for k, name in enumerate(info.class_names):
-                    lw = text_width(name, 11.5) + 26
-                    if x + lw > width and x > 0:
-                        x, y = 0.0, y + 20
-                    parts.append(f'<circle cx="{_n(x + 5)}" cy="{_n(y + 6)}" r="5" style="{_st(P.cls(k))}"/>')
-                    parts.append(_text(x + 15, y + 10, name, 11.5, P("ink2")))
-                    x += lw
-                note = {"sum": "leaf values add up to the log-odds", "mean": "the trees' predictions are averaged"}
-                if info.combine in note:
-                    parts.append(_text(x + 6, y + 10, note[info.combine], 11.5, P("muted")))
-                y += 18
+                    if x + widths[k] > width and x > x0:
+                        x, ly = 0.0, ly + 20
+                    parts.append(f'<circle cx="{_n(x + 5)}" cy="{_n(ly + 6)}" r="5" style="{_st(P.cls(k))}"/>')
+                    parts.append(_text(x + 15, ly + 10, name, 11.5, P("ink2")))
+                    x += widths[k]
+                if note:
+                    parts.append(_text(x + 6, ly + 10, note, 11.5, P("muted")))
             else:
                 gid = f"{self.A.uid}-grad"
                 stops = "".join(f'<stop offset="{i / (len(P.seq_stops()) - 1):.3f}" stop-color="{c}"/>'
                                 for i, c in enumerate(P.seq_stops()))
-                lo, hi = info.value_range
-                label = "leaf value, added across trees" if info.combine == "sum" else f"predicted {info.target_name}"
                 lw = text_width(label, 11.5) + 10
                 parts.append(f'<defs><linearGradient id="{gid}">{stops}</linearGradient></defs>')
-                parts.append(_text(0, y + 10, label, 11.5, P("ink2")))
-                parts.append(_text(lw, y + 10, fmt(lo), 10.5, P("muted")))
-                gx = lw + text_width(fmt(lo), 10.5) + 6
-                parts.append(f'<rect x="{_n(gx)}" y="{_n(y + 2)}" width="140" height="8" rx="4" style="fill:url(#{gid})"/>')
-                parts.append(_text(gx + 146, y + 10, fmt(hi), 10.5, P("muted")))
-                y += 18
+                parts.append(_text(x0, ly + 10, label, 11.5, P("ink2")))
+                parts.append(_text(x0 + lw, ly + 10, fmt(lo), 10.5, P("muted")))
+                gx = x0 + lw + text_width(fmt(lo), 10.5) + 6
+                parts.append(f'<rect x="{_n(gx)}" y="{_n(ly + 2)}" width="140" height="8" rx="4" style="fill:url(#{gid})"/>')
+                parts.append(_text(gx + 146, ly + 10, fmt(hi), 10.5, P("muted")))
+            y = max(y, ly + 17)
         if self.prediction:
-            y += 6
+            y += 4
             parts.append(_text(0, y + 11, self.prediction, 12, P("ink"), 600))
             y += 18
-        return "".join(parts), (y + 18 if parts else 0)
+        return "".join(parts), (y + 12 if parts else 0)
 
     def svg(self):
         P, info, A = self.P, self.info, self.A

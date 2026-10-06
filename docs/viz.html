@@ -262,7 +262,7 @@ clf = DecisionTreeClassifier(max_depth=3, random_state=0).fit(X, y)
 fig = viz.draw(clf, X, y, class_names=d.target_names, title=&quot;Iris species&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="iris_simple" data-group="sktrees" data-slug="iris_simple" data-title="Simple mode" data-note="simple=True replaces each card with a box filled by the class proportions entering it. Ribbons split by class, so the flow shows which classes take each branch." data-svg="viz_gallery/static/iris_simple.svg" data-model="DecisionTreeClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/iris_simple.svg" aria-label="Simple mode: enlarge"><img src="viz_gallery/static/iris_simple.svg" alt="Simple mode" loading="lazy" style="width:100.00%;left:-0.00%;top:0.65%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/iris_simple.svg" aria-label="Simple mode: enlarge"><img src="viz_gallery/static/iris_simple.svg" alt="Simple mode" loading="lazy" style="width:100.00%;left:-0.00%;top:8.22%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Simple mode</h3><span class="vz-num">02</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeClassifier</span><span class="vz-live">live</span></div>
@@ -273,7 +273,7 @@ clf = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X, y)
 fig = viz.draw(clf, X, y, class_names=d.target_names, simple=True, title=&quot;Iris species&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="california_big" data-group="sktrees" data-slug="california_big" data-title="A bigger tree" data-note="A depth-8 tree with about 300 nodes on all 20,640 California districts. The static view shows the top three levels. The interactive page holds the full tree and opens collapsed in simple mode (the Simple button switches to charts); its feature panel shows where each feature is used." data-svg="viz_gallery/static/california_big.svg" data-model="DecisionTreeClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/california_big.svg" aria-label="A bigger tree: enlarge"><img src="viz_gallery/static/california_big.svg" alt="A bigger tree" loading="lazy" style="width:125.92%;left:-12.96%;top:8.72%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/california_big.svg" aria-label="A bigger tree: enlarge"><img src="viz_gallery/static/california_big.svg" alt="A bigger tree" loading="lazy" style="width:125.92%;left:-12.96%;top:12.77%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>A bigger tree</h3><span class="vz-num">03</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeClassifier</span><span class="vz-live">live</span></div>
@@ -307,7 +307,7 @@ reg = DecisionTreeRegressor(max_depth=3, random_state=0).fit(X, y)
 fig = viz.draw(reg, X, y, x=X.iloc[7], target_name=&quot;progression&quot;, title=&quot;Diabetes progression&quot;)</template>
                       </figure>
                       <figure class="vz-card dark" id="iris_dark" data-group="sktrees" data-slug="iris_dark" data-title="Dark theme" data-note="Both themes use their own validated color steps rather than an inverted palette." data-svg="viz_gallery/static/iris_dark.svg" data-model="DecisionTreeClassifier">
-                        <a class="vz-thumb" href="viz_gallery/static/iris_dark.svg" aria-label="Dark theme: enlarge"><img src="viz_gallery/static/iris_dark.svg" alt="Dark theme" loading="lazy" style="width:73.09%;left:13.45%;top:-0.00%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/iris_dark.svg" aria-label="Dark theme: enlarge"><img src="viz_gallery/static/iris_dark.svg" alt="Dark theme" loading="lazy" style="width:78.75%;left:10.62%;top:-0.00%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Dark theme</h3><span class="vz-num">06</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeClassifier</span></div>
@@ -318,7 +318,7 @@ fig = viz.draw(clf, d.data, d.target, class_names=d.target_names, theme=&quot;da
                x=d.data.iloc[120], title=&quot;Iris species&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="california_lr" data-group="sktrees" data-slug="california_lr" data-title="Left-to-right layout" data-note="orientation=&quot;LR&quot; suits deep, narrow trees and wide screens. Leaves show the distribution of the target in that leaf against the full target range." data-svg="viz_gallery/static/california_lr.svg" data-model="DecisionTreeRegressor">
-                        <a class="vz-thumb" href="viz_gallery/static/california_lr.svg" aria-label="Left-to-right layout: enlarge"><img src="viz_gallery/static/california_lr.svg" alt="Left-to-right layout" loading="lazy" style="width:133.33%;left:0.00%;top:-27.55%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/california_lr.svg" aria-label="Left-to-right layout: enlarge"><img src="viz_gallery/static/california_lr.svg" alt="Left-to-right layout" loading="lazy" style="width:133.33%;left:0.00%;top:-24.78%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Left-to-right layout</h3><span class="vz-num">07</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeRegressor</span></div>
@@ -329,7 +329,7 @@ reg = DecisionTreeRegressor(max_depth=3, min_samples_leaf=50, random_state=0).fi
 fig = viz.draw(reg, X, y, orientation=&quot;LR&quot;, target_name=&quot;value ($100k)&quot;, title=&quot;California house values&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="wine_nodata" data-group="sktrees" data-slug="wine_nodata" data-title="Model only, no data" data-note="Without data the cards show the class mix from the fitted tree itself. Useful when the training set is not at hand." data-svg="viz_gallery/static/wine_nodata.svg" data-model="DecisionTreeClassifier">
-                        <a class="vz-thumb" href="viz_gallery/static/wine_nodata.svg" aria-label="Model only, no data: enlarge"><img src="viz_gallery/static/wine_nodata.svg" alt="Model only, no data" loading="lazy" style="width:133.33%;left:-16.67%;top:2.96%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/wine_nodata.svg" aria-label="Model only, no data: enlarge"><img src="viz_gallery/static/wine_nodata.svg" alt="Model only, no data" loading="lazy" style="width:133.33%;left:-16.67%;top:7.31%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Model only, no data</h3><span class="vz-num">08</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeClassifier</span></div>
@@ -340,7 +340,7 @@ fig = viz.draw(clf, feature_names=d.feature_names, class_names=[&quot;barolo&quo
                title=&quot;Wine cultivar&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="cancer_truncated" data-group="sktrees" data-slug="cancer_truncated" data-title="Deep tree, truncated view" data-note="max_depth limits what is drawn. Subtrees below the cut become stacked cards that count their hidden nodes. The interactive page holds the whole tree." data-svg="viz_gallery/static/cancer_truncated.svg" data-model="DecisionTreeClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/cancer_truncated.svg" aria-label="Deep tree, truncated view: enlarge"><img src="viz_gallery/static/cancer_truncated.svg" alt="Deep tree, truncated view" loading="lazy" style="width:99.34%;left:0.33%;top:-0.00%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/cancer_truncated.svg" aria-label="Deep tree, truncated view: enlarge"><img src="viz_gallery/static/cancer_truncated.svg" alt="Deep tree, truncated view" loading="lazy" style="width:100.00%;left:-0.00%;top:5.01%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Deep tree, truncated view</h3><span class="vz-num">09</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeClassifier</span><span class="vz-live">live</span></div>
@@ -351,7 +351,7 @@ clf = DecisionTreeClassifier(random_state=0).fit(X, y)   # unrestricted depth
 fig = viz.draw(clf, X, y, class_names=d.target_names, max_depth=2, title=&quot;Breast cancer diagnosis&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="digits_compact" data-group="sktrees" data-slug="digits_compact" data-title="Many classes, compact style" data-note="Trees with more than 24 leaves switch to compact cards automatically. Ten classes use the eight validated hues plus four extras, so the legend carries identity." data-svg="viz_gallery/static/digits_compact.svg" data-model="DecisionTreeClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/digits_compact.svg" aria-label="Many classes, compact style: enlarge"><img src="viz_gallery/static/digits_compact.svg" alt="Many classes, compact style" loading="lazy" style="width:226.00%;left:-63.00%;top:10.51%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/digits_compact.svg" aria-label="Many classes, compact style: enlarge"><img src="viz_gallery/static/digits_compact.svg" alt="Many classes, compact style" loading="lazy" style="width:226.00%;left:-63.00%;top:13.79%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Many classes, compact style</h3><span class="vz-num">10</span></div>
                           <div class="vz-meta"><span class="vz-model">DecisionTreeClassifier</span><span class="vz-live">live</span></div>
@@ -361,7 +361,7 @@ clf = DecisionTreeClassifier(max_depth=5, random_state=0).fit(d.data, d.target)
 fig = viz.draw(clf, feature_names=[f&quot;px{i}&quot; for i in range(64)], title=&quot;Handwritten digits&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="forest_member" data-group="sktrees" data-slug="forest_member" data-title="One tree from a random forest" data-note="Any single tree of an ensemble works: forest.estimators_[i] or gbm.estimators_[i, 0]." data-svg="viz_gallery/static/forest_member.svg" data-model="RandomForestClassifier">
-                        <a class="vz-thumb" href="viz_gallery/static/forest_member.svg" aria-label="One tree from a random forest: enlarge"><img src="viz_gallery/static/forest_member.svg" alt="One tree from a random forest" loading="lazy" style="width:133.33%;left:-16.67%;top:0.00%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/forest_member.svg" aria-label="One tree from a random forest: enlarge"><img src="viz_gallery/static/forest_member.svg" alt="One tree from a random forest" loading="lazy" style="width:133.33%;left:-16.67%;top:2.93%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>One tree from a random forest</h3><span class="vz-num">11</span></div>
                           <div class="vz-meta"><span class="vz-model">RandomForestClassifier</span></div>
@@ -373,7 +373,7 @@ fig = viz.draw(rf.estimators_[0], X, y, feature_names=list(X.columns),
                class_names=d.target_names, max_depth=3, title=&quot;Random forest, tree 0&quot;)</template>
                       </figure>
                       <figure class="vz-card" id="gbm_stage" data-group="sktrees" data-slug="gbm_stage" data-title="A gradient boosting stage" data-note="Boosting trees fit residuals, so pass the residual target to see what the stage learned." data-svg="viz_gallery/static/gbm_stage.svg" data-model="GradientBoostingRegressor">
-                        <a class="vz-thumb" href="viz_gallery/static/gbm_stage.svg" aria-label="A gradient boosting stage: enlarge"><img src="viz_gallery/static/gbm_stage.svg" alt="A gradient boosting stage" loading="lazy" style="width:73.35%;left:13.32%;top:-0.00%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/gbm_stage.svg" aria-label="A gradient boosting stage: enlarge"><img src="viz_gallery/static/gbm_stage.svg" alt="A gradient boosting stage" loading="lazy" style="width:78.75%;left:10.62%;top:-0.00%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>A gradient boosting stage</h3><span class="vz-num">12</span></div>
                           <div class="vz-meta"><span class="vz-model">GradientBoostingRegressor</span></div>
@@ -422,7 +422,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_irf" data-group="trees" data-slug="im_irf" data-title="Iterative random forest (IRF)" data-note="IRF reweights features over several forests; its final forest averages its trees like any forest." data-svg="viz_gallery/static/im_irf.svg" data-model="IRFClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_irf.svg" aria-label="Iterative random forest (IRF): enlarge"><img src="viz_gallery/static/im_irf.svg" alt="Iterative random forest (IRF)" loading="lazy" style="width:257.90%;left:0.00%;top:9.71%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_irf.svg" aria-label="Iterative random forest (IRF): enlarge"><img src="viz_gallery/static/im_irf.svg" alt="Iterative random forest (IRF)" loading="lazy" style="width:257.90%;left:0.00%;top:13.73%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Iterative random forest (IRF)</h3><span class="vz-num">16</span></div>
                           <div class="vz-meta"><span class="vz-model">IRFClassifier</span><span class="vz-live">live</span></div>
@@ -472,7 +472,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_skope" data-group="sets" data-slug="im_skope" data-title="Skope rules" data-note="Skope scores a sample by the precision-weighted share of its rules that hold." data-svg="viz_gallery/static/im_skope.svg" data-model="SkopeRulesClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_skope.svg" aria-label="Skope rules: enlarge"><img src="viz_gallery/static/im_skope.svg" alt="Skope rules" loading="lazy" style="width:133.33%;left:0.00%;top:0.40%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_skope.svg" aria-label="Skope rules: enlarge"><img src="viz_gallery/static/im_skope.svg" alt="Skope rules" loading="lazy" style="width:133.33%;left:0.00%;top:6.62%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Skope rules</h3><span class="vz-num">20</span></div>
                           <div class="vz-meta"><span class="vz-model">SkopeRulesClassifier</span><span class="vz-live">live</span></div>
@@ -484,7 +484,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_boosted" data-group="sets" data-slug="im_boosted" data-title="Boosted rules" data-note="Boosted stumps become one rule each plus a share of the baseline, so the table adds up to the model&#x27;s decision function exactly." data-svg="viz_gallery/static/im_boosted.svg" data-model="BoostedRulesClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_boosted.svg" aria-label="Boosted rules: enlarge"><img src="viz_gallery/static/im_boosted.svg" alt="Boosted rules" loading="lazy" style="width:133.33%;left:0.00%;top:3.42%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_boosted.svg" aria-label="Boosted rules: enlarge"><img src="viz_gallery/static/im_boosted.svg" alt="Boosted rules" loading="lazy" style="width:133.33%;left:0.00%;top:9.29%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Boosted rules</h3><span class="vz-num">21</span></div>
                           <div class="vz-meta"><span class="vz-model">BoostedRulesClassifier</span><span class="vz-live">live</span></div>
@@ -496,7 +496,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_riskscore" data-group="scores" data-slug="im_riskscore" data-title="FastRiskScore" data-note="A points table next to the risk each total score maps to, with the training samples at each score underneath. In interactive mode, click an item to switch it on or off and watch the score move along the curve." data-svg="viz_gallery/static/im_riskscore.svg" data-model="FastRiskScoreClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_riskscore.svg" aria-label="FastRiskScore: enlarge"><img src="viz_gallery/static/im_riskscore.svg" alt="FastRiskScore" loading="lazy" style="width:129.17%;left:0.00%;top:4.63%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_riskscore.svg" aria-label="FastRiskScore: enlarge"><img src="viz_gallery/static/im_riskscore.svg" alt="FastRiskScore" loading="lazy" style="width:129.17%;left:0.00%;top:7.78%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>FastRiskScore</h3><span class="vz-num">22</span></div>
                           <div class="vz-meta"><span class="vz-model">FastRiskScoreClassifier</span><span class="vz-live">live</span></div>
@@ -508,7 +508,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_riskscore_loans" data-group="scores" data-slug="im_riskscore_loans" data-title="FastRiskScore with categories and missing values" data-note="FastRiskScore turns string columns into level indicators and gives missing values their own item. Predict offers a dropdown per categorical feature and a missing switch." data-svg="viz_gallery/static/im_riskscore_loans.svg" data-model="FastRiskScoreClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_riskscore_loans.svg" aria-label="FastRiskScore with categories and missing values: enlarge"><img src="viz_gallery/static/im_riskscore_loans.svg" alt="FastRiskScore with categories and missing values" loading="lazy" style="width:129.17%;left:0.00%;top:4.63%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_riskscore_loans.svg" aria-label="FastRiskScore with categories and missing values: enlarge"><img src="viz_gallery/static/im_riskscore_loans.svg" alt="FastRiskScore with categories and missing values" loading="lazy" style="width:129.17%;left:0.00%;top:7.78%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>FastRiskScore with categories and missing values</h3><span class="vz-num">23</span></div>
                           <div class="vz-meta"><span class="vz-model">FastRiskScoreClassifier</span><span class="vz-live">live</span></div>
@@ -520,7 +520,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_slim" data-group="scores" data-slug="im_slim" data-title="SLIM" data-note="Sparse integer points on 0/1 features, drawn as a scorecard. The intercept moves into the risk formula so the score is a plain sum of points." data-svg="viz_gallery/static/im_slim.svg" data-model="SLIMClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_slim.svg" aria-label="SLIM: enlarge"><img src="viz_gallery/static/im_slim.svg" alt="SLIM" loading="lazy" style="width:129.17%;left:0.00%;top:2.04%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_slim.svg" aria-label="SLIM: enlarge"><img src="viz_gallery/static/im_slim.svg" alt="SLIM" loading="lazy" style="width:129.17%;left:0.00%;top:5.19%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>SLIM</h3><span class="vz-num">24</span></div>
                           <div class="vz-meta"><span class="vz-model">SLIMClassifier</span><span class="vz-live">live</span></div>
@@ -558,7 +558,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="im_linear" data-group="additive" data-slug="im_linear" data-title="Linear model with marginal shrinkage" data-note="Linear terms are drawn by their typical effect (coefficient times the feature&#x27;s spread); labels give the raw coefficient per unit." data-svg="viz_gallery/static/im_linear.svg" data-model="MarginalShrinkageLinearModelRegressor" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/im_linear.svg" aria-label="Linear model with marginal shrinkage: enlarge"><img src="viz_gallery/static/im_linear.svg" alt="Linear model with marginal shrinkage" loading="lazy" style="width:93.75%;left:3.13%;top:-0.00%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/im_linear.svg" aria-label="Linear model with marginal shrinkage: enlarge"><img src="viz_gallery/static/im_linear.svg" alt="Linear model with marginal shrinkage" loading="lazy" style="width:100.00%;left:-0.00%;top:3.33%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Linear model with marginal shrinkage</h3><span class="vz-num">27</span></div>
                           <div class="vz-meta"><span class="vz-model">MarginalShrinkageLinearModelRegressor</span><span class="vz-live">live</span></div>
@@ -570,7 +570,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="sk_forest" data-group="skmore" data-slug="sk_forest" data-title="Random forest" data-note="Forests draw their first few trees in a grid; predictions average every tree. In interactive mode Predict lists each tree&#x27;s vote." data-svg="viz_gallery/static/sk_forest.svg" data-model="RandomForestClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/sk_forest.svg" aria-label="Random forest: enlarge"><img src="viz_gallery/static/sk_forest.svg" alt="Random forest" loading="lazy" style="width:257.65%;left:0.00%;top:6.43%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/sk_forest.svg" aria-label="Random forest: enlarge"><img src="viz_gallery/static/sk_forest.svg" alt="Random forest" loading="lazy" style="width:257.65%;left:0.00%;top:10.78%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Random forest</h3><span class="vz-num">28</span></div>
                           <div class="vz-meta"><span class="vz-model">RandomForestClassifier</span><span class="vz-live">live</span></div>
@@ -583,7 +583,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="sk_gbm" data-group="skmore" data-slug="sk_gbm" data-title="Gradient boosting" data-note="Boosted trees add up: each leaf shows its contribution and the waterfall in Predict sums them." data-svg="viz_gallery/static/sk_gbm.svg" data-model="GradientBoostingRegressor" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/sk_gbm.svg" aria-label="Gradient boosting: enlarge"><img src="viz_gallery/static/sk_gbm.svg" alt="Gradient boosting" loading="lazy" style="width:175.00%;left:0.00%;top:10.35%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/sk_gbm.svg" aria-label="Gradient boosting: enlarge"><img src="viz_gallery/static/sk_gbm.svg" alt="Gradient boosting" loading="lazy" style="width:175.00%;left:0.00%;top:14.74%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Gradient boosting</h3><span class="vz-num">29</span></div>
                           <div class="vz-meta"><span class="vz-model">GradientBoostingRegressor</span><span class="vz-live">live</span></div>
@@ -595,7 +595,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="sk_hgb" data-group="skmore" data-slug="sk_hgb" data-title="Histogram gradient boosting" data-note="HistGradientBoosting trees, including where each split sends missing values." data-svg="viz_gallery/static/sk_hgb.svg" data-model="HistGradientBoostingClassifier" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/sk_hgb.svg" aria-label="Histogram gradient boosting: enlarge"><img src="viz_gallery/static/sk_hgb.svg" alt="Histogram gradient boosting" loading="lazy" style="width:262.35%;left:0.00%;top:1.97%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/sk_hgb.svg" aria-label="Histogram gradient boosting: enlarge"><img src="viz_gallery/static/sk_hgb.svg" alt="Histogram gradient boosting" loading="lazy" style="width:262.35%;left:0.00%;top:6.75%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Histogram gradient boosting</h3><span class="vz-num">30</span></div>
                           <div class="vz-meta"><span class="vz-model">HistGradientBoostingClassifier</span><span class="vz-live">live</span></div>
@@ -623,7 +623,7 @@ fig = viz.draw(model, X, y, **kw)
 page = viz.interactive(model, X, y, **kw)</template>
                       </figure>
                       <figure class="vz-card" id="sk_isotonic" data-group="skmore" data-slug="sk_isotonic" data-title="Isotonic regression" data-note="A monotone fit of one feature, drawn as a shape function over the data&#x27;s distribution." data-svg="viz_gallery/static/sk_isotonic.svg" data-model="IsotonicRegression" data-live="1">
-                        <a class="vz-thumb" href="viz_gallery/static/sk_isotonic.svg" aria-label="Isotonic regression: enlarge"><img src="viz_gallery/static/sk_isotonic.svg" alt="Isotonic regression" loading="lazy" style="width:65.40%;left:17.30%;top:-0.00%"></a>
+                        <a class="vz-thumb" href="viz_gallery/static/sk_isotonic.svg" aria-label="Isotonic regression: enlarge"><img src="viz_gallery/static/sk_isotonic.svg" alt="Isotonic regression" loading="lazy" style="width:72.22%;left:13.89%;top:-0.00%"></a>
                         <div class="vz-body">
                           <div class="vz-top"><h3>Isotonic regression</h3><span class="vz-num">32</span></div>
                           <div class="vz-meta"><span class="vz-model">IsotonicRegression</span><span class="vz-live">live</span></div>
