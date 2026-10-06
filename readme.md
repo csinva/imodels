@@ -25,7 +25,7 @@
 Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
-from imodels import get_clean_dataset, HSTreeClassifierCV, viz # import any imodels model here
+from imodels import get_clean_dataset, viz, HSTreeClassifierCV # import any imodels model here
 from sklearn.model_selection import train_test_split
 
 # prepare data (a sample clinical dataset)
@@ -39,24 +39,10 @@ model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 viz.draw(model, X_train, y_train, feature_names=feature_names, class_names=["no CSI", "CSI"],
-         title="Cervical spine injury").save("model.svg")  # draw the model (or print(model) for text)
+         title="Cervical spine injury").save("model.svg")  # draw the model (or print(model) for text, viz.interactive(model) for interaction)
 ```
 
 <p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="55%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
-
-### Visualizing models
-
-`imodels.viz` draws a fitted model as a static figure (SVG, PNG, PDF) or as an interactive page where you can fold the model, run a sample through it and see what would change its prediction. It works for the models here (trees, rule lists, rule sets, scoring systems, additive models) and for scikit-learn trees, forests, boosting and linear models. See [the gallery post](https://csinva.io/imodels/viz.html).
-
-```python
-from imodels import viz
-viz.draw(model, X, y).save("model.svg")          # static figure
-viz.interactive(model, X, y).save("model.html")  # interactive page (also renders inline in Jupyter)
-```
-
-Every tree-based model (CART variants, HSTree, TAO, C4.5, FastSmallTree, FIGS, IRF) can also be exported to an equivalent fitted scikit-learn estimator with `imodels.to_sklearn(model)`, with identical predictions. `imodels.viz` draws trees through this export, and it also lets [dtreeviz](https://github.com/parrt/dtreeviz), `sklearn.tree.plot_tree` or `export_text` draw any of these models: `dtreeviz.model(imodels.to_sklearn(model), X, y)`.
-
-<p align="center"><img src="docs/viz_gallery/static/im_figs.svg" width="85%" alt="A FIGS model drawn by imodels.viz"></p>
 
 ### Installation
 
