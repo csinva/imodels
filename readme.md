@@ -39,10 +39,10 @@ model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 viz.draw(model, X_train, y_train, feature_names=feature_names, class_names=["no CSI", "CSI"],
-         title="Cervical spine injury").save("model.svg")  # draw the model (or print(model) for text, viz.interactive(model) for interaction)
+         title="Cervical spine injury", orientation="LR").save("model.svg")  # draw the model (or print(model) for text, viz.interactive(model) for interaction)
 ```
 
-<p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="55%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
+<p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="85%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
 
 ### Installation
 
