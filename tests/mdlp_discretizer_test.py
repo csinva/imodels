@@ -19,7 +19,7 @@ FEATURES = ['a', 'b', 'c']
 @pytest.fixture
 def data():
     rng = np.random.RandomState(0)
-    X = pd.DataFrame(rng.randn(200, 3), columns=FEATURES)
+    X = pd.DataFrame(rng.randn(100, 3), columns=FEATURES)
     y = (X['a'] > 0).astype(int)
     return X, y
 

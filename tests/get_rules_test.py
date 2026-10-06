@@ -13,7 +13,7 @@ FEATURE_NAMES = ['age', 'bmi', 'bp']
 
 # one model per way of storing rules, so every extraction path is covered
 RULE_MODELS = {
-    'RuleFitClassifier': dict(max_rules=4, random_state=0),
+    'RuleFitClassifier': dict(max_rules=4, cv=False, random_state=0),
     'SkopeRulesClassifier': dict(random_state=0, max_depth_duplication=1),
     'SlipperClassifier': dict(n_estimators=2),
     'GreedyRuleListClassifier': {},

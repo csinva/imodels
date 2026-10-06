@@ -33,5 +33,20 @@ jobs:
     - name: Show resolved dependency versions
       run: uv pip list
 
+    # numba compiles FastRiskScore's and FastSmallTree's search on first use (about 3.5 min);
+    # cache the compiled code between runs. numba checks each source file's mtime, and a
+    # fresh checkout sets it to now, so pin the mtimes first or the cache would never be used.
+    - name: Pin source mtimes for the numba cache
+      run: find imodels -name '*.py' -exec touch -d '2020-01-01 00:00:00' {} +
+
+    - name: Cache numba-compiled code
+      uses: actions/cache@v4
+      with:
+        path: |
+          imodels/**/__pycache__/*.nbi
+          imodels/**/__pycache__/*.nbc
+        key: numba-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('imodels/algebraic/risk_score/solver.py', 'imodels/tree/optimal_tree/solver.py') }}
+        restore-keys: numba-${{ runner.os }}-py${{ matrix.python-version }}-
+
     - name: Run tests
       run: uv run pytest tests

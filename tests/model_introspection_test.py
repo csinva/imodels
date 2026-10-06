@@ -7,6 +7,7 @@ models advertise, which is easy to break when a model is added or changed.
 
 import contextlib
 import io
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -41,12 +42,19 @@ def _data(model_type):
     return X, y
 
 
+_FITTED = {}
+
+
 def _fit(model_type):
+    """The tests here only read the fitted model, so each model is fitted once
+    and every test gets its own deep copy."""
     X, y = _data(model_type)
-    model = model_type(**model_kwargs(model_type.__name__))
-    with contextlib.redirect_stdout(io.StringIO()):  # some models print
-        model.fit(X, y)
-    return model, X, y
+    if model_type not in _FITTED:
+        model = model_type(**model_kwargs(model_type.__name__))
+        with contextlib.redirect_stdout(io.StringIO()):  # some models print
+            model.fit(X, y)
+        _FITTED[model_type] = model
+    return deepcopy(_FITTED[model_type]), X, y
 
 
 def _supported(fn):

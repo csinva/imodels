@@ -31,10 +31,14 @@ MODEL_KWARGS = {
     "BayesianRuleListClassifier": dict(max_iter=2000, n_chains=1, random_state=0),
     "BoostedRulesClassifier": dict(n_estimators=5, random_state=0),
     "BoostedRulesRegressor": dict(n_estimators=5, random_state=0),
-    "RuleFitClassifier": dict(max_rules=5, n_estimators=5, random_state=0),
-    "RuleFitRegressor": dict(max_rules=5, n_estimators=5, random_state=0),
+    # cv=False picks the alpha without 5-fold CV at each of up to 100 alphas
+    # (the CV path is covered by rulefit_test.py)
+    "RuleFitClassifier": dict(max_rules=5, n_estimators=5, cv=False, random_state=0),
+    "RuleFitRegressor": dict(max_rules=5, n_estimators=5, cv=False, random_state=0),
+    "FPLassoClassifier": dict(cv=False, random_state=0),
+    "FPLassoRegressor": dict(cv=False, random_state=0),
     "TreeGAMClassifier": dict(n_boosting_rounds=10, random_state=0),
-    "TreeGAMRegressor": dict(n_boosting_rounds=50, random_state=0),
+    "TreeGAMRegressor": dict(n_boosting_rounds=20, random_state=0),
     "FIGSClassifierCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
     # an exact solver: a continuous column becomes one binary feature per
     # distinct value, so the test config prices leaves high enough to keep the
@@ -48,7 +52,8 @@ MODEL_KWARGS = {
                           n_rit=10, random_state=0),
     "IRFRegressor": dict(n_estimators=10, n_iterations=2, n_bootstraps=2,
                          n_rit=10, random_state=0),
-    "BART": dict(n_samples=5, n_burn=5, n_trees=3, n_chains=1),
+    # n_jobs=1: the default (-1) starts a process pool, which costs ~2.5 s per fit
+    "BART": dict(n_samples=5, n_burn=5, n_trees=3, n_chains=1, n_jobs=1),
     "DecisionTreeCCPClassifier": dict(
         estimator_=DecisionTreeClassifier(random_state=0), desired_complexity=3
     ),
@@ -96,7 +101,7 @@ EXCLUDED_MODELS = {
 }
 
 # FastSmallTreeClassifier needs numba, an optional dependency, to fit; without it the model
-# raises an ImportError naming the fix (checked by fast_small_tree_without_numba_test.py)
+# raises an ImportError naming the fix (checked by without_numba_test.py)
 if importlib.util.find_spec("numba") is None:
     EXCLUDED_MODELS["FastSmallTreeClassifier"] = "numba is not installed"
     EXCLUDED_MODELS["FastRiskScoreClassifier"] = "numba is not installed"

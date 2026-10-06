@@ -8,6 +8,8 @@ Each model gets a small, fast configuration in ``tests/model_configs.py`` so the
 suite stays quick; a coverage test asserts that no registered model is left untested.
 """
 
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -55,12 +57,22 @@ def _make_data(model_type, classification):
     return X, y, pd.DataFrame(X, columns=FEATURE_NAMES)
 
 
-def _fit(model_type, classification):
-    """Fit a small model, returning (fitted_model, X, y, X_df)."""
+# (model_type, classification, on_frame) -> (fitted model, whether fit returned self)
+_FITTED = {}
+
+
+def _fit(model_type, classification, on_frame=False):
+    """A small fitted model, returning (fitted_model, X, y, X_df).
+
+    Most tests here only read a fitted model, so each model is fitted once per
+    input type (array or DataFrame) and every test gets its own deep copy.
+    """
     X, y, X_df = _make_data(model_type, classification)
-    model = _make_model(model_type)
-    fitted = model.fit(X, y)
-    return fitted, X, y, X_df
+    key = (model_type, classification, on_frame)
+    if key not in _FITTED:
+        model = _make_model(model_type)
+        _FITTED[key] = (model, model.fit(X_df if on_frame else X, y) is model)
+    return deepcopy(_FITTED[key][0]), X, y, X_df
 
 
 def _ids(models):
@@ -77,9 +89,10 @@ class TestSharedModelAPI:
     @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
     def test_fit_returns_self(self, model_type, classification):
         """fit() must return the estimator, so that fit().predict() chains work"""
-        X, y, _ = _make_data(model_type, classification)
-        model = _make_model(model_type)
-        assert model.fit(X, y) is model
+        _fit(model_type, classification)
+        assert _FITTED[(model_type, classification, False)][1]
+        _fit(model_type, classification, on_frame=True)
+        assert _FITTED[(model_type, classification, True)][1]
 
     @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
     def test_predict_shape(self, model_type, classification):
@@ -97,15 +110,14 @@ class TestSharedModelAPI:
             assert set(np.asarray(model.classes_).tolist()) == {0, 1}
 
         # feature_names_in_ is set (only) when fitting on named columns
-        assert not hasattr(_make_model(model_type).fit(X, y), "feature_names_in_")
-        model_df = _make_model(model_type).fit(X_df, y)
+        assert not hasattr(model, "feature_names_in_")
+        model_df = _fit(model_type, classification, on_frame=True)[0]
         assert list(model_df.feature_names_in_) == FEATURE_NAMES
 
     @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
     def test_dataframe_input(self, model_type, classification):
         """fitting/predicting on a DataFrame works and predicts the same shape"""
-        X, y, X_df = _make_data(model_type, classification)
-        model = _make_model(model_type).fit(X_df, y)
+        model, X, y, X_df = _fit(model_type, classification, on_frame=True)
         preds = np.asarray(model.predict(X_df))
         assert preds.shape == (N_SAMPLES,)
 
@@ -172,7 +184,7 @@ class TestSharedModelAPI:
         """plain lists are accepted, and give the same result as arrays"""
         X, y, _ = _make_data(model_type, classification)
         from_lists = _make_model(model_type).fit(X.tolist(), y.tolist()).predict(X.tolist())
-        from_arrays = _make_model(model_type).fit(X, y).predict(X)
+        from_arrays = _fit(model_type, classification)[0].predict(X)
         assert np.asarray(from_lists).shape == np.asarray(from_arrays).shape
 
 class TestClassifierAPI:

@@ -40,7 +40,7 @@ def test_seed_is_actually_used():
     y = X[:, 0]
     coefs = []
     for _ in range(2):
-        m = FPLassoRegressor(random_state=7, max_rules=5)
+        m = FPLassoRegressor(random_state=7, max_rules=5, cv=False)
         m.fit(X, y)
         coefs.append([r.coef for r in m.rules_])
     assert coefs[0] == coefs[1]

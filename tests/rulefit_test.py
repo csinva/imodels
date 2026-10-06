@@ -63,8 +63,9 @@ def test_sample_fract_is_used():
     y = X[:, 0] + 0.1 * np.random.RandomState(1).randn(200)
 
     def fit_rules(sample_fract):
+        # cv=False: the rules come from the trees, so the alpha search needs no CV here
         m = RuleFitRegressor(sample_fract=sample_fract, random_state=0,
-                             exp_rand_tree_size=False, n_estimators=10)
+                             exp_rand_tree_size=False, n_estimators=10, cv=False)
         m.fit(X, y)
         return [str(rule) for rule in m.rules_]
 
@@ -84,8 +85,9 @@ def test_set_params_lin_trim_quantile():
     X = np.random.RandomState(0).randn(50, 3)
     y = (X[:, 0] > 0).astype(int)
 
-    via_init = RuleFitRegressor(lin_trim_quantile=0.04, random_state=0)
-    via_set_params = RuleFitRegressor(random_state=0).set_params(
+    # a small max_rules ends the cross-validated alpha search early
+    via_init = RuleFitRegressor(lin_trim_quantile=0.04, random_state=0, max_rules=3)
+    via_set_params = RuleFitRegressor(random_state=0, max_rules=3).set_params(
         lin_trim_quantile=0.04)
 
     via_init.fit(X, y)
@@ -117,7 +119,7 @@ def test_tree_generator_is_not_modified():
     params_before = dict(generator.get_params())
     n_estimators_before = len(generator.estimators_)
 
-    model = RuleFitClassifier(tree_generator=generator, random_state=0)
+    model = RuleFitClassifier(tree_generator=generator, random_state=0, cv=False)
     model.fit(X, y)  # used to raise ValueError
     assert len(model.rules_) > 0
 
@@ -127,5 +129,5 @@ def test_tree_generator_is_not_modified():
 
     # an unfitted generator still works
     unfitted = GradientBoostingClassifier(n_estimators=20, random_state=0)
-    RuleFitClassifier(tree_generator=unfitted, random_state=0).fit(X, y)
+    RuleFitClassifier(tree_generator=unfitted, random_state=0, cv=False).fit(X, y)
     assert not hasattr(unfitted, 'estimators_')

@@ -1,30 +1,33 @@
-import os
 import random
 import unittest
-from os.path import join as oj
-from random import sample
 
 import numpy as np
-from pandas.io.parsers import read_csv
+import pandas as pd
 
-from imodels import *
-
-test_dir = os.path.dirname(os.path.abspath(__file__))
+from imodels import BayesianRuleSetClassifier
 
 
 class TestBRSClassifier(unittest.TestCase):
-    def test_brs_tictactoe(self):
-        '''Test classifiers are properly sklearn-compatible
+    def test_brs_recovers_a_planted_rule_set(self):
+        '''BRS fits DataFrame and numpy input and recovers a planted rule set
+
+        The rule generation fits min(n_columns ** length, 4000) trees for each
+        rule length up to maxlen, so five binary features (ten columns with
+        their negations) keep the fit to about a second, where the 27-feature
+        tic-tac-toe data this test used before took over ten.
         '''
+        rng = np.random.RandomState(0)
+        X = pd.DataFrame((rng.rand(400, 5) > 0.5).astype(int),
+                         columns=[f'x{i}' for i in range(5)])
+        Y_clean = ((X.x0 & X.x1) | X.x2).to_numpy().astype(float)  # (x0 and x1) or x2
+        Y = Y_clean.copy()
+        flip = rng.rand(400) < 0.05
+        Y[flip] = 1 - Y[flip]
+        train, test = slice(0, 200), slice(200, 400)
+        y_test = Y[test]
+
         np.random.seed(13)
         random.seed(13)
-        df = read_csv(oj(test_dir, 'test_data', 'tictactoe_X.txt'), header=0, sep=" ")
-        Y = np.loadtxt(open(oj(test_dir, 'test_data', 'tictactoe_Y.txt'), "rb"), delimiter=" ")
-
-        lenY = len(Y)
-        idxs_train = sample(range(lenY), int(0.50 * lenY))
-        idxs_test = [i for i in range(lenY) if i not in idxs_train]
-        y_test = Y[idxs_test]
         model = BayesianRuleSetClassifier(n_rules=100,
                                           supp=5,
                                           maxlen=3,
@@ -36,19 +39,16 @@ class TestBRSClassifier(unittest.TestCase):
                                           random_state=13)
 
         # fit and check accuracy
-        model.fit(df.iloc[idxs_train], Y[idxs_train])
-        y_pred = model.predict(df.iloc[idxs_test])
+        model.fit(X[train], Y[train])
+        y_pred = model.predict(X[test])
         acc1 = np.mean(y_pred == y_test)
-        assert acc1 > 0.75
+        assert acc1 > 0.85
 
-        # try fitting np version
+        # try fitting np version, on noise-free labels so that the search also
+        # reaches a rule set with no training errors and takes its 'clean' move
         np.random.seed(13)
         random.seed(13)
-        model.fit(df.iloc[idxs_train].values, Y[idxs_train])
-        y_pred = model.predict(df.iloc[idxs_test].values)
-        y_test = Y[idxs_test]
+        model.fit(X[train].values, Y_clean[train])
+        y_pred = model.predict(X[test].values)
         acc2 = np.mean(y_pred == y_test)
-        assert acc2 > 0.75
-
-        # assert np.abs(acc1 - acc2) < 0.05 # todo: fix seeding
-
+        assert acc2 > 0.85
