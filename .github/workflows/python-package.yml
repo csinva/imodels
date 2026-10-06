@@ -48,5 +48,6 @@ jobs:
         key: numba-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('imodels/algebraic/risk_score/solver.py', 'imodels/tree/optimal_tree/solver.py') }}
         restore-keys: numba-${{ runner.os }}-py${{ matrix.python-version }}-
 
+    # pytest-xdist: one worker per CPU
     - name: Run tests
-      run: uv run pytest tests
+      run: uv run pytest -n auto tests

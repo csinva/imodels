@@ -52,3 +52,23 @@ class TestBRSClassifier(unittest.TestCase):
         y_pred = model.predict(X[test].values)
         acc2 = np.mean(y_pred == y_test)
         assert acc2 > 0.85
+
+
+def test_extract_rules_from_a_tree_that_never_split():
+    """A forest tree with no split is a single leaf: it gives no rule instead of crashing."""
+    from sklearn.tree import DecisionTreeClassifier
+    from imodels.rule_set.brs import _extract_rules
+    stump = DecisionTreeClassifier().fit(np.zeros((6, 2)), [0, 1, 0, 1, 0, 1])
+    assert stump.tree_.node_count == 1
+    assert _extract_rules(stump, ['a', 'b']) == []
+    split = DecisionTreeClassifier(max_depth=1).fit(np.array([[0, 0], [1, 0], [0, 1], [1, 1]]), [0, 1, 0, 1])
+    assert _extract_rules(split, ['a', 'b']) == [['a_neg'], ['a']]
+
+
+def test_brs_rejects_a_single_class_target():
+    """Regression: a one-class y (e.g. the first 479 rows of the class-sorted tic-tac-toe data)
+    crashed deep inside rule mining; it now raises a clear error."""
+    import pytest
+    X = np.random.RandomState(0).randint(0, 2, (40, 5))
+    with pytest.raises(ValueError, match="at least 2 classes"):
+        BayesianRuleSetClassifier().fit(X, np.ones(40))
