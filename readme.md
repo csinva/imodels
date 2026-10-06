@@ -140,16 +140,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
 
-|                           Rule set                           |                        Rule list                        |                        Rule tree                        |                       Algebraic models                       |
-| :----------------------------------------------------------: | :-----------------------------------------------------: | :-----------------------------------------------------: | :----------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_list.jpg"> | <img src="https://csinva.io/imodels/img/rule_tree.jpg"> | <img src="https://csinva.io/imodels/img/algebraic_models.jpg"> |
-
-Different models and algorithms vary not only in their final form but also in different choices made during modeling, such as how they generate, select, and postprocess rules:
-
-|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing|
-| :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_candidates.jpg"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
-
+<p align="center"><img src="https://csinva.io/imodels/img/model_categories.png" width="100%" alt="The four forms of an interpretable model: rule set, rule list, rule tree and algebraic model, each with the regions it carves out of two features"></p>
 
 <details>
 <summary>Ex. RuleFit vs. SkopeRules</summary>

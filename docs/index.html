@@ -260,41 +260,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </details>
 <h2 id="model-categories">Model categories</h2>
 <p>The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Rule set</th>
-<th style="text-align: center;">Rule list</th>
-<th style="text-align: center;">Rule tree</th>
-<th style="text-align: center;">Algebraic models</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_list.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_tree.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/algebraic_models.jpg"></td>
-</tr>
-</tbody>
-</table>
-<p>Different models and algorithms vary not only in their final form but also in different choices made during modeling, such as how they generate, select, and postprocess rules:</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Rule candidate generation</th>
-<th style="text-align: center;">Rule selection</th>
-<th style="text-align: center;">Rule postprocessing</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_candidates.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_overfit.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_pruned.jpg"></td>
-</tr>
-</tbody>
-</table>
+<p align="center"><img src="https://csinva.io/imodels/img/model_categories.png" width="100%" alt="The four forms of an interpretable model: rule set, rule list, rule tree and algebraic model, each with the regions it carves out of two features"></p>
 <details>
 <summary>Ex. RuleFit vs. SkopeRules</summary>
 RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
