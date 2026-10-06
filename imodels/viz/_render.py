@@ -297,7 +297,10 @@ class Artist:
     def _simple(self, node, truncated=False):
         """A plain box filled by class proportions (or the predicted value) with a small label."""
         P, info = self.P, self.info
-        if node.is_leaf:
+        contrib = getattr(node, "value", None) if info.combine == "sum" else None
+        if node.is_leaf and contrib is not None:  # trees that add up: a leaf is what it adds, not a class
+            label = ("+" if contrib > 0 else "") + fmt(contrib, self.sig)
+        elif node.is_leaf:
             k = info.prediction(node)
             label = info.class_names[k] if info.is_clf else fmt(node.counts[0], max(self.sig, 4))
         else:
