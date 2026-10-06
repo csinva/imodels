@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iris species</title>
+<style>
+:root{--dti-page:#f9f9f7;--dti-surface:#fcfcfb;--dti-card:#ffffff;--dti-ink:#0b0b0b;--dti-ink2:#52514e;--dti-muted:#898781;--dti-grid:#e1e0d9;--dti-axis:#c3c2b7;--dti-ring:#e4e3dd;--dti-ribbon:#b9b8b0;--dti-hl:#0b0b0b;--dti-shadow:#1a1a1a;--dti-c0:#2a78d6;--dti-c1:#eb6834;--dti-c2:#1baf7a;--dti-c3:#eda100;--dti-c4:#e87ba4;--dti-c5:#008300;--dti-c6:#4a3aa7;--dti-c7:#e34948;--dti-c8:#7a6a58;--dti-c9:#5f7f8f;--dti-c10:#9a9a2a;--dti-c11:#8a8a8a;--dti-s0:#6da7ec;--dti-s1:#5598e7;--dti-s2:#3987e5;--dti-s3:#2a78d6;--dti-s4:#256abf;--dti-s5:#1c5cab;--dti-s6:#184f95;--dti-s7:#104281;--dti-s8:#0d366b; --dti-font:Helvetica, 'Helvetica Neue', Arial, 'Nimbus Sans', 'Liberation Sans', sans-serif; color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}}
+:root[data-theme="dark"]{--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}
+/* Shared page shell for every imodels.viz interactive page (trees, rule lists, rule sets, scorecards, GAMs). */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--dti-surface);color:var(--dti-ink);font:13px/1.4 var(--dti-font);-webkit-font-smoothing:antialiased}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr) auto auto;height:100%}
+header{grid-column:1/4;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px;padding:18px 22px 10px}
+.ttl{flex:1 1 320px;min-width:0}
+h1{font-size:18px;font-weight:650;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--dti-ink2);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;color:var(--dti-ink2);font-size:11.5px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .grad{width:140px;height:8px;border-radius:4px;display:inline-block;margin:0 6px;vertical-align:0}
+.legend .lnote{color:var(--dti-muted)}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tools .sep{width:1px;height:20px;background:var(--dti-ring);margin:0 4px}
+button,.ctl{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:8px;height:30px;padding:0 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--dti-axis)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--dti-ink);outline-offset:1px}
+button.on{background:var(--dti-ink);color:var(--dti-card);border-color:var(--dti-ink)}
+button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ctl{cursor:default;gap:8px;padding-right:8px}
+.ctl input[type=range]{width:84px;accent-color:var(--dti-ink)}
+.ctl b{min-width:14px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ctl select{font:inherit;font-size:12px;color:var(--dti-ink);background:transparent;border:0;cursor:pointer}
+#stage{position:relative;min-width:0;min-height:0}
+.hint-bar{position:absolute;left:14px;bottom:12px;font-size:11px;color:var(--dti-muted);pointer-events:none}
+.hint-bar kbd{font:inherit;border:1px solid var(--dti-ring);border-bottom-width:2px;border-radius:4px;padding:0 4px;margin:0 2px;background:var(--dti-card);color:var(--dti-ink2)}
+
+/* features column */
+#hudcol{min-height:0;display:flex;padding:0 12px 12px 0}
+.hud{width:288px;max-height:100%;align-self:flex-start;display:flex;flex-direction:column;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.08);overflow:hidden;font-size:12px}
+.hud.min{width:auto}
+.hud-h{display:flex;align-items:center;gap:8px;padding:9px 8px 8px 12px;border-bottom:1px solid var(--dti-ring)}
+.hud-h b{font-weight:650;font-size:12.5px}
+.hud-h .tt-m{flex:1;font-size:11px}
+.hud-h button{height:24px;width:24px;padding:0;justify-content:center;border:0;background:transparent}
+.hud-h button svg{transition:transform .2s}
+.hud.min .hud-body,.hud.min .hud-note,.hud.min .hud-f,.hud.min .hud-h .tt-m{display:none}
+.hud.min .hud-h{border-bottom:0}
+.hud.min .hud-h button svg{transform:rotate(90deg)}
+.hud-body{overflow-y:auto;padding:4px 0;min-height:0}
+.frow{padding:7px 12px 7px 10px;cursor:pointer;border-left:2px solid transparent}
+.frow:hover,.frow.hot{background:var(--dti-page)}
+.frow.pin{border-left-color:var(--dti-ink);background:var(--dti-page)}
+.frow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.frow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.frow .im{font-variant-numeric:tabular-nums;color:var(--dti-ink2);font-size:11.5px}
+.frow .ib{height:3px;border-radius:2px;background:var(--dti-grid);margin:4px 0 6px}
+.frow .ib span{display:block;height:100%;border-radius:2px;background:var(--dti-ink)}
+.frow svg{display:block;width:100%;height:36px}
+.frow .xv{display:none}
+.predicting .frow .xv{display:inline}
+.frow .meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--dti-muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.hud-note{padding:8px 12px 2px;border-top:1px solid var(--dti-ring);font-size:10.5px;line-height:1.45;color:var(--dti-ink2)}
+.hud-note b{font-weight:600;color:var(--dti-ink)}
+.hud-note code{font-size:10px}
+.hud-f{padding:4px 12px 8px;font-size:10.5px;color:var(--dti-muted)}
+
+/* tooltip */
+#tip{position:fixed;pointer-events:none;max-width:340px;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;z-index:9}
+#tip.show{opacity:1;transform:none}
+.tt-h{font-size:12.5px;margin-bottom:6px}
+.tt-k{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dti-muted);margin-right:4px}
+.tt-r{margin:0 0 8px;padding:0;list-style:none;color:var(--dti-ink2);font-size:11.5px}
+.tt-r li{padding:1px 0 1px 12px;position:relative}
+.tt-r li:before{content:"";position:absolute;left:2px;top:8px;width:4px;height:4px;border-radius:2px;background:var(--dti-axis)}
+.tt-m{color:var(--dti-muted)}
+.tt-act{margin-top:6px;font-size:11px;color:var(--dti-muted)}
+#tip table,#panel table{border-collapse:collapse;width:100%;font-size:11.5px}
+#tip td,#panel td{padding:2px 0;color:var(--dti-ink2)}
+#tip td:first-child{padding-right:12px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--dti-ink);padding-left:12px}
+td i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+td.bar{width:70px;padding-left:10px}
+td.bar span{display:block;height:5px;border-radius:3px}
+tr.sep td{height:6px}
+
+/* predict panel */
+#panel{width:0;overflow:hidden;border-left:1px solid var(--dti-ring);background:var(--dti-page);transition:width .25s ease}
+#panel.open{width:320px}
+#panel .in{width:320px;height:100%;overflow-y:auto;padding:16px 18px 24px}
+#panel h2{font-size:13px;margin:0 0 2px;font-weight:650}
+#panel h3{font-size:10px;margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--dti-muted)}
+#panel .hint{font-size:11.5px;color:var(--dti-muted);margin-bottom:12px}
+.res{background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.res .big{font-size:20px;font-weight:650;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.res .big i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.res .meta{font-size:11.5px;color:var(--dti-ink2);margin-top:2px}
+.res .truth{font-size:11px;color:var(--dti-muted);margin-top:2px}
+.res .truth b{color:var(--dti-ink2)}
+.probs{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:8px 0 2px;background:var(--dti-grid)}
+.probs span{display:block;height:100%}
+.plabs{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:10.5px;color:var(--dti-ink2);font-variant-numeric:tabular-nums}
+.plabs i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.wf{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;font-size:11.5px;align-items:center}
+.wf .lab{color:var(--dti-ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.wf .bar{grid-column:1/3;height:4px;border-radius:2px;margin-bottom:4px}
+.wf .tot{border-top:1px solid var(--dti-ring);padding-top:4px;color:var(--dti-ink);font-weight:600}
+.path{margin:8px 0 0}
+.wi{display:flex;flex-direction:column;gap:6px}
+.wi button{height:auto;padding:7px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;align-items:center;width:100%}
+.wi .what{font-size:11.5px;color:var(--dti-ink);overflow-wrap:anywhere}
+.wi .what b{font-weight:600}
+.wi .to{font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.wi .to i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.wi .how{grid-column:1/3;font-size:10.5px;color:var(--dti-muted)}
+.wi .none{font-size:11.5px;color:var(--dti-muted)}
+.fld{margin-bottom:10px}
+.fld label{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--dti-ink2);margin-bottom:3px;gap:8px}
+.fld label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld input[type=number]{width:84px;font:inherit;font-size:12px;text-align:right;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.fld input[type=range]{width:100%;accent-color:var(--dti-ink);margin:0}
+.fld select{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;max-width:150px}
+.fld .ctl2{display:flex;align-items:center;gap:8px;overflow:visible}
+.fld .miss{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--dti-muted);margin:0;cursor:pointer}
+.fld .miss input{margin:0;accent-color:var(--dti-ink)}
+.fld.hot label span{color:var(--dti-ink);font-weight:600}
+.fld.changed input[type=number]{border-color:var(--dti-ink)}
+.row{display:flex;gap:6px;margin-bottom:6px}
+.row button{flex:1;justify-content:center}
+@media (max-width:900px){#hudcol{display:none}}
+@media (max-width:700px){#app{grid-template-columns:minmax(0,1fr)}#panel.open{width:100%;position:absolute;inset:auto 0 0 0;height:55%;border-left:0;border-top:1px solid var(--dti-ring);z-index:6}#panel .in{width:100%}.hint-bar{display:none}}
+
+#stage{overflow:hidden;cursor:grab;touch-action:none}
+#stage.drag{cursor:grabbing}
+#canvas{width:100%;height:100%;display:block;font-family:var(--dti-font)}
+.node{cursor:pointer}
+.node .stack,.node .badge{display:none}
+.node.collapsed .stack,.node.collapsed .badge{display:inline}
+.node:hover .dti-frame{stroke:var(--dti-axis)!important}
+.node.feat .dti-frame{stroke:var(--dti-ink)!important;stroke-width:2px!important}
+.rib{fill-opacity:.32;transition:fill-opacity .2s}
+.rib.hl{fill-opacity:.62}
+.predicting .node:not(.onpath){opacity:.42}
+.predicting .rib{fill-opacity:.08}
+.predicting .rib.onpath{fill-opacity:.6}
+.predicting .pill:not(.onpath){opacity:.45}
+.ring{display:none}
+.node.onpath .ring{display:inline}
+.feat-mode .node:not(.feat){opacity:.28}
+.feat-mode .rib{fill-opacity:.1}
+.feat-mode .pill{opacity:.35}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="ttl"><h1>Iris species</h1><div class="sub">DecisionTreeClassifier  ·  depth 4  ·  8 leaves  ·  150 training samples</div><div class="legend" id="legend"></div></div>
+    <div class="tools">
+      
+      <label class="ctl" title="Expand the tree to this depth">Depth <input id="depth" type="range" min="1" step="1" aria-label="Depth"><b id="depthv"></b></label>
+      <button id="b-fit" title="Fit to screen"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>Fit</button>
+      <button id="b-simple" title="Simple boxes instead of charts"><svg viewBox="0 0 16 16"><rect x="2" y="4.5" width="12" height="7" rx="2"/><path d="M7 4.5v7"/></svg>Simple</button>
+      <button id="b-orient" title="Switch orientation"><svg viewBox="0 0 16 16"><path d="M8 2v9M4.5 8 8 11.5 11.5 8M3 14h10"/></svg><span>Vertical</span></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-theme" title="Switch light / dark theme" aria-label="Switch light or dark theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg></button>
+      <button id="b-svg" title="Download the current view as SVG"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13.5h10"/></svg>SVG</button>
+      <button id="b-pred" title="Try a sample: see the prediction, how it is reached and what would change it"><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><path d="M4 5.6V8a2 2 0 0 0 2 2h4a2 2 0 0 1 2 2"/></svg>Predict</button>
+    </div>
+  </header>
+  <div id="stage"><svg id="canvas" xmlns="http://www.w3.org/2000/svg"><g id="vp"><g id="g-rib"></g><g id="g-node"></g><g id="g-lab"></g></g></svg>
+    <div class="hint-bar"><kbd>click</kbd>collapse / expand or load a leaf's row <kbd>drag</kbd>pan <kbd>scroll</kbd>zoom</div></div>
+  <div id="hudcol"><div id="hud" class="hud" aria-label="Features">
+    <div class="hud-h"><b>Features</b><span class="tt-m" id="hud-sub"></span>
+      <button id="hud-x" title="Show or hide the features panel" aria-label="Show or hide the features panel"><svg viewBox="0 0 16 16"><path d="M4 6.5 8 10l4-3.5"/></svg></button></div>
+    <div class="hud-body" id="hud-body"></div>
+    <div class="hud-note" id="hud-note"></div>
+    <div class="hud-f" id="hud-f"></div>
+  </div></div>
+  <aside id="panel" aria-label="Predict"><div class="in">
+    <h2>Try a sample</h2>
+    <div class="hint" id="p-hint"></div>
+    <div class="res" id="res"></div>
+    <div class="row"><button id="b-rand">Random training row</button><button id="b-reset">Reset</button></div>
+    <h3>What would change the prediction</h3>
+    <div class="wi" id="whatif"></div>
+    <h3>Feature values</h3>
+    <div id="fields"></div>
+  </div></aside>
+</div>
+<div id="tip" role="tooltip"></div>
+<script type="application/json" id="dti-data">{"nodes":[{"nl":false,"id":0,"p":-1,"l":1,"r":2,"d":0,"w":200,"h":136.5,"svg":"<title>petal width (cm) \u2264 0.8\n150 samples  \u00b7  gini 0.667<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text><path d=\"M12.8,87V80Q12.8,78 14.8,78H16.6Q18.6,78 18.6,80V87Z\" style=\"fill:var(--dti-c0)\"/><path d=\"M20.1,87V37Q20.1,35 22.1,35H23.9Q25.9,35 25.9,37V87Z\" style=\"fill:var(--dti-c0)\"/><path d=\"M27.4,87V76.4Q27.4,74.4 29.4,74.4H31.2Q33.2,74.4 33.2,76.4V87Z\" style=\"fill:var(--dti-c0)\"/><path d=\"M34.8,87V76.4Q34.8,74.4 36.8,74.4H38.6Q40.6,74.4 40.6,76.4V87Z\" style=\"fill:var(--dti-c0)\"/><path d=\"M42.1,87V87Q42.1,85.2 43.9,85.2H46.1Q47.9,85.2 47.9,87V87Z\" style=\"fill:var(--dti-c0)\"/><path d=\"M49.4,87V87Q49.4,85.2 51.2,85.2H53.5Q55.2,85.2 55.2,87V87Z\" style=\"fill:var(--dti-c0)\"/><path d=\"M78.7,87V76.4Q78.7,74.4 80.7,74.4H82.6Q84.6,74.4 84.6,76.4V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M86.1,87V83.6Q86.1,81.6 88.1,81.6H89.9Q91.9,81.6 91.9,83.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M93.4,87V80Q93.4,78 95.4,78H97.2Q99.2,78 99.2,80V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M100.7,87V65.7Q100.7,63.7 102.7,63.7H104.6Q106.6,63.7 106.6,65.7V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M108.1,87V74.4H113.9V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M108.1,74.4V74.4Q108.1,72.7 109.9,72.7H112.1Q113.9,72.7 113.9,74.4V74.4Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M115.4,87V69.1H121.2V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M115.4,69.1V67.5Q115.4,65.5 117.4,65.5H119.2Q121.2,65.5 121.2,67.5V69.1Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M122.7,87V81.6H128.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M122.7,81.6V81.6Q122.7,79.8 124.5,79.8H126.8Q128.6,79.8 128.6,81.6V81.6Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M130.1,87V85.2H135.9V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M130.1,85.2V85.2Q130.1,83.4 131.9,83.4H134.1Q135.9,83.4 135.9,85.2V85.2Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M137.4,87V85.2H143.2V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M137.4,85.2V67.5Q137.4,65.5 139.4,65.5H141.2Q143.2,65.5 143.2,67.5V85.2Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M144.8,87V80Q144.8,78 146.8,78H148.6Q150.6,78 150.6,80V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M152.1,87V78.2Q152.1,76.2 154.1,76.2H155.9Q157.9,76.2 157.9,78.2V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M159.4,87V78.2Q159.4,76.2 161.4,76.2H163.2Q165.2,76.2 165.2,78.2V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M166.8,87V83.6Q166.8,81.6 168.8,81.6H170.6Q172.6,81.6 172.6,83.6V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M174.1,87V74.7Q174.1,72.7 176.1,72.7H177.9Q179.9,72.7 179.9,74.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M181.4,87V78.2Q181.4,76.2 183.4,76.2H185.2Q187.2,76.2 187.2,78.2V87Z\" style=\"fill:var(--dti-c2)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M63.3,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"63.3\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">0.8<\/text><text x=\"12\" y=\"106\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">0.1<\/text><text x=\"188\" y=\"106\" text-anchor=\"end\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">2.5<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">150 samples  \u00b7  gini 0.667<\/text>","sw":121.5,"sh":34.0,"ssvg":"<title>petal width (cm)\n150 samples  \u00b7  gini 0.667\nsetosa: 50\nversicolor: 50\nvirginica: 50<\/title><clipPath id=\"dti4-cs0\"><rect width=\"121.5\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"121.5\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs0)\"><rect x=\"0\" width=\"39.2\" height=\"34\" style=\"fill:var(--dti-c0)\"/><rect x=\"41.2\" width=\"39.2\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"82.4\" width=\"39.2\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"103.5\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"60.8\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text>","mix":[["var(--dti-c0)",0.33333],["var(--dti-c1)",0.33333],["var(--dti-c2)",0.33333]],"n":150,"wt":150.0,"col":"var(--dti-c0)","lab":"","labw":14.0,"f":3,"t":0.8000000417232512,"c":[[3,"<=",0.8000000417232512]],"fs":[3],"st":"petal width (cm) \u2264 0.8","desc":14,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":0.1,"hi":2.5},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>petal width (cm)<\/b> \u2264 0.8<\/div><ul class='tt-r'><li class='tt-m'>all samples (root)<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>150 <span class='tt-m'>(100.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.667<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c0)'><\/i>setosa<\/td><td class='num'>50<\/td><td class='num'>33%<\/td><td class='bar'><span style='width:33.3%;background:var(--dti-c0)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>50<\/td><td class='num'>33%<\/td><td class='bar'><span style='width:33.3%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>50<\/td><td class='num'>33%<\/td><td class='bar'><span style='width:33.3%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.333333,0.333333,0.333333],"pc":0},{"nl":null,"id":1,"p":0,"l":-1,"r":-1,"d":1,"w":132,"h":71.5,"svg":"<title>setosa\n50 samples  \u00b7  gini 0\nsetosa: 50<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc1\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc1)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c0);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c0)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c0)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">setosa<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 50<\/text><clipPath id=\"dti4-cb1\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb1)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c0)\"/><\/g>","sw":70.4,"sh":34.0,"ssvg":"<title>setosa\n50 samples  \u00b7  gini 0\nsetosa: 50<\/title><clipPath id=\"dti4-cs1\"><rect width=\"70.4\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"70.4\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs1)\"><rect x=\"0\" width=\"70.4\" height=\"34\" style=\"fill:var(--dti-c0)\"/><\/g><rect x=\"9\" y=\"7\" width=\"52.4\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"35.2\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">setosa<\/text>","mix":[["var(--dti-c0)",1.0]],"n":50,"wt":50.0,"col":"var(--dti-c0)","lab":"\u2264 0.8","labw":37.8,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>setosa<\/b><\/div><ul class='tt-r'><li>petal width (cm) \u2264 0.8<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>50 <span class='tt-m'>(33.3%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c0)'><\/i>setosa<\/td><td class='num'>50<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c0)'><\/span><\/td><\/tr><\/table>","pr":[1.0,0.0,0.0],"pc":0},{"nl":true,"id":2,"p":0,"l":3,"r":10,"d":1,"w":200,"h":136.5,"svg":"<title>petal width (cm) \u2264 1.75\n100 samples  \u00b7  gini 0.5<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text><path d=\"M12.8,87V61Q12.8,59 14.8,59H16.6Q18.6,59 18.6,61V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M20.1,87V77Q20.1,75 22.1,75H23.9Q25.9,75 25.9,77V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M34.8,87V69Q34.8,67 36.8,67H38.6Q40.6,67 40.6,69V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M42.1,87V37Q42.1,35 44.1,35H45.9Q47.9,35 47.9,37V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M56.8,87V59H62.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M56.8,59V57Q56.8,55 58.8,55H60.6Q62.6,55 62.6,57V59Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M71.4,87V47H77.2V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M71.4,47V41Q71.4,39 73.4,39H75.2Q77.2,39 77.2,41V47Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M78.7,87V75H84.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M78.7,75V73Q78.7,71 80.7,71H82.6Q84.6,71 84.6,73V75Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M93.4,87V83H99.2V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M93.4,83V81Q93.4,79 95.4,79H97.2Q99.2,79 99.2,81V83Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M100.7,87V83H106.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M100.7,83V41Q100.7,39 102.7,39H104.6Q106.6,39 106.6,41V83Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M115.4,87V69Q115.4,67 117.4,67H119.2Q121.2,67 121.2,69V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M130.1,87V65Q130.1,63 132.1,63H133.9Q135.9,63 135.9,65V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M137.4,87V65Q137.4,63 139.4,63H141.2Q143.2,63 143.2,65V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M152.1,87V77Q152.1,75 154.1,75H155.9Q157.9,75 157.9,77V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M159.4,87V57Q159.4,55 161.4,55H163.2Q165.2,55 165.2,57V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M174.1,87V77Q174.1,75 176.1,75H177.9Q179.9,75 179.9,77V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M181.4,87V77Q181.4,75 183.4,75H185.2Q187.2,75 187.2,77V87Z\" style=\"fill:var(--dti-c2)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M100,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"100\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">1.75<\/text><text x=\"12\" y=\"106\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">1<\/text><text x=\"188\" y=\"106\" text-anchor=\"end\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">2.5<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">100 samples  \u00b7  gini 0.5<\/text>","sw":121.5,"sh":34.0,"ssvg":"<title>petal width (cm)\n100 samples  \u00b7  gini 0.5\nversicolor: 50\nvirginica: 50<\/title><clipPath id=\"dti4-cs2\"><rect width=\"121.5\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"121.5\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs2)\"><rect x=\"0\" width=\"59.8\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"61.8\" width=\"59.8\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"103.5\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"60.8\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text>","mix":[["var(--dti-c1)",0.5],["var(--dti-c2)",0.5]],"n":100,"wt":100.0,"col":"var(--dti-c1)","lab":"> 0.8","labw":37.6,"f":3,"t":1.7500000596046446,"c":[[3,"<=",1.7500000596046446]],"fs":[3],"st":"petal width (cm) \u2264 1.75","desc":12,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":1.0,"hi":2.5},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>petal width (cm)<\/b> \u2264 1.75<\/div><ul class='tt-r'><li>petal width (cm) &gt; 0.8<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>100 <span class='tt-m'>(66.7%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.5<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>50<\/td><td class='num'>50%<\/td><td class='bar'><span style='width:50.0%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>50<\/td><td class='num'>50%<\/td><td class='bar'><span style='width:50.0%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.5,0.5],"pc":1},{"nl":true,"id":3,"p":2,"l":4,"r":7,"d":2,"w":200,"h":136.5,"svg":"<title>petal length (cm) \u2264 4.95\n54 samples  \u00b7  gini 0.168<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">petal length (cm)<\/text><path d=\"M12.8,87V84.7Q12.8,82.7 14.8,82.7H16.6Q18.6,82.7 18.6,84.7V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M27.4,87V80.3Q27.4,78.3 29.4,78.3H31.2Q33.2,78.3 33.2,80.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M42.1,87V80.3Q42.1,78.3 44.1,78.3H45.9Q47.9,78.3 47.9,80.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M49.4,87V84.7Q49.4,82.7 51.4,82.7H53.2Q55.2,82.7 55.2,84.7V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M56.8,87V80.3Q56.8,78.3 58.8,78.3H60.6Q62.6,78.3 62.6,80.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M64.1,87V76Q64.1,74 66.1,74H67.9Q69.9,74 69.9,76V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M71.4,87V67.3Q71.4,65.3 73.4,65.3H75.2Q77.2,65.3 77.2,67.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M78.7,87V76Q78.7,74 80.7,74H82.6Q84.6,74 84.6,76V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M86.1,87V71.7Q86.1,69.7 88.1,69.7H89.9Q91.9,69.7 91.9,71.7V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M93.4,87V80.3Q93.4,78.3 95.4,78.3H97.2Q99.2,78.3 99.2,80.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M100.7,87V39.3H106.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M100.7,39.3V37Q100.7,35 102.7,35H104.6Q106.6,35 106.6,37V39.3Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M108.1,87V76Q108.1,74 110.1,74H111.9Q113.9,74 113.9,76V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M115.4,87V67.3Q115.4,65.3 117.4,65.3H119.2Q121.2,65.3 121.2,67.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M122.7,87V84.7Q122.7,82.7 124.7,82.7H126.6Q128.6,82.7 128.6,84.7V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M130.1,87V80.3Q130.1,78.3 132.1,78.3H133.9Q135.9,78.3 135.9,80.3V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M137.4,87V82.7H143.2V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M137.4,82.7V80.3Q137.4,78.3 139.4,78.3H141.2Q143.2,78.3 143.2,80.3V82.7Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M144.8,87V82.7H150.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M144.8,82.7V80.3Q144.8,78.3 146.8,78.3H148.6Q150.6,78.3 150.6,80.3V82.7Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M174.1,87V84.7Q174.1,82.7 176.1,82.7H177.9Q179.9,82.7 179.9,84.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M181.4,87V84.7Q181.4,82.7 183.4,82.7H185.2Q187.2,82.7 187.2,84.7V87Z\" style=\"fill:var(--dti-c2)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M134.6,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"134.6\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">4.95<\/text><text x=\"12\" y=\"106\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">3<\/text><text x=\"188\" y=\"106\" text-anchor=\"end\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">5.8<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">54 samples  \u00b7  gini 0.168<\/text>","sw":126.0,"sh":34.0,"ssvg":"<title>petal length (cm)\n54 samples  \u00b7  gini 0.168\nversicolor: 49\nvirginica: 5<\/title><clipPath id=\"dti4-cs3\"><rect width=\"126\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"126\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs3)\"><rect x=\"0\" width=\"112.5\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"114.5\" width=\"11.5\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"108\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"63\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">petal length (cm)<\/text>","mix":[["var(--dti-c1)",0.90741],["var(--dti-c2)",0.09259]],"n":54,"wt":54.0,"col":"var(--dti-c1)","lab":"\u2264 1.75","labw":43.7,"f":2,"t":4.950000047683715,"c":[[2,"<=",4.950000047683715]],"fs":[2],"st":"petal length (cm) \u2264 4.95","desc":6,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":3.0,"hi":5.8},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>petal length (cm)<\/b> \u2264 4.95<\/div><ul class='tt-r'><li>0.8 &lt; petal width (cm) \u2264 1.75<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>54 <span class='tt-m'>(36.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.168<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>49<\/td><td class='num'>91%<\/td><td class='bar'><span style='width:90.7%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>5<\/td><td class='num'>9%<\/td><td class='bar'><span style='width:9.3%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.907407,0.092593],"pc":1},{"nl":true,"id":4,"p":3,"l":5,"r":6,"d":3,"w":200,"h":136.5,"svg":"<title>petal width (cm) \u2264 1.65\n48 samples  \u00b7  gini 0.0408<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text><path d=\"M12.8,87V61Q12.8,59 14.8,59H16.6Q18.6,59 18.6,61V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M34.8,87V77Q34.8,75 36.8,75H38.6Q40.6,75 40.6,77V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M56.8,87V69Q56.8,67 58.8,67H60.6Q62.6,67 62.6,69V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M86.1,87V37Q86.1,35 88.1,35H89.9Q91.9,35 91.9,37V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M108.1,87V61Q108.1,59 110.1,59H111.9Q113.9,59 113.9,61V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M137.4,87V49Q137.4,47 139.4,47H141.2Q143.2,47 143.2,49V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M159.4,87V81Q159.4,79 161.4,79H163.2Q165.2,79 165.2,81V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M181.4,87V85Q181.4,83 183.4,83H185.2Q187.2,83 187.2,85V87Z\" style=\"fill:var(--dti-c2)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M175.4,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"175.4\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">1.65<\/text><text x=\"12\" y=\"106\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">1<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">48 samples  \u00b7  gini 0.0408<\/text>","sw":121.5,"sh":34.0,"ssvg":"<title>petal width (cm)\n48 samples  \u00b7  gini 0.0408\nversicolor: 47\nvirginica: 1<\/title><clipPath id=\"dti4-cs4\"><rect width=\"121.5\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"121.5\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs4)\"><rect x=\"0\" width=\"117\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"119\" width=\"2.5\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"103.5\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"60.8\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text>","mix":[["var(--dti-c1)",0.97917],["var(--dti-c2)",0.02083]],"n":48,"wt":48.0,"col":"var(--dti-c1)","lab":"\u2264 4.95","labw":43.7,"f":3,"t":1.6500000357627866,"c":[[3,"<=",1.6500000357627866]],"fs":[3],"st":"petal width (cm) \u2264 1.65","desc":2,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":1.0,"hi":1.7},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>petal width (cm)<\/b> \u2264 1.65<\/div><ul class='tt-r'><li>0.8 &lt; petal width (cm) \u2264 1.75<\/li><li>petal length (cm) \u2264 4.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>48 <span class='tt-m'>(32.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.0408<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>47<\/td><td class='num'>98%<\/td><td class='bar'><span style='width:97.9%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>1<\/td><td class='num'>2%<\/td><td class='bar'><span style='width:2.1%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.979167,0.020833],"pc":1},{"nl":null,"id":5,"p":4,"l":-1,"r":-1,"d":4,"w":132,"h":71.5,"svg":"<title>versicolor\n47 samples  \u00b7  gini 0\nversicolor: 47<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc5\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc5)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c1);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c1)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c1)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">versicolor<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 47<\/text><clipPath id=\"dti4-cb5\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb5)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c1)\"/><\/g>","sw":89.0,"sh":34.0,"ssvg":"<title>versicolor\n47 samples  \u00b7  gini 0\nversicolor: 47<\/title><clipPath id=\"dti4-cs5\"><rect width=\"89\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"89\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs5)\"><rect x=\"0\" width=\"89\" height=\"34\" style=\"fill:var(--dti-c1)\"/><\/g><rect x=\"9\" y=\"7\" width=\"71\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"44.5\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">versicolor<\/text>","mix":[["var(--dti-c1)",1.0]],"n":47,"wt":47.0,"col":"var(--dti-c1)","lab":"\u2264 1.65","labw":43.7,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>versicolor<\/b><\/div><ul class='tt-r'><li>0.8 &lt; petal width (cm) \u2264 1.65<\/li><li>petal length (cm) \u2264 4.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>47 <span class='tt-m'>(31.3%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>47<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c1)'><\/span><\/td><\/tr><\/table>","pr":[0.0,1.0,0.0],"pc":1},{"nl":null,"id":6,"p":4,"l":-1,"r":-1,"d":4,"w":132,"h":71.5,"svg":"<title>virginica\n1 samples  \u00b7  gini 0\nvirginica: 1<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc6\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc6)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c2);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c2)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c2)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 1<\/text><clipPath id=\"dti4-cb6\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb6)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c2)\"/><\/g>","sw":81.3,"sh":34.0,"ssvg":"<title>virginica\n1 samples  \u00b7  gini 0\nvirginica: 1<\/title><clipPath id=\"dti4-cs6\"><rect width=\"81.3\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"81.3\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs6)\"><rect x=\"0\" width=\"81.3\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"63.3\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"40.6\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text>","mix":[["var(--dti-c2)",1.0]],"n":1,"wt":1.0,"col":"var(--dti-c2)","lab":"> 1.65","labw":43.5,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>virginica<\/b><\/div><ul class='tt-r'><li>1.65 &lt; petal width (cm) \u2264 1.75<\/li><li>petal length (cm) \u2264 4.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>1 <span class='tt-m'>(0.7%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>1<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.0,1.0],"pc":2},{"nl":false,"id":7,"p":3,"l":8,"r":9,"d":3,"w":200,"h":136.5,"svg":"<title>petal width (cm) \u2264 1.55\n6 samples  \u00b7  gini 0.444<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text><path d=\"M12.8,87V63Q12.8,61 14.8,61H16.6Q18.6,61 18.6,63V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M71.4,87V37Q71.4,35 73.4,35H75.2Q77.2,35 77.2,37V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M130.1,87V61H135.9V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M130.1,61V37Q130.1,35 132.1,35H133.9Q135.9,35 135.9,37V61Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M181.4,87V63Q181.4,61 183.4,61H185.2Q187.2,61 187.2,63V87Z\" style=\"fill:var(--dti-c1)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M100,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"100\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">1.55<\/text><text x=\"12\" y=\"106\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">1.4<\/text><text x=\"188\" y=\"106\" text-anchor=\"end\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">1.7<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">6 samples  \u00b7  gini 0.444<\/text>","sw":121.5,"sh":34.0,"ssvg":"<title>petal width (cm)\n6 samples  \u00b7  gini 0.444\nversicolor: 2\nvirginica: 4<\/title><clipPath id=\"dti4-cs7\"><rect width=\"121.5\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"121.5\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs7)\"><rect x=\"0\" width=\"39.8\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"41.8\" width=\"79.7\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"103.5\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"60.8\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">petal width (cm)<\/text>","mix":[["var(--dti-c1)",0.33333],["var(--dti-c2)",0.66667]],"n":6,"wt":6.0,"col":"var(--dti-c2)","lab":"> 4.95","labw":43.5,"f":3,"t":1.5500000119209287,"c":[[3,"<=",1.5500000119209287]],"fs":[3],"st":"petal width (cm) \u2264 1.55","desc":2,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":1.4,"hi":1.7},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>petal width (cm)<\/b> \u2264 1.55<\/div><ul class='tt-r'><li>0.8 &lt; petal width (cm) \u2264 1.75<\/li><li>petal length (cm) &gt; 4.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>6 <span class='tt-m'>(4.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.444<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>2<\/td><td class='num'>33%<\/td><td class='bar'><span style='width:33.3%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>4<\/td><td class='num'>67%<\/td><td class='bar'><span style='width:66.7%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.333333,0.666667],"pc":2},{"nl":null,"id":8,"p":7,"l":-1,"r":-1,"d":4,"w":132,"h":71.5,"svg":"<title>virginica\n3 samples  \u00b7  gini 0\nvirginica: 3<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc8\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc8)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c2);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c2)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c2)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 3<\/text><clipPath id=\"dti4-cb8\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb8)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c2)\"/><\/g>","sw":81.3,"sh":34.0,"ssvg":"<title>virginica\n3 samples  \u00b7  gini 0\nvirginica: 3<\/title><clipPath id=\"dti4-cs8\"><rect width=\"81.3\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"81.3\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs8)\"><rect x=\"0\" width=\"81.3\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"63.3\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"40.6\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text>","mix":[["var(--dti-c2)",1.0]],"n":3,"wt":3.0,"col":"var(--dti-c2)","lab":"\u2264 1.55","labw":43.7,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>virginica<\/b><\/div><ul class='tt-r'><li>0.8 &lt; petal width (cm) \u2264 1.55<\/li><li>petal length (cm) &gt; 4.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>3 <span class='tt-m'>(2.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>3<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.0,1.0],"pc":2},{"nl":null,"id":9,"p":7,"l":-1,"r":-1,"d":4,"w":132,"h":71.5,"svg":"<title>versicolor\n3 samples  \u00b7  gini 0.444\nversicolor: 2\nvirginica: 1<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc9\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc9)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c1);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c1)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c1)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">versicolor<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">67% of 3<\/text><clipPath id=\"dti4-cb9\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb9)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"70.7\" height=\"6\" style=\"fill:var(--dti-c1)\"/><rect x=\"84.7\" y=\"53.5\" width=\"35.3\" height=\"6\" style=\"fill:var(--dti-c2)\"/><\/g>","sw":89.0,"sh":34.0,"ssvg":"<title>versicolor\n3 samples  \u00b7  gini 0.444\nversicolor: 2\nvirginica: 1<\/title><clipPath id=\"dti4-cs9\"><rect width=\"89\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"89\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs9)\"><rect x=\"0\" width=\"58\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"60\" width=\"29\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"71\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"44.5\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">versicolor<\/text>","mix":[["var(--dti-c1)",0.66667],["var(--dti-c2)",0.33333]],"n":3,"wt":3.0,"col":"var(--dti-c1)","lab":"> 1.55","labw":43.5,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>versicolor<\/b><\/div><ul class='tt-r'><li>1.55 &lt; petal width (cm) \u2264 1.75<\/li><li>petal length (cm) &gt; 4.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>3 <span class='tt-m'>(2.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.444<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>2<\/td><td class='num'>67%<\/td><td class='bar'><span style='width:66.7%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>1<\/td><td class='num'>33%<\/td><td class='bar'><span style='width:33.3%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.666667,0.333333],"pc":1},{"nl":false,"id":10,"p":2,"l":11,"r":14,"d":2,"w":200,"h":136.5,"svg":"<title>petal length (cm) \u2264 4.85\n46 samples  \u00b7  gini 0.0425<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">petal length (cm)<\/text><path d=\"M12.8,87V78.3H18.6V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M12.8,78.3V63Q12.8,61 14.8,61H16.6Q18.6,61 18.6,63V78.3Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M20.1,87V63Q20.1,61 22.1,61H23.9Q25.9,61 25.9,63V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M27.4,87V71.7Q27.4,69.7 29.4,69.7H31.2Q33.2,69.7 33.2,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M34.8,87V37Q34.8,35 36.8,35H38.6Q40.6,35 40.6,37V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M42.1,87V71.7Q42.1,69.7 44.1,69.7H45.9Q47.9,69.7 47.9,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M49.4,87V71.7Q49.4,69.7 51.4,69.7H53.2Q55.2,69.7 55.2,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M56.8,87V71.7Q56.8,69.7 58.8,69.7H60.6Q62.6,69.7 62.6,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M71.4,87V63Q71.4,61 73.4,61H75.2Q77.2,61 77.2,63V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M78.7,87V45.7Q78.7,43.7 80.7,43.7H82.6Q84.6,43.7 84.6,45.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M86.1,87V63Q86.1,61 88.1,61H89.9Q91.9,61 91.9,63V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M93.4,87V71.7Q93.4,69.7 95.4,69.7H97.2Q99.2,69.7 99.2,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M100.7,87V71.7Q100.7,69.7 102.7,69.7H104.6Q106.6,69.7 106.6,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M108.1,87V71.7Q108.1,69.7 110.1,69.7H111.9Q113.9,69.7 113.9,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M115.4,87V63Q115.4,61 117.4,61H119.2Q121.2,61 121.2,63V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M137.4,87V80.3Q137.4,78.3 139.4,78.3H141.2Q143.2,78.3 143.2,80.3V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M144.8,87V80.3Q144.8,78.3 146.8,78.3H148.6Q150.6,78.3 150.6,80.3V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M159.4,87V80.3Q159.4,78.3 161.4,78.3H163.2Q165.2,78.3 165.2,80.3V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M166.8,87V71.7Q166.8,69.7 168.8,69.7H170.6Q172.6,69.7 172.6,71.7V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M181.4,87V80.3Q181.4,78.3 183.4,78.3H185.2Q187.2,78.3 187.2,80.3V87Z\" style=\"fill:var(--dti-c2)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M16.2,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"22.2\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">4.85<\/text><text x=\"188\" y=\"106\" text-anchor=\"end\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">6.9<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">46 samples  \u00b7  gini 0.0425<\/text>","sw":126.0,"sh":34.0,"ssvg":"<title>petal length (cm)\n46 samples  \u00b7  gini 0.0425\nversicolor: 1\nvirginica: 45<\/title><clipPath id=\"dti4-cs10\"><rect width=\"126\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"126\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs10)\"><rect x=\"0\" width=\"2.7\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"4.7\" width=\"121.3\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"108\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"63\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">petal length (cm)<\/text>","mix":[["var(--dti-c1)",0.02174],["var(--dti-c2)",0.97826]],"n":46,"wt":46.0,"col":"var(--dti-c2)","lab":"> 1.75","labw":43.5,"f":2,"t":4.850000143051147,"c":[[2,"<=",4.850000143051147]],"fs":[2],"st":"petal length (cm) \u2264 4.85","desc":4,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":4.8,"hi":6.9},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>petal length (cm)<\/b> \u2264 4.85<\/div><ul class='tt-r'><li>petal width (cm) &gt; 1.75<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>46 <span class='tt-m'>(30.7%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.0425<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>1<\/td><td class='num'>2%<\/td><td class='bar'><span style='width:2.2%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>45<\/td><td class='num'>98%<\/td><td class='bar'><span style='width:97.8%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.021739,0.978261],"pc":2},{"nl":false,"id":11,"p":10,"l":12,"r":13,"d":3,"w":200,"h":136.5,"svg":"<title>sepal length (cm) \u2264 5.95\n3 samples  \u00b7  gini 0.444<\/title><rect class=\"dti-frame\" width=\"200\" height=\"136.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><text x=\"12\" y=\"22.5\" style=\"font-size:13px;font-weight:600;fill:var(--dti-ink)\">sepal length (cm)<\/text><path d=\"M12.8,87V37Q12.8,35 14.8,35H16.6Q18.6,35 18.6,37V87Z\" style=\"fill:var(--dti-c1)\"/><path d=\"M71.4,87V37Q71.4,35 73.4,35H75.2Q77.2,35 77.2,37V87Z\" style=\"fill:var(--dti-c2)\"/><path d=\"M181.4,87V37Q181.4,35 183.4,35H185.2Q187.2,35 187.2,37V87Z\" style=\"fill:var(--dti-c2)\"/><line x1=\"12\" y1=\"87.5\" x2=\"188\" y2=\"87.5\" style=\"stroke:var(--dti-axis);stroke-width:1\"/><path d=\"M41.3,89l4.5,6h-9z\" style=\"fill:var(--dti-ink)\"/><text x=\"41.3\" y=\"106\" text-anchor=\"middle\" style=\"font-size:10.5px;font-weight:600;fill:var(--dti-ink)\">5.95<\/text><text x=\"188\" y=\"106\" text-anchor=\"end\" style=\"font-size:10px;font-weight:400;fill:var(--dti-muted)\">6.2<\/text><text x=\"12\" y=\"122.5\" style=\"font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums\">3 samples  \u00b7  gini 0.444<\/text>","sw":128.6,"sh":34.0,"ssvg":"<title>sepal length (cm)\n3 samples  \u00b7  gini 0.444\nversicolor: 1\nvirginica: 2<\/title><clipPath id=\"dti4-cs11\"><rect width=\"128.6\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"128.6\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs11)\"><rect x=\"0\" width=\"42.2\" height=\"34\" style=\"fill:var(--dti-c1)\"/><rect x=\"44.2\" width=\"84.4\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"110.6\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"64.3\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">sepal length (cm)<\/text>","mix":[["var(--dti-c1)",0.33333],["var(--dti-c2)",0.66667]],"n":3,"wt":3.0,"col":"var(--dti-c2)","lab":"\u2264 4.85","labw":43.7,"f":0,"t":5.950000047683715,"c":[[0,"<=",5.950000047683715]],"fs":[0],"st":"sepal length (cm) \u2264 5.95","desc":2,"leaf":false,"chart":{"x0":12,"x1":188,"y0":35,"y1":87,"lo":5.9,"hi":6.2},"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Split<\/span> <b>sepal length (cm)<\/b> \u2264 5.95<\/div><ul class='tt-r'><li>petal width (cm) &gt; 1.75<\/li><li>petal length (cm) \u2264 4.85<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>3 <span class='tt-m'>(2.0%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0.444<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>1<\/td><td class='num'>33%<\/td><td class='bar'><span style='width:33.3%;background:var(--dti-c1)'><\/span><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>2<\/td><td class='num'>67%<\/td><td class='bar'><span style='width:66.7%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.333333,0.666667],"pc":2},{"nl":null,"id":12,"p":11,"l":-1,"r":-1,"d":4,"w":132,"h":71.5,"svg":"<title>versicolor\n1 samples  \u00b7  gini 0\nversicolor: 1<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc12\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc12)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c1);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c1)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c1)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">versicolor<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 1<\/text><clipPath id=\"dti4-cb12\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb12)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c1)\"/><\/g>","sw":89.0,"sh":34.0,"ssvg":"<title>versicolor\n1 samples  \u00b7  gini 0\nversicolor: 1<\/title><clipPath id=\"dti4-cs12\"><rect width=\"89\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"89\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs12)\"><rect x=\"0\" width=\"89\" height=\"34\" style=\"fill:var(--dti-c1)\"/><\/g><rect x=\"9\" y=\"7\" width=\"71\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"44.5\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">versicolor<\/text>","mix":[["var(--dti-c1)",1.0]],"n":1,"wt":1.0,"col":"var(--dti-c1)","lab":"\u2264 5.95","labw":43.7,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>versicolor<\/b><\/div><ul class='tt-r'><li>petal width (cm) &gt; 1.75<\/li><li>petal length (cm) \u2264 4.85<\/li><li>sepal length (cm) \u2264 5.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>1 <span class='tt-m'>(0.7%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c1)'><\/i>versicolor<\/td><td class='num'>1<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c1)'><\/span><\/td><\/tr><\/table>","pr":[0.0,1.0,0.0],"pc":1},{"nl":null,"id":13,"p":11,"l":-1,"r":-1,"d":4,"w":132,"h":71.5,"svg":"<title>virginica\n2 samples  \u00b7  gini 0\nvirginica: 2<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc13\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc13)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c2);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c2)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c2)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 2<\/text><clipPath id=\"dti4-cb13\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb13)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c2)\"/><\/g>","sw":81.3,"sh":34.0,"ssvg":"<title>virginica\n2 samples  \u00b7  gini 0\nvirginica: 2<\/title><clipPath id=\"dti4-cs13\"><rect width=\"81.3\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"81.3\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs13)\"><rect x=\"0\" width=\"81.3\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"63.3\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"40.6\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text>","mix":[["var(--dti-c2)",1.0]],"n":2,"wt":2.0,"col":"var(--dti-c2)","lab":"> 5.95","labw":43.5,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>virginica<\/b><\/div><ul class='tt-r'><li>petal width (cm) &gt; 1.75<\/li><li>petal length (cm) \u2264 4.85<\/li><li>sepal length (cm) &gt; 5.95<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>2 <span class='tt-m'>(1.3%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>2<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.0,1.0],"pc":2},{"nl":null,"id":14,"p":10,"l":-1,"r":-1,"d":3,"w":132,"h":71.5,"svg":"<title>virginica\n43 samples  \u00b7  gini 0\nvirginica: 43<\/title><rect class=\"dti-frame\" width=\"132\" height=\"71.5\" rx=\"10\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><clipPath id=\"dti4-cc14\"><rect width=\"132\" height=\"71.5\" rx=\"10\"/><\/clipPath><g clip-path=\"url(#dti4-cc14)\"><rect width=\"132\" height=\"71.5\" style=\"fill:var(--dti-c2);fill-opacity:0.07\"/><rect width=\"132\" height=\"4\" style=\"fill:var(--dti-c2)\"/><\/g><circle cx=\"16.5\" cy=\"22.2\" r=\"4.5\" style=\"fill:var(--dti-c2)\"/><text x=\"27\" y=\"27\" style=\"font-size:13.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text><text x=\"12\" y=\"44.5\" style=\"font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums\">100% of 43<\/text><clipPath id=\"dti4-cb14\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" rx=\"3\"/><\/clipPath><g clip-path=\"url(#dti4-cb14)\"><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-grid)\"/><rect x=\"12\" y=\"53.5\" width=\"108\" height=\"6\" style=\"fill:var(--dti-c2)\"/><\/g>","sw":81.3,"sh":34.0,"ssvg":"<title>virginica\n43 samples  \u00b7  gini 0\nvirginica: 43<\/title><clipPath id=\"dti4-cs14\"><rect width=\"81.3\" height=\"34\" rx=\"9\"/><\/clipPath><rect class=\"dti-frame\" width=\"81.3\" height=\"34\" rx=\"9\" filter=\"url(#dti4-sh)\" style=\"fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1\"/><g clip-path=\"url(#dti4-cs14)\"><rect x=\"0\" width=\"81.3\" height=\"34\" style=\"fill:var(--dti-c2)\"/><\/g><rect x=\"9\" y=\"7\" width=\"63.3\" height=\"20\" rx=\"10\" style=\"fill:var(--dti-card);fill-opacity:0.94\"/><text x=\"40.6\" y=\"21\" text-anchor=\"middle\" style=\"font-size:11.5px;font-weight:600;fill:var(--dti-ink)\">virginica<\/text>","mix":[["var(--dti-c2)",1.0]],"n":43,"wt":43.0,"col":"var(--dti-c2)","lab":"> 4.85","labw":43.5,"f":-1,"t":-2.0,"c":[],"fs":[],"st":"","desc":0,"leaf":true,"chart":null,"v":null,"tip":"<div class='tt-h'><span class=\"tt-k\">Leaf<\/span> predicts <b>virginica<\/b><\/div><ul class='tt-r'><li>petal width (cm) &gt; 1.75<\/li><li>petal length (cm) &gt; 4.85<\/li><\/ul><table><tr><td>samples<\/td><td class='num' colspan=3>43 <span class='tt-m'>(28.7%)<\/span><\/td><\/tr><tr><td>gini<\/td><td class='num' colspan=3>0<\/td><\/tr><tr class=sep><td colspan=4><\/td><\/tr><tr><td><i style='background:var(--dti-c2)'><\/i>virginica<\/td><td class='num'>43<\/td><td class='num'>100%<\/td><td class='bar'><span style='width:100.0%;background:var(--dti-c2)'><\/span><\/td><\/tr><\/table>","pr":[0.0,0.0,1.0],"pc":2}],"feats":[{"i":3,"name":"petal width (cm)","imp":0.9350784208121166,"lo":0.1,"hi":2.5,"v":1.3,"step":0.012,"kind":"continuous","nsplit":4,"thr":[0.8000000417232512,1.5500000119209287,1.6500000357627866,1.7500000596046446],"hlo":0.1,"hhi":2.5,"hist":[[5,0,0],[29,0,0],[7,0,0],[7,0,0],[1,0,0],[1,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,7,0],[0,3,0],[0,5,0],[0,0,0],[0,13,0],[0,7,1],[0,10,2],[0,3,1],[0,1,1],[0,1,11],[0,0,5],[0,0,0],[0,0,6],[0,0,6],[0,0,3],[0,0,8],[0,0,3],[0,0,3]],"ends":["0.1","2.5"]},{"i":2,"name":"petal length (cm)","imp":0.05140806567437001,"lo":1.0,"hi":6.9,"v":4.35,"step":0.03,"kind":"continuous","nsplit":2,"thr":[4.850000143051147,4.950000047683715],"hlo":1.0,"hhi":6.9,"hist":[[4,0,0],[20,0,0],[20,0,0],[4,0,0],[2,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,1,0],[0,2,0],[0,2,0],[0,2,0],[0,4,0],[0,8,0],[0,6,0],[0,11,1],[0,8,0],[0,5,8],[0,1,9],[0,0,4],[0,0,9],[0,0,6],[0,0,4],[0,0,3],[0,0,2],[0,0,1],[0,0,3]],"ends":["1","6.9"]},{"i":0,"name":"sepal length (cm)","imp":0.01351351351351351,"lo":4.3,"hi":7.9,"v":5.8,"step":0.018,"kind":"continuous","nsplit":1,"thr":[5.950000047683715],"hlo":4.3,"hhi":7.9,"hist":[[4,0,0],[1,0,0],[4,0,0],[7,0,0],[4,1,1],[8,2,0],[8,1,0],[4,1,0],[5,1,0],[2,5,0],[2,10,2],[1,3,3],[0,2,1],[0,4,2],[0,6,4],[0,3,6],[0,2,5],[0,3,4],[0,3,5],[0,1,2],[0,1,3],[0,1,1],[0,0,3],[0,0,1],[0,0,1],[0,0,1],[0,0,4],[0,0,1]],"ends":["4.3","7.9"]}],"samples":[{"x":{"3":2.4,"2":5.6,"0":6.3},"y":"virginica","row":136},{"x":{"3":0.3,"2":1.3,"0":4.5},"y":"setosa","row":41},{"x":{"3":1.5,"2":4.5,"0":6.2},"y":"versicolor","row":68},{"x":{"3":2.2,"2":6.7,"0":7.7},"y":"virginica","row":117},{"x":{"3":0.1,"2":1.5,"0":5.2},"y":"setosa","row":32},{"x":{"3":1.5,"2":4.5,"0":6.4},"y":"versicolor","row":51},{"x":{"3":1.5,"2":5.1,"0":6.3},"y":"virginica","row":133},{"x":{"3":0.2,"2":1.2,"0":5.0},"y":"setosa","row":35},{"x":{"3":2.2,"2":5.6,"0":6.4},"y":"virginica","row":132},{"x":{"3":1.4,"2":3.9,"0":5.2},"y":"versicolor","row":59},{"x":{"3":1.8,"2":6.0,"0":7.2},"y":"virginica","row":125},{"x":{"3":0.3,"2":1.7,"0":5.7},"y":"setosa","row":18},{"x":{"3":0.2,"2":1.4,"0":5.0},"y":"setosa","row":49},{"x":{"3":0.2,"2":1.4,"0":5.5},"y":"setosa","row":33},{"x":{"3":0.2,"2":1.4,"0":5.1},"y":"setosa","row":0},{"x":{"3":2.1,"2":5.6,"0":6.4},"y":"virginica","row":128},{"x":{"3":1.0,"2":3.7,"0":5.5},"y":"versicolor","row":81},{"x":{"3":0.6,"2":1.6,"0":5.0},"y":"setosa","row":43},{"x":{"3":1.3,"2":4.0,"0":6.1},"y":"versicolor","row":71},{"x":{"3":1.8,"2":5.1,"0":5.9},"y":"virginica","row":149},{"x":{"3":2.3,"2":6.1,"0":7.7},"y":"virginica","row":135},{"x":{"3":0.2,"2":1.6,"0":5.0},"y":"setosa","row":25},{"x":{"3":2.3,"2":5.7,"0":6.9},"y":"virginica","row":120},{"x":{"3":2.1,"2":6.6,"0":7.6},"y":"virginica","row":105},{"x":{"3":0.2,"2":1.7,"0":5.4},"y":"setosa","row":20},{"x":{"3":0.4,"2":1.5,"0":5.1},"y":"setosa","row":21},{"x":{"3":0.2,"2":1.4,"0":5.2},"y":"setosa","row":28},{"x":{"3":0.2,"2":1.5,"0":5.1},"y":"setosa","row":39},{"x":{"3":1.8,"2":5.5,"0":6.4},"y":"virginica","row":137},{"x":{"3":0.2,"2":1.4,"0":4.4},"y":"setosa","row":8},{"x":{"3":1.6,"2":5.1,"0":6.0},"y":"versicolor","row":83},{"x":{"3":2.1,"2":5.4,"0":6.9},"y":"virginica","row":139},{"x":{"3":1.0,"2":3.3,"0":5.0},"y":"versicolor","row":93},{"x":{"3":0.2,"2":1.5,"0":5.2},"y":"setosa","row":27},{"x":{"3":0.4,"2":1.6,"0":5.0},"y":"setosa","row":26},{"x":{"3":1.3,"2":4.1,"0":5.7},"y":"versicolor","row":99},{"x":{"3":2.5,"2":5.7,"0":6.7},"y":"virginica","row":144},{"x":{"3":1.5,"2":4.9,"0":6.3},"y":"versicolor","row":72},{"x":{"3":0.3,"2":1.4,"0":4.8},"y":"setosa","row":45},{"x":{"3":1.7,"2":5.0,"0":6.7},"y":"versicolor","row":77},{"x":{"3":2.0,"2":5.2,"0":6.5},"y":"virginica","row":147},{"x":{"3":0.2,"2":1.3,"0":4.4},"y":"setosa","row":42},{"x":{"3":0.4,"2":1.7,"0":5.4},"y":"setosa","row":5},{"x":{"3":0.4,"2":1.9,"0":5.1},"y":"setosa","row":44},{"x":{"3":0.2,"2":1.6,"0":5.1},"y":"setosa","row":46},{"x":{"3":0.3,"2":1.3,"0":5.0},"y":"setosa","row":40},{"x":{"3":2.0,"2":5.1,"0":6.5},"y":"virginica","row":110},{"x":{"3":0.2,"2":1.6,"0":4.8},"y":"setosa","row":11},{"x":{"3":2.3,"2":6.9,"0":7.7},"y":"virginica","row":118},{"x":{"3":2.3,"2":5.1,"0":6.9},"y":"virginica","row":141},{"x":{"3":1.0,"2":3.5,"0":5.7},"y":"versicolor","row":79},{"x":{"3":0.2,"2":1.6,"0":4.7},"y":"setosa","row":29},{"x":{"3":2.3,"2":5.4,"0":6.2},"y":"virginica","row":148},{"x":{"3":1.1,"2":3.8,"0":5.5},"y":"versicolor","row":80},{"x":{"3":0.2,"2":1.5,"0":5.3},"y":"setosa","row":48},{"x":{"3":0.2,"2":1.9,"0":4.8},"y":"setosa","row":24},{"x":{"3":1.4,"2":4.6,"0":6.1},"y":"versicolor","row":91},{"x":{"3":0.3,"2":1.5,"0":5.1},"y":"setosa","row":19},{"x":{"3":1.5,"2":4.5,"0":5.6},"y":"versicolor","row":66},{"x":{"3":1.4,"2":4.7,"0":6.1},"y":"versicolor","row":63},{"x":{"3":1.4,"2":4.8,"0":6.8},"y":"versicolor","row":76},{"x":{"3":1.5,"2":4.9,"0":6.9},"y":"versicolor","row":52},{"x":{"3":1.9,"2":5.3,"0":6.4},"y":"virginica","row":111},{"x":{"3":0.2,"2":1.4,"0":5.0},"y":"setosa","row":4},{"x":{"3":0.3,"2":1.4,"0":5.1},"y":"setosa","row":17},{"x":{"3":1.5,"2":4.2,"0":5.9},"y":"versicolor","row":61},{"x":{"3":1.0,"2":3.5,"0":5.0},"y":"versicolor","row":60},{"x":{"3":0.2,"2":1.5,"0":4.9},"y":"setosa","row":34},{"x":{"3":1.9,"2":6.1,"0":7.4},"y":"virginica","row":130},{"x":{"3":1.2,"2":4.7,"0":6.1},"y":"versicolor","row":73},{"x":{"3":0.3,"2":1.4,"0":4.6},"y":"setosa","row":6},{"x":{"3":2.0,"2":5.0,"0":5.7},"y":"virginica","row":113},{"x":{"3":1.8,"2":4.8,"0":6.2},"y":"virginica","row":126},{"x":{"3":1.6,"2":5.8,"0":7.2},"y":"virginica","row":129},{"x":{"3":1.1,"2":3.9,"0":5.6},"y":"versicolor","row":69},{"x":{"3":2.4,"2":5.6,"0":6.7},"y":"virginica","row":140},{"x":{"3":1.6,"2":4.5,"0":6.0},"y":"versicolor","row":85},{"x":{"3":1.5,"2":5.0,"0":6.0},"y":"virginica","row":119},{"x":{"3":2.0,"2":4.9,"0":5.6},"y":"virginica","row":121},{"x":{"3":1.3,"2":4.6,"0":6.6},"y":"versicolor","row":58},{"x":{"3":1.4,"2":4.4,"0":6.7},"y":"versicolor","row":65},{"x":{"3":0.2,"2":1.5,"0":4.6},"y":"setosa","row":3},{"x":{"3":1.9,"2":5.1,"0":5.8},"y":"virginica","row":142},{"x":{"3":1.9,"2":5.0,"0":6.3},"y":"virginica","row":146},{"x":{"3":1.2,"2":4.0,"0":5.8},"y":"versicolor","row":92},{"x":{"3":2.4,"2":5.1,"0":5.8},"y":"virginica","row":114},{"x":{"3":1.0,"2":3.3,"0":4.9},"y":"versicolor","row":57},{"x":{"3":1.3,"2":4.3,"0":6.2},"y":"versicolor","row":97},{"x":{"3":2.1,"2":5.9,"0":7.1},"y":"virginica","row":102},{"x":{"3":0.5,"2":1.7,"0":5.1},"y":"setosa","row":23},{"x":{"3":1.3,"2":4.1,"0":5.6},"y":"versicolor","row":88},{"x":{"3":1.8,"2":4.9,"0":6.1},"y":"virginica","row":127},{"x":{"3":0.1,"2":1.4,"0":4.8},"y":"setosa","row":12},{"x":{"3":1.4,"2":4.4,"0":6.6},"y":"versicolor","row":75},{"x":{"3":1.5,"2":4.5,"0":5.4},"y":"versicolor","row":84},{"x":{"3":1.1,"2":3.0,"0":5.1},"y":"versicolor","row":98},{"x":{"3":0.4,"2":1.5,"0":5.4},"y":"setosa","row":31},{"x":{"3":0.2,"2":1.4,"0":4.6},"y":"setosa","row":47},{"x":{"3":2.0,"2":6.7,"0":7.7},"y":"virginica","row":122},{"x":{"3":1.2,"2":3.9,"0":5.8},"y":"versicolor","row":82},{"x":{"3":1.7,"2":4.5,"0":4.9},"y":"virginica","row":106},{"x":{"3":1.8,"2":5.8,"0":6.7},"y":"virginica","row":108},{"x":{"3":0.1,"2":1.4,"0":4.9},"y":"setosa","row":37},{"x":{"3":1.9,"2":5.1,"0":5.8},"y":"virginica","row":101},{"x":{"3":1.5,"2":4.6,"0":6.5},"y":"versicolor","row":54},{"x":{"3":0.4,"2":1.5,"0":5.7},"y":"setosa","row":15},{"x":{"3":0.2,"2":1.3,"0":4.4},"y":"setosa","row":38},{"x":{"3":2.0,"2":6.4,"0":7.9},"y":"virginica","row":131},{"x":{"3":2.3,"2":5.2,"0":6.7},"y":"virginica","row":145},{"x":{"3":1.8,"2":6.3,"0":7.3},"y":"virginica","row":107},{"x":{"3":0.1,"2":1.5,"0":4.9},"y":"setosa","row":9},{"x":{"3":1.3,"2":4.2,"0":5.7},"y":"versicolor","row":96},{"x":{"3":0.1,"2":1.1,"0":4.3},"y":"setosa","row":13},{"x":{"3":0.2,"2":1.4,"0":4.9},"y":"setosa","row":1},{"x":{"3":2.5,"2":6.0,"0":6.3},"y":"virginica","row":100},{"x":{"3":2.1,"2":5.5,"0":6.8},"y":"virginica","row":112},{"x":{"3":1.5,"2":4.5,"0":6.0},"y":"versicolor","row":78},{"x":{"3":2.5,"2":6.1,"0":7.2},"y":"virginica","row":109},{"x":{"3":1.8,"2":4.9,"0":6.3},"y":"virginica","row":123},{"x":{"3":1.3,"2":4.4,"0":6.3},"y":"versicolor","row":87},{"x":{"3":0.4,"2":1.3,"0":5.4},"y":"setosa","row":16},{"x":{"3":0.2,"2":1.2,"0":5.8},"y":"setosa","row":14},{"x":{"3":0.2,"2":1.0,"0":4.6},"y":"setosa","row":22},{"x":{"3":2.1,"2":5.7,"0":6.7},"y":"virginica","row":124},{"x":{"3":2.3,"2":5.3,"0":6.4},"y":"virginica","row":115},{"x":{"3":1.3,"2":4.0,"0":5.5},"y":"versicolor","row":89},{"x":{"3":1.2,"2":4.2,"0":5.7},"y":"versicolor","row":95},{"x":{"3":1.3,"2":4.2,"0":5.6},"y":"versicolor","row":94},{"x":{"3":0.2,"2":1.3,"0":5.5},"y":"setosa","row":36},{"x":{"3":1.3,"2":4.0,"0":5.5},"y":"versicolor","row":53},{"x":{"3":0.2,"2":1.5,"0":5.4},"y":"setosa","row":10},{"x":{"3":1.8,"2":5.6,"0":6.3},"y":"virginica","row":103},{"x":{"3":0.2,"2":1.6,"0":4.8},"y":"setosa","row":30},{"x":{"3":1.8,"2":4.8,"0":5.9},"y":"versicolor","row":70},{"x":{"3":1.6,"2":4.7,"0":6.3},"y":"versicolor","row":56},{"x":{"3":1.0,"2":4.1,"0":5.8},"y":"versicolor","row":67},{"x":{"3":1.3,"2":4.5,"0":5.7},"y":"versicolor","row":55},{"x":{"3":2.2,"2":5.8,"0":6.5},"y":"virginica","row":104},{"x":{"3":1.8,"2":5.5,"0":6.5},"y":"virginica","row":116},{"x":{"3":1.3,"2":3.6,"0":5.6},"y":"versicolor","row":64},{"x":{"3":0.2,"2":1.3,"0":4.7},"y":"setosa","row":2},{"x":{"3":1.4,"2":5.6,"0":6.1},"y":"virginica","row":134},{"x":{"3":1.5,"2":4.7,"0":6.7},"y":"versicolor","row":86},{"x":{"3":2.3,"2":5.9,"0":6.8},"y":"virginica","row":143},{"x":{"3":1.4,"2":4.7,"0":7.0},"y":"versicolor","row":50},{"x":{"3":1.2,"2":4.4,"0":5.5},"y":"versicolor","row":90},{"x":{"3":1.8,"2":4.8,"0":6.0},"y":"virginica","row":138},{"x":{"3":1.0,"2":4.0,"0":6.0},"y":"versicolor","row":62},{"x":{"3":0.2,"2":1.5,"0":5.0},"y":"setosa","row":7},{"x":{"3":1.3,"2":4.3,"0":6.4},"y":"versicolor","row":74}],"task":"classification","classes":[{"name":"setosa","col":"var(--dti-c0)"},{"name":"versicolor","col":"var(--dti-c1)"},{"name":"virginica","col":"var(--dti-c2)"}],"legend":[{"k":"dot","col":"var(--dti-c0)","label":"setosa"},{"k":"dot","col":"var(--dti-c1)","label":"versicolor"},{"k":"dot","col":"var(--dti-c2)","label":"virginica"}],"impNote":"<b>%<\/b> is the feature's share of the model's total gini reduction, summed over its splits and weighted by samples (sklearn's <code>feature_importances_<\/code> definition). Bars are relative to the top feature; ticks under each distribution mark split thresholds.","fileName":"DecisionTreeClassifier","target":"target","orientation":"TB","initialDepth":99,"maxDepth":4,"simple":true,"defs":"<defs><filter id=\"dti4-sh\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"160%\"><feDropShadow dx=\"0\" dy=\"1\" stdDeviation=\"1\" style=\"flood-color:var(--dti-shadow);flood-opacity:0.06\"/><feDropShadow dx=\"0\" dy=\"6\" stdDeviation=\"8\" style=\"flood-color:var(--dti-shadow);flood-opacity:0.07\"/><\/filter><\/defs>","sig":3,"bandMax":120.0,"roots":[0],"shown":[0],"combine":"single","layout":"tree","link":"identity","intercept":0.0}</script>
+<script>
+/* Shared runtime for imodels.viz interactive pages.
+ * A model script calls DTI.init() for utilities, draws its view, then calls S.start(hooks):
+ *   predict(x)        -> {cls, proba} for classifiers or {value} for regressors (pure)
+ *   explain(x, pred)  -> HTML shown under the prediction (path, waterfall, ...)
+ *   show(x, pred)     -> update the drawing for input x (x = null clears it)
+ *   highlight(f)      -> emphasize what uses feature f (null clears)
+ *   exportSvg()       -> SVG text of the current view
+ *   onOpen / onClose  -> optional layout hooks when the Predict panel opens / closes
+ */
+window.DTI = (function () {
+  "use strict";
+
+  function init() {
+    const D = JSON.parse(document.getElementById("dti-data").textContent);
+    const S = {D};
+    const $ = (id) => document.getElementById(id);
+    const sig = D.sig || 3;
+
+    // ---------- formatting
+    S.esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    S.fmt = (v, digits) => {
+      if (v == null || !isFinite(v)) return String(v);
+      if (Math.abs(v) < 1e-12) return "0";
+      const g = digits || sig, a = Math.abs(v);
+      if (a >= 1e6 || a < 1e-3) return v.toExponential(g - 1).replace("e+", "e").replace("-", "−");
+      const d = Math.max(g - Math.floor(Math.log10(a)) - 1, 0);
+      return Number(v.toFixed(d)).toLocaleString("en-US", {maximumFractionDigits: d}).replace("-", "−");
+    };
+    S.signed = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + S.fmt(Math.abs(v));
+    S.pct = (p) => (p >= 0.995 && p < 1 ? ">99" : p > 0 && p <= 0.005 ? "<1" : (100 * p).toFixed(0)) + "%";
+    const isClf = D.task === "classification";
+    S.isClf = isClf;
+    S.classDot = (k) => `<i style="background:${D.classes[k].col}"></i>${S.esc(D.classes[k].name)}`;
+
+    // ---------- legend (same look on every page)
+    $("legend").innerHTML = (D.legend || []).map((it) => {
+      if (it.k === "dot") return `<span><i style="background:${it.col}"></i>${S.esc(it.label)}</span>`;
+      if (it.k === "grad") return `<span>${S.esc(it.label)}</span><span class="tt-m">${S.fmt(it.lo)}</span>` +
+        `<span class="grad" style="background:linear-gradient(90deg,${it.stops.join(",")})"></span><span class="tt-m">${S.fmt(it.hi)}</span>`;
+      return `<span class="lnote">${S.esc(it.label)}</span>`;
+    }).join("");
+
+    // ---------- tooltip
+    const tip = $("tip");
+    let tipOn = false;
+    S.tip = (html) => { tip.innerHTML = html; tip.classList.add("show"); tipOn = true; };
+    S.hideTip = () => { tip.classList.remove("show"); tipOn = false; };
+    addEventListener("pointermove", (e) => {
+      if (!tipOn) return;
+      let x = e.clientX + 16, y = e.clientY + 16;
+      if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - tip.offsetWidth - 16;
+      if (y + tip.offsetHeight > innerHeight - 8) y = Math.max(8, innerHeight - tip.offsetHeight - 8);
+      tip.style.left = x + "px"; tip.style.top = y + "px";
+    });
+
+    // ---------- theme
+    const root = document.documentElement;
+    $("b-theme").onclick = () => {
+      const dark = root.dataset.theme === "dark" || (root.dataset.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      root.dataset.theme = dark ? "light" : "dark";
+    };
+    S.resolveVars = (text) => {
+      const cs = getComputedStyle(root);
+      return text.replace(/var\((--dti-[a-z0-9]+)\)/g, (_, v) => cs.getPropertyValue(v).trim());
+    };
+    S.surface = () => getComputedStyle(root).getPropertyValue("--dti-surface").trim();
+
+    // ---------- features column
+    const hud = $("hud"), hudBody = $("hud-body");
+    const FW = 264, FH = 26;
+    let hoverF = null, pinned = null, H = {};
+    function sparkline(f) {
+      const sx = (v) => Math.max(0, Math.min(1, (v - f.hlo) / (f.hhi - f.hlo || 1))) * FW;
+      let out = `<line x1="0" x2="${FW}" y1="${FH + 0.5}" y2="${FH + 0.5}" style="stroke:var(--dti-axis)"/>`;
+      if (f.hist) {
+        const nb = f.hist.length, bw = FW / nb, top = Math.max(1, ...f.hist.map((b) => b.reduce((a, c) => a + c, 0)));
+        const w = Math.min(bw - 1, 22);
+        f.hist.forEach((b, i) => {
+          let y = FH;
+          b.forEach((c, k) => {
+            if (!c) return;
+            const h = (c / top) * (FH - 2);
+            y -= h;
+            const col = isClf && b.length > 1 ? D.classes[k].col : "var(--dti-s4)";
+            out += `<rect x="${(i * bw + (bw - w) / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" style="fill:${col}"/>`;
+          });
+        });
+      }
+      for (const t of f.thr) out += `<line x1="${sx(t).toFixed(1)}" x2="${sx(t).toFixed(1)}" y1="${FH + 2}" y2="${FH + 8}" style="stroke:var(--dti-ink);stroke-width:1.5"/>`;
+      out += `<line class="xv" y1="-1" y2="${FH}" style="stroke:var(--dti-hl);stroke-width:2"/>`;
+      return `<svg viewBox="0 -2 ${FW} ${FH + 12}" preserveAspectRatio="none" aria-hidden="true">${out}</svg>`;
+    }
+    function buildHud(word) {
+      const tot = D.feats.reduce((a, f) => a + f.imp, 0) || 1, maxImp = Math.max(...D.feats.map((f) => f.imp), 1e-12);
+      $("hud-sub").textContent = `${D.feats.length} used · sorted by importance`;
+      $("hud-note").innerHTML = D.impNote || "";
+      $("hud-f").textContent = `Hover a feature to highlight the ${word}s that use it. Click to pin.`;
+      hudBody.innerHTML = D.feats.map((f) => {
+        const ends = f.ends || [S.fmt(f.hlo), S.fmt(f.hhi)], n = f.nsplit;
+        return `<div class="frow" data-f="${f.i}">
+          <div class="top"><span class="nm" title="${S.esc(f.name)}">${S.esc(f.name)}</span><span class="im">${(100 * f.imp / tot).toFixed(1)}%</span></div>
+          <div class="ib"><span style="width:${(100 * f.imp / maxImp).toFixed(1)}%"></span></div>
+          ${sparkline(f)}
+          <div class="meta"><span>${S.esc(ends[0])}</span><span>${n} ${word}${n === 1 ? "" : "s"}</span><span>${S.esc(ends[1])}</span></div></div>`;
+      }).join("");
+      hudBody.querySelectorAll(".frow").forEach((row) => {
+        const f = +row.dataset.f;
+        row.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        row.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+        row.addEventListener("click", () => { pinned = pinned === f ? null : f; applyFeat(); });
+      });
+      $("hud-x").onclick = () => hud.classList.toggle("min");
+      if (innerWidth < 1100) hud.classList.add("min");  // keep the model in view on smaller screens
+    }
+    function applyFeat() {
+      const f = hoverF ?? pinned;
+      if (H.highlight) H.highlight(f);
+      hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("pin", +r.dataset.f === pinned));
+    }
+    S.reapplyHighlight = applyFeat;
+    S.hotFeatures = (fs) => hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("hot", fs.includes(+r.dataset.f)));
+
+    // ---------- predict panel
+    const panel = $("panel"), fields = $("fields"), res = $("res"), wi = $("whatif"), predBtn = $("b-pred");
+    let x = null, truth = null, truthLabel = "";
+    const featByIdx = {};
+    D.feats.forEach((f) => (featByIdx[f.i] = f));
+    S.feat = (i) => featByIdx[i];
+    // a feature value as read by people: level name, "missing", or the number
+    S.val = (i, v, digits) => {
+      const f = featByIdx[i];
+      if (v == null || Number.isNaN(v)) return "missing";
+      if (f && f.levels) return f.levels[Math.round(v)] ?? S.fmt(v);
+      return S.fmt(v, digits);
+    };
+    const isMissing = (v) => v == null || Number.isNaN(v);
+    // samples store missing values as null
+    const fromSample = (sx) => { const o = {}; for (const k in sx) o[k] = sx[k] == null ? NaN : sx[k]; return o; };
+    S.x = () => x;
+    S.predicting = () => !!x;
+    function defaults() { const o = {}; D.feats.forEach((f) => (o[f.i] = f.v)); return o; }
+    function buildFields() {
+      fields.innerHTML = D.feats.map((f) => {
+        const nm = S.esc(f.name);
+        if (f.levels) {  // categorical: pick a level (or missing)
+          return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span>
+            <select aria-label="${nm}">${f.levels.map((l, k) => `<option value="${k}">${S.esc(l)}</option>`).join("")}` +
+            `${f.missing ? `<option value="nan">(missing)</option>` : ""}</select></label></div>`;
+        }
+        return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span><span class="ctl2">` +
+          (f.missing ? `<label class="miss" title="Treat ${nm} as missing"><input type="checkbox"> missing</label>` : "") +
+          `<input type="number" step="${f.step}" value="${+(+f.v).toPrecision(6)}" aria-label="${nm}"></span></label>
+          <input type="range" min="${f.lo}" max="${f.hi}" step="${f.step}" value="${f.v}" aria-label="${nm} slider"></div>`;
+      }).join("");
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, ft = featByIdx[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        const changed = () => { truth = null; refresh(); };
+        if (sel) sel.addEventListener("change", () => { x[f] = sel.value === "nan" ? NaN : +sel.value; changed(); });
+        if (num) num.addEventListener("input", () => {
+          if (num.value === "") return;
+          x[f] = +num.value; rng.value = num.value; if (miss) miss.checked = false; changed();
+        });
+        if (rng) rng.addEventListener("input", () => {
+          x[f] = +rng.value; num.value = +(+rng.value).toPrecision(6); if (miss) miss.checked = false; changed();
+        });
+        if (miss) miss.addEventListener("change", () => { x[f] = miss.checked ? NaN : +num.value || ft.v; changed(); });
+        el.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        el.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+      });
+    }
+    function setFields() {
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, v = x[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        if (sel) { sel.value = isMissing(v) ? "nan" : String(Math.round(v)); return; }
+        if (miss) miss.checked = isMissing(v);
+        if (isMissing(v)) { num.value = ""; return; }
+        num.value = +(+v).toPrecision(6);
+        rng.value = v;
+      });
+    }
+    function resultHtml(p) {
+      let html = `<div class="tt-k">Prediction</div>`;
+      if (isClf) {
+        const k = p.cls;
+        html += `<div class="big">${S.classDot(k)}</div>`;
+        if (p.proba) {
+          const shown = D.classes.length === 2 ? 1 : k;
+          html += `<div class="meta">P(${S.esc(D.classes[shown].name)}) = ${S.pct(p.proba[shown])}${p.note ? " \u00b7 " + p.note : ""}</div>`;
+          html += `<div class="probs">${p.proba.map((q, j) => q > 0 ? `<span style="width:${(100 * q).toFixed(2)}%;background:${D.classes[j].col}" title="${S.esc(D.classes[j].name)} ${S.pct(q)}"></span>` : "").join("")}</div>`;
+          html += `<div class="plabs">${p.proba.map((q, j) => q > 0.005 ? `<span><i style="background:${D.classes[j].col}"></i>${S.esc(D.classes[j].name)} ${S.pct(q)}</span>` : "").join("")}</div>`;
+        } else if (p.note) html += `<div class="meta">${p.note}</div>`;
+      } else {
+        html += `<div class="big">${S.fmt(p.value, Math.max(sig, 4))}</div>`;
+        if (p.note) html += `<div class="meta">${p.note}</div>`;
+      }
+      if (truth != null) html += `<div class="truth">${S.esc(truthLabel)} <b>${S.esc(truth)}</b></div>`;
+      return html + (H.explain ? H.explain(x, p) : "");
+    }
+    function refresh() {
+      const p = H.predict(x);
+      res.innerHTML = resultHtml(p);
+      if (H.show) H.show(x, p);
+      for (const f of D.feats) {
+        const ln = hudBody.querySelector(`.frow[data-f="${f.i}"] .xv`);
+        if (!ln) continue;
+        ln.style.visibility = isMissing(x[f.i]) ? "hidden" : "";
+        const px = (Math.max(0, Math.min(1, (x[f.i] - f.hlo) / (f.hhi - f.hlo || 1))) * FW).toFixed(1);
+        ln.setAttribute("x1", px); ln.setAttribute("x2", px);
+      }
+      hud.classList.add("predicting");
+      whatIf(p);
+      applyFeat();
+    }
+    S.refresh = () => { if (x) refresh(); };
+
+    // ---------- what would change the prediction
+    // the roundest number just past threshold t (above when up, else below) that crosses no other
+    // threshold, so an applied change reads cleanly (1.8 rather than 1.750001)
+    function nicePast(t, up, span, thr) {
+      const tol = span * 1e-3;
+      for (let p = 1; p <= 12; p++) {
+        const step = Math.pow(10, Math.floor(Math.log10(Math.abs(t) || 1)) - p + 1);
+        const v = +((up ? Math.floor(t / step) + 1 : Math.ceil(t / step) - 1) * step).toPrecision(p + 1);
+        const clear = thr.every((o) => !(up ? o > t && o < v : o < t && o > v));
+        if ((up ? v > t : v < t) && Math.abs(v - t) <= tol && clear) return v;
+      }
+      return up ? t + span * 1e-6 : t - span * 1e-6;
+    }
+    function candidates(f, cur) {
+      const span = (f.hi - f.lo) || 1, out = [];
+      if (f.missing && !isMissing(cur)) out.push({v: NaN, txt: "missing"});
+      if (f.levels) {
+        f.levels.forEach((l, k) => { if (isMissing(cur) || k !== Math.round(cur)) out.push({v: k, txt: l}); });
+        return out;
+      }
+      if (f.kind === "binary") return out.concat([{v: 0, txt: "0"}, {v: 1, txt: "1"}].filter((c) => c.v !== cur));
+      for (const t of f.thr) {
+        if (f.kind === "integer") {
+          out.push({v: Math.floor(t), txt: S.fmt(Math.floor(t), 12)}, {v: Math.floor(t) + 1, txt: S.fmt(Math.floor(t) + 1, 12)});
+        } else {
+          let dg = sig;  // enough digits that the threshold reads differently from the current value
+          // (only when they really differ: a value sitting on the cut keeps the short form)
+          while (dg < 8 && !isMissing(cur) && Math.abs(t - cur) > span * 1e-5 && S.fmt(t, dg) === S.fmt(cur, dg)) dg++;
+          out.push({v: nicePast(t, false, span, f.thr), txt: `\u2264 ${S.fmt(t, dg)}`, t},
+                   {v: nicePast(t, true, span, f.thr), txt: `> ${S.fmt(t, dg)}`, t});
+        }
+      }
+      for (let q = 0; q <= 8; q++) {
+        let v = f.lo + span * q / 8;
+        if (f.kind === "integer") v = Math.round(v);
+        out.push({v, txt: S.fmt(v)});
+      }
+      return out.filter((c) => isMissing(c.v) || isMissing(cur) || Math.abs(c.v - cur) > 1e-12);
+    }
+    // how big a change is, as a share of the feature's range (switching a level or to / from missing counts as half)
+    function dist(f, c, cur) {
+      if (f.levels || isMissing(c.v) || isMissing(cur)) return 0.5;
+      return Math.abs(c.v - cur) / ((f.hi - f.lo) || 1);
+    }
+    function whatIf(base) {
+      const rows = [];
+      for (const f of D.feats) {
+        const cur = x[f.i];
+        let best = null;
+        for (const c of candidates(f, cur)) {
+          const xx = Object.assign({}, x, {[f.i]: c.v});
+          const p = H.predict(xx), d = dist(f, c, cur);
+          if (isClf) {
+            const flips = p.cls !== base.cls;
+            // prefer the smallest change that flips the class; otherwise the biggest drop in the current class
+            const drop = p.proba && base.proba ? base.proba[base.cls] - p.proba[base.cls] : 0;
+            const key = flips ? [0, d] : [1, -drop];
+            if (!flips && drop < 0.005) continue;  // ignore changes that barely move the probability
+            if (!best || key[0] < best.key[0] || (key[0] === best.key[0] && key[1] < best.key[1])) best = {f, c, p, key, flips, drop};
+          } else {
+            const delta = p.value - base.value;
+            if (Math.abs(delta) <= 1e-9 * (1 + Math.abs(base.value))) continue;
+            const key = [0, -Math.abs(delta)];
+            if (!best || key[1] < best.key[1]) best = {f, c, p, key, delta};
+          }
+        }
+        if (best) rows.push(best);
+      }
+      rows.sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1]);
+      rows.forEach((r) => (r.changes = [{f: r.f, c: r.c}]));
+      const flipping = rows.filter((r) => r.flips), lowering = rows.filter((r) => !r.flips);
+      const pairs = isClf && !flipping.length ? pairFlips(base) : [];
+      const cls = S.esc(D.classes[base.cls] ? D.classes[base.cls].name : "");
+      const groups = isClf
+        ? [["Smallest single-feature changes that flip the class:", flipping.slice(0, 4)],
+           ["No single change flips the class. Smallest pairs of changes that do:", pairs],
+           [`Changes that lower P(${cls}) most without flipping it:`, lowering.slice(0, Math.max(0, 4 - flipping.length - pairs.length))]]
+        : [["Single-feature changes that move the prediction most:", rows.slice(0, 5)]];
+      const show = [];
+      let html = "";
+      for (const [lead, list] of groups) {
+        if (!list.length) continue;
+        html += `<div class="none">${lead}</div>`;
+        for (const r of list) {
+          const to = isClf
+            ? `${S.classDot(r.p.cls)}${r.p.proba ? " " + S.pct(r.p.proba[r.p.cls]) : ""}`
+            : `${S.fmt(r.p.value, Math.max(sig, 4))} <span class="tt-m">(${S.signed(r.delta)})</span>`;
+          const what = r.changes.map((ch) => {
+            let dg = sig;
+            while (dg < 8 && ch.c.t != null && !isMissing(x[ch.f.i]) &&
+                   Math.abs(ch.c.t - x[ch.f.i]) > ((ch.f.hi - ch.f.lo) || 1) * 1e-5 &&
+                   S.fmt(ch.c.t, dg) === S.fmt(x[ch.f.i], dg)) dg++;
+            return `<b>${S.esc(ch.f.name)}</b> ${S.esc(S.val(ch.f.i, x[ch.f.i], dg))} \u2192 ${S.esc(ch.c.txt)}`;
+          }).join(" and ");
+          html += `<button data-k="${show.length}" title="Apply ${r.changes.length > 1 ? "these changes" : "this change"}"><span class="what">${what}</span>` +
+            `<span class="to">${to}</span></button>`;
+          show.push(r);
+        }
+      }
+      wi.innerHTML = html || `<div class="none">No change to one or two features moves this prediction.</div>`;
+      wi.querySelectorAll("button").forEach((b) => {
+        const r = show[+b.dataset.k];
+        b.onclick = () => { for (const ch of r.changes) x[ch.f.i] = ch.c.v; truth = null; setFields(); refresh(); };
+      });
+    }
+    // two-feature changes that flip the class, nearest first (top features, nearest candidates only)
+    function pairFlips(base) {
+      const cand = D.feats.slice(0, 10).map((f) => {
+        const cur = x[f.i];
+        return {f, list: candidates(f, cur).map((c) => ({c, d: dist(f, c, cur)})).sort((a, b) => a.d - b.d).slice(0, 12)};
+      });
+      const best = [];
+      for (let a = 0; a < cand.length; a++) for (let b = a + 1; b < cand.length; b++) {
+        let top = null;
+        for (const ca of cand[a].list) for (const cb of cand[b].list) {
+          const d = ca.d + cb.d;
+          if (top && d >= top.key[1]) continue;
+          const p = H.predict(Object.assign({}, x, {[cand[a].f.i]: ca.c.v, [cand[b].f.i]: cb.c.v}));
+          if (p.cls !== base.cls) top = {changes: [{f: cand[a].f, c: ca.c}, {f: cand[b].f, c: cb.c}], p, key: [0, d], flips: true};
+        }
+        if (top) best.push(top);
+      }
+      return best.sort((a, b) => a.key[1] - b.key[1]).slice(0, 3);
+    }
+
+    function open(on) {
+      on = on ?? !panel.classList.contains("open");
+      panel.classList.toggle("open", on);
+      predBtn.classList.toggle("on", on);
+      if (on) {
+        if (!x) { x = defaults(); buildFields(); }
+        refresh();
+        if (H.onOpen) setTimeout(H.onOpen, 270);
+      } else {
+        x = null;
+        hud.classList.remove("predicting");
+        if (H.show) H.show(null, null);
+        if (H.onClose) setTimeout(H.onClose, 270);
+      }
+    }
+    S.open = open;
+    // load a training row into Predict (optionally one matching `keep`)
+    S.loadSample = (keep, why) => {
+      const pool = keep ? D.samples.filter((s) => keep(Object.assign(defaults(), fromSample(s.x)))) : D.samples;
+      if (!pool.length) return false;
+      const s = pool[Math.floor(Math.random() * pool.length)];
+      if (!x) { x = defaults(); buildFields(); }
+      Object.assign(x, fromSample(s.x));
+      truth = s.y;
+      truthLabel = why ? `${why}; true label` : "true label";
+      if (!panel.classList.contains("open")) open(true); else { setFields(); refresh(); }
+      setFields();
+      return true;
+    };
+    S.setValues = (vals) => { if (!x) open(true); Object.assign(x, vals); truth = null; setFields(); refresh(); };
+    S.withX = (vals) => Object.assign({}, x || defaults(), vals);
+    S.defaults = defaults;
+
+    S.start = (hooks) => {
+      H = hooks;
+      buildHud(hooks.word || "term");
+      $("p-hint").textContent = hooks.hint || "Set feature values to see the prediction. Features are ordered by importance.";
+      predBtn.onclick = () => open();
+      const rb = $("b-rand");
+      if (!D.samples.length) rb.style.display = "none";
+      rb.onclick = () => S.loadSample(null);
+      $("b-reset").onclick = () => { x = defaults(); truth = null; setFields(); refresh(); };
+      $("b-svg").onclick = () => {
+        const text = S.resolveVars(hooks.exportSvg());
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], {type: "image/svg+xml"}));
+        a.download = (D.fileName || "model") + ".svg";
+        a.click();
+      };
+    };
+    // a small horizontal waterfall used by additive models and sums of trees
+    S.waterfall = (items, totalLabel, total, pos, neg, limit = 12) => {
+      // the baseline is listed but not drawn: it would set the scale and flatten every contribution
+      const maxc = Math.max(...items.filter(([lab]) => lab !== "baseline").map(([, c]) => Math.abs(c)), 1e-12);
+      const line = (lab, c) => `<div class="lab" title="${S.esc(lab)}">${S.esc(lab)}</div><div class="val">${S.signed(c)}</div>` +
+        (lab === "baseline" ? `<div class="bar"></div>` :
+          `<div class="bar" style="width:${(100 * Math.abs(c) / maxc).toFixed(1)}%;background:${c >= 0 ? pos : neg}"></div>`);
+      let html = items.slice(0, limit).map(([lab, c]) => line(lab, c)).join("");
+      if (items.length > limit) html += `<div class="lab tt-m">+${items.length - limit} smaller terms</div><div></div>`;
+      return `<div class="wf">${html}<div class="lab tot">${S.esc(totalLabel)}</div><div class="val tot">${S.fmt(total, Math.max(sig, 4))}</div></div>`;
+    };
+    return S;
+  }
+  return {init};
+})();
+
+</script>
+<script>
+/* Tree pages: decision trees, rule lists (cascade layout) and sums of trees (several roots). */
+(function () {
+  "use strict";
+  const S = DTI.init(), D = S.D, esc = S.esc, fmt = S.fmt;
+  const N = D.nodes, NS = "http://www.w3.org/2000/svg";
+  const ROOT0 = D.roots[0], ROOTW = N[ROOT0].wt, CASCADE = D.layout === "cascade", SUM = D.combine === "sum";
+  const MEAN = D.combine === "mean", SHOWN = D.shown || D.roots;
+  const svg = document.getElementById("canvas"), vp = document.getElementById("vp");
+  const gRib = document.getElementById("g-rib"), gNode = document.getElementById("g-node"), gLab = document.getElementById("g-lab");
+  const stage = document.getElementById("stage");
+  const GAP = 20, LEVEL_TB = 64, LEVEL_LR = 120, DUR = 380;
+  let orient = D.orientation === "LR" ? "LR" : "TB";
+  let collapsed = new Set(), view = {k: 1, x: 0, y: 0}, cur = {}, path = new Set();
+  const els = {}, ribs = {}, pills = {};
+  svg.insertAdjacentHTML("afterbegin", D.defs);
+  // which tree each node belongs to (sums of trees have several roots)
+  N.forEach((n) => { let r = n.id; while (N[r].p >= 0) r = N[r].p; n.root = r; });
+
+  // detailed and simple cards; `simple` picks which one each node shows
+  N.forEach((n) => { n.dw = n.w; n.dh = n.h; n.dsvg = n.svg; });
+  let simple = !!D.simple, cascBand = 0;
+  function applyMode() {
+    N.forEach((n) => { n.w = simple ? n.sw : n.dw; n.h = simple ? n.sh : n.dh; n.svg = simple ? n.ssvg : n.dsvg; });
+    cascBand = 0.8 * Math.min(...N.map((n) => n.h));  // rule lists: flows turn sideways into cards
+  }
+  applyMode();
+
+  // ---------- model evaluation
+  const OPS = {"<=": (a, b) => a <= b, "<": (a, b) => a < b, ">": (a, b) => a > b, ">=": (a, b) => a >= b, "==": (a, b) => a === b, "!=": (a, b) => a !== b};
+  function holds(n, x) {  // a split sends a sample left when all its conditions hold
+    if (n.nl != null && Number.isNaN(x[n.c[0][0]])) return n.nl;  // sklearn: missing values go to a fixed side
+    return n.c.every(([f, op, v]) => OPS[op](x[f], v));
+  }
+  function walk(x, root) {
+    const p = [root];
+    let id = root;
+    while (!N[id].leaf) { id = holds(N[id], x) ? N[id].l : N[id].r; p.push(id); }
+    return p;
+  }
+  const leafOf = (x, root) => { const p = walk(x, root); return p[p.length - 1]; };
+  function predict(x) {
+    const leaves = D.roots.map((r) => leafOf(x, r));
+    if (MEAN) {  // forests: average the trees' predictions
+      if (S.isClf) {
+        const pr = D.classes.map((_, k) => leaves.reduce((a, id) => a + N[id].pr[k], 0) / leaves.length);
+        const cls = pr.indexOf(Math.max(...pr));
+        return {cls, proba: pr, leaves, note: `average of ${leaves.length} trees`};
+      }
+      return {value: leaves.reduce((a, id) => a + N[id].v, 0) / leaves.length, leaves, note: `average of ${leaves.length} trees`};
+    }
+    if (SUM) {
+      const total = D.intercept + leaves.reduce((a, id) => a + N[id].v, 0);
+      if (S.isClf) {
+        const p1 = D.link === "logistic" ? 1 / (1 + Math.exp(-total)) : Math.min(1, Math.max(0, total));
+        return {cls: p1 >= 0.5 ? 1 : 0, proba: [1 - p1, p1], leaves, total, note: `log-odds ${fmt(total)}`};
+      }
+      return {value: total, leaves, total, note: `${leaves.length} trees added together`};
+    }
+    const lf = N[leaves[0]];
+    const note = `${CASCADE ? (lf.ruleLabel || "else") : "leaf #" + lf.id} · ${lf.n.toLocaleString()} training samples`;
+    return S.isClf ? {cls: lf.pc, proba: lf.pr, leaves, note} : {value: lf.v, leaves, note};
+  }
+
+  // ---------- node elements
+  function stackSvg(n) {
+    let s = "";
+    for (const d of [8, 4]) s += `<rect class="stack" x="${d}" y="${d}" width="${n.w}" height="${n.h}" rx="10" style="fill:var(--dti-card);stroke:var(--dti-ring)"/>`;
+    return s;
+  }
+  function badgeSvg(n) {
+    const t = "+" + n.desc, w = 12 + t.length * 6.4;
+    return `<g class="badge" transform="translate(${n.w / 2},${n.h + 9})"><rect x="${-w / 2}" y="-9" width="${w}" height="18" rx="9" style="fill:var(--dti-ink)"/>` +
+      `<text y="3.8" text-anchor="middle" style="font-size:10.5px;font-weight:600;fill:var(--dti-card)">${t}</text></g>`;
+  }
+  function nodeEl(id) {
+    if (els[id]) return els[id];
+    const n = N[id], g = document.createElementNS(NS, "g");
+    g.setAttribute("class", "node" + (n.leaf ? " leaf" : ""));
+    g.innerHTML = stackSvg(n) + n.svg.replace(/<title>[\s\S]*?<\/title>/, "") + (n.leaf ? "" : badgeSvg(n)) +
+      `<rect class="ring" x="-3" y="-3" width="${n.w + 6}" height="${n.h + 6}" rx="13" style="fill:none;stroke:var(--dti-hl);stroke-width:2"/>` +
+      `<g class="mk"></g>`;
+    g.dataset.id = id;
+    gNode.appendChild(g);
+    els[id] = g;
+    return g;
+  }
+  function ribEl(id) {
+    if (ribs[id]) return ribs[id];
+    const p = document.createElementNS(NS, "g");
+    p.setAttribute("class", "rib");
+    p.innerHTML = N[id].mix.map(([c]) => `<path style="fill:${c}"/>`).join("");
+    gRib.appendChild(p);
+    ribs[id] = p;
+    const g = document.createElementNS(NS, "g"), w = N[id].labw;
+    g.setAttribute("class", "pill");
+    g.innerHTML = `<rect x="${-w / 2}" y="-9" width="${w}" height="18" rx="9" style="fill:var(--dti-card);stroke:var(--dti-ring)"/>` +
+      `<text y="3.7" text-anchor="middle" style="font-size:10.5px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">${esc(N[id].lab)}</text>`;
+    gLab.appendChild(g);
+    pills[id] = g;
+    return p;
+  }
+
+  // ---------- layout (contour-based tidy tree, same as the Python renderer)
+  function kids(id) { const n = N[id]; return n.leaf || collapsed.has(id) ? [] : [n.l, n.r]; }
+  function sideChild(pid) { const n = N[pid]; return N[n.l].leaf ? n.l : n.r; }
+  let plusAt = [];
+  function tidyFrom(root, H) {
+    const B = (id) => (H ? N[id].h : N[id].w), Z = (id) => (H ? N[id].w : N[id].h);
+    const rel = {};
+    function place(id) {
+      const cs = kids(id), half = B(id) / 2;
+      if (!cs.length) return [[-half, half]];
+      const conts = cs.map(place);
+      let offs = [0], acc = conts[0].slice();
+      for (let k = 1; k < conts.length; k++) {
+        const c = conts[k];
+        let s = -Infinity;
+        for (let i = 0; i < Math.min(acc.length, c.length); i++) s = Math.max(s, acc[i][1] - c[i][0]);
+        s += GAP;
+        offs.push(s);
+        const m = [];
+        for (let i = 0; i < Math.max(acc.length, c.length); i++) {
+          const a = acc[i], b = c[i] ? [c[i][0] + s, c[i][1] + s] : null;
+          m.push(a && b ? [Math.min(a[0], b[0]), Math.max(a[1], b[1])] : a || b);
+        }
+        acc = m;
+      }
+      const mid = (offs[0] + offs[offs.length - 1]) / 2;
+      cs.forEach((c, k) => (rel[c] = offs[k] - mid));
+      return [[-half, half]].concat(acc.map(([a, b]) => [a - mid, b - mid]));
+    }
+    const cont = place(root);
+    const lo = Math.min(...cont.map((c) => c[0])), hi = Math.max(...cont.map((c) => c[1]));
+    const pos = {[root]: -lo}, vis = [root], st = [root];
+    while (st.length) { const id = st.pop(); for (const c of kids(id)) { pos[c] = pos[id] + rel[c]; vis.push(c); st.push(c); } }
+    const lv = {};
+    for (const id of vis) lv[N[id].d] = Math.max(lv[N[id].d] || 0, Z(id));
+    const off = {};
+    let acc = 0;
+    Object.keys(lv).map(Number).sort((a, b) => a - b).forEach((d) => { off[d] = acc; acc += lv[d] + (H ? LEVEL_LR : LEVEL_TB); });
+    const out = {};
+    for (const id of vis) {
+      const n = N[id];
+      out[id] = H ? [off[n.d], pos[id] - n.h / 2, n.w, n.h] : [pos[id] - n.w / 2, off[n.d], n.w, n.h];
+    }
+    return [out, hi - lo];
+  }
+  function cascade() {
+    const out = {}, chain = [];
+    let id = ROOT0;
+    for (;;) {
+      const n = N[id];
+      if (n.leaf || collapsed.has(id)) { chain.push([id, null]); break; }
+      const side = sideChild(id);
+      chain.push([id, side]);
+      id = side === n.l ? n.r : n.l;
+    }
+    const colW = Math.max(...chain.map(([i]) => N[i].w)), sx = colW + 110;
+    let y = 0;
+    for (const [i, sd] of chain) {
+      const n = N[i];
+      let rh = n.h;
+      out[i] = [(colW - n.w) / 2, y, n.w, n.h];
+      if (sd != null) { const m = N[sd]; out[sd] = [sx, m.h < n.h ? y + (n.h - m.h) / 2 : y, m.w, m.h]; rh = Math.max(rh, m.h); }
+      y += rh + 62;
+    }
+    return out;
+  }
+  function layout() {
+    plusAt = [];
+    if (CASCADE) return cascade();
+    const H = orient === "LR", out = {};
+    let off = 0;
+    SHOWN.forEach((r, k) => {
+      const [boxes, extent] = tidyFrom(r, H);
+      if (k) plusAt.push(H ? [N[r].w / 2, off - 36] : [off - 36, N[r].h / 2]);
+      for (const id in boxes) { const b = boxes[id]; out[id] = H ? [b[0], b[1] + off, b[2], b[3]] : [b[0] + off, b[1], b[2], b[3]]; }
+      off += extent + 72;
+    });
+    return out;
+  }
+
+  // ---------- ribbons: one sub-ribbon per class, sized by that class's share of the samples entering the child
+  function bandW(wt) {
+    const r = N[ROOT0];
+    let b = Math.min(D.bandMax, 0.8 * (orient === "LR" && !CASCADE ? r.h : r.w));
+    if (CASCADE) b = Math.min(b, cascBand);
+    return Math.max(1.5, b * wt / ROOTW);
+  }
+  function ribbon(id, pb, cb) {
+    const n = N[id], p = N[n.p], H = CASCADE ? id === sideChild(n.p) : orient === "LR";
+    const pw = bandW(p.wt), lw = pw * N[p.l].wt / (p.wt || 1), share = pw * n.wt / (p.wt || 1);
+    // in a cascade the two children leave from different sides, so each flow is centered
+    const a0 = CASCADE ? -share / 2 : n.id === p.l ? -pw / 2 : -pw / 2 + lw;
+    const a1 = CASCADE ? share / 2 : n.id === p.l ? -pw / 2 + lw : pw / 2;
+    const cw = bandW(n.wt), c0 = -cw / 2, c1 = cw / 2;
+    const r = (v) => Math.round(v * 10) / 10;
+    const pc = H ? pb[1] + pb[3] / 2 : pb[0] + pb[2] / 2, pe = H ? pb[0] + pb[2] : pb[1] + pb[3];
+    const cc = H ? cb[1] + cb[3] / 2 : cb[0] + cb[2] / 2, ce = H ? cb[0] : cb[1], m = (pe + ce) / 2;
+    const ds = [];
+    let A = pc + a0, C = cc + c0;
+    for (const [, f] of n.mix) {
+      const A0 = A, A1 = A + (a1 - a0) * f, C0 = C, C1 = C + (c1 - c0) * f;
+      ds.push(H
+        ? `M${r(pe)},${r(A0)}C${r(m)},${r(A0)} ${r(m)},${r(C0)} ${r(ce)},${r(C0)}L${r(ce)},${r(C1)}C${r(m)},${r(C1)} ${r(m)},${r(A1)} ${r(pe)},${r(A1)}Z`
+        : `M${r(A0)},${r(pe)}C${r(A0)},${r(m)} ${r(C0)},${r(m)} ${r(C0)},${r(ce)}L${r(C1)},${r(ce)}C${r(C1)},${r(m)} ${r(A1)},${r(m)} ${r(A1)},${r(pe)}Z`);
+      A = A1; C = C1;
+    }
+    const mid = (2 * pc + a0 + a1 + 2 * cc) / 4;
+    return H ? [ds, m, mid] : [ds, mid, m];
+  }
+
+  // ---------- drawing + animation
+  function applyView() { vp.setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`); }
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const lerpBox = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), b[2], b[3]];
+  function anchor(id, boxes, own) {
+    let p = N[id].p;
+    while (p >= 0 && !boxes[p]) p = N[p].p;
+    if (p < 0) return own;
+    const b = boxes[p], n = N[id];
+    return [b[0] + b[2] / 2 - n.w / 2, b[1] + b[3] / 2 - n.h / 2, n.w, n.h];
+  }
+  let anim = null;
+  function render(tgt, opts = {}) {
+    const ids = new Set([...Object.keys(cur), ...Object.keys(tgt)].map(Number));
+    const from = {}, to = {};
+    for (const id of ids) { to[id] = tgt[id] || anchor(id, tgt, cur[id]); from[id] = cur[id] || anchor(id, cur, to[id]); }
+    const v0 = {...view}, v1 = opts.view || view;
+    for (const id of ids) {
+      const g = nodeEl(id);
+      g.style.display = "";
+      g.classList.toggle("collapsed", collapsed.has(id) && !N[id].leaf);
+      if (N[id].p >= 0) { ribEl(id).style.display = ""; pills[id].style.display = ""; }
+    }
+    gLab.querySelectorAll(".plus").forEach((e) => e.remove());
+    for (const [x, y] of plusAt) gLab.insertAdjacentHTML("beforeend", `<text class="plus" x="${x}" y="${y + 9}" text-anchor="middle" style="font-size:26px;font-weight:300;fill:var(--dti-muted)">+</text>`);
+    if (anim) cancelAnimationFrame(anim);
+    const t0 = performance.now(), dur = opts.instant ? 0 : DUR;
+    const frame = (now) => {
+      const t = dur ? ease(Math.min(1, (now - t0) / dur)) : 1;
+      const box = {};
+      for (const id of ids) {
+        const b = (box[id] = lerpBox(from[id], to[id], t));
+        els[id].setAttribute("transform", `translate(${b[0].toFixed(1)},${b[1].toFixed(1)})`);
+        const op = !cur[id] ? t : !tgt[id] ? 1 - t : 1;
+        els[id].style.opacity = op < 1 ? op : "";
+      }
+      for (const id of ids) {
+        const p = N[id].p;
+        if (p < 0 || !box[p]) continue;
+        const [ds, mx, my] = ribbon(id, box[p], box[id]);
+        const paths = ribs[id].children;
+        ds.forEach((d, k) => paths[k].setAttribute("d", d));
+        const op = !cur[id] ? t : !tgt[id] ? 1 - t : 1;
+        ribs[id].style.opacity = op < 1 ? op : "";
+        pills[id].setAttribute("transform", `translate(${mx.toFixed(1)},${my.toFixed(1)})`);
+        pills[id].style.opacity = op < 1 ? op : "";
+      }
+      view = {k: lerp(v0.k, v1.k, t), x: lerp(v0.x, v1.x, t), y: lerp(v0.y, v1.y, t)};
+      applyView();
+      if (t < 1) { anim = requestAnimationFrame(frame); return; }
+      anim = null;
+      for (const id of ids) if (!tgt[id]) {
+        els[id].style.display = "none";
+        if (N[id].p >= 0) { ribs[id].style.display = "none"; pills[id].style.display = "none"; }
+      }
+      cur = tgt;
+    };
+    if (dur) anim = requestAnimationFrame(frame); else frame(t0 + 1);
+  }
+  function bounds(boxes) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const b of Object.values(boxes)) { x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[0] + b[2] + 8); y1 = Math.max(y1, b[1] + b[3] + 18); }
+    return [x0, y0, x1, y1];
+  }
+  function fitView(boxes) {
+    const [x0, y0, x1, y1] = bounds(boxes), W = stage.clientWidth, Hh = stage.clientHeight, m = 36;
+    const k = Math.max(0.08, Math.min(1.15, (W - 2 * m) / (x1 - x0), (Hh - 2 * m) / (y1 - y0)));
+    return {k, x: (W - (x1 - x0) * k) / 2 - x0 * k, y: Math.max(m, (Hh - (y1 - y0) * k) / 2) - y0 * k};
+  }
+  // relayout, keeping node `keep` fixed on screen (or refitting)
+  function update(keep, fit) {
+    const tgt = layout();
+    let v = view;
+    if (fit) v = fitView(tgt);
+    else if (keep != null && cur[keep] && tgt[keep]) {
+      v = {k: view.k, x: view.x - (tgt[keep][0] - cur[keep][0]) * view.k, y: view.y - (tgt[keep][1] - cur[keep][1]) * view.k};
+    }
+    render(tgt, {view: v});
+    syncPath();
+  }
+
+  // ---------- toolbar controls
+  const depthEl = document.getElementById("depth"), depthV = document.getElementById("depthv");
+  depthEl.max = Math.max(1, D.maxDepth);
+  function setDepth(d, fit = true) {
+    d = Math.max(1, Math.min(d, D.maxDepth || 1));
+    collapsed = new Set(N.filter((n) => !n.leaf && n.d >= d).map((n) => n.id));
+    depthEl.value = d; depthV.textContent = d;
+    update(ROOT0, fit);
+  }
+  depthEl.addEventListener("input", () => setDepth(+depthEl.value));
+  document.getElementById("b-fit").onclick = () => update(null, true);
+  const orientBtn = document.getElementById("b-orient");
+  function setOrientLabel() { orientBtn.querySelector("span").textContent = orient === "TB" ? "Vertical" : "Horizontal"; orientBtn.querySelector("svg").style.transform = orient === "TB" ? "" : "rotate(-90deg)"; }
+  const simpleBtn = document.getElementById("b-simple");
+  simpleBtn.classList.toggle("on", simple);
+  simpleBtn.onclick = () => {
+    simple = !simple;
+    simpleBtn.classList.toggle("on", simple);
+    applyMode();
+    for (const id in els) { els[id].remove(); delete els[id]; }
+    cur = {};
+    const t = layout();
+    render(t, {view: fitView(t), instant: true});
+    syncPath();
+  };
+  orientBtn.onclick = () => { orient = orient === "TB" ? "LR" : "TB"; setOrientLabel(); update(null, true); };
+
+  // ---------- pan, zoom, click
+  let drag = null;
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    drag = {x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false, target: e.target.closest(".node")};
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = true;
+    stage.classList.add("drag");
+    S.hideTip();
+    view.x = drag.vx + dx; view.y = drag.vy + dy;
+    applyView();
+  });
+  stage.addEventListener("pointerup", () => {
+    if (drag && !drag.moved && drag.target) {
+      const id = +drag.target.dataset.id, n = N[id];
+      if (n.leaf) {  // a leaf loads one of its training rows into Predict
+        S.loadSample((x) => leafOf(x, n.root) === id, `training row from ${CASCADE ? (n.ruleLabel || "the else outcome") : "leaf #" + id}`);
+      } else {
+        if (collapsed.has(id)) collapsed.delete(id); else collapsed.add(id);
+        update(id, false);
+      }
+    }
+    drag = null;
+    stage.classList.remove("drag");
+  });
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = stage.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    const k = Math.max(0.05, Math.min(4, view.k * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015))));
+    view = {k, x: mx - (mx - view.x) * k / view.k, y: my - (my - view.y) * k / view.k};
+    applyView();
+  }, {passive: false});
+
+  // ---------- hover: tooltip + path highlight
+  let hoverPath = [];
+  const ancestors = (id) => { const out = []; while (id >= 0) { out.push(id); id = N[id].p; } return out; };
+  gNode.addEventListener("pointerover", (e) => {
+    const g = e.target.closest(".node");
+    if (!g || drag) return;
+    const id = +g.dataset.id, n = N[id];
+    hoverPath.forEach((a) => ribs[a] && ribs[a].classList.remove("hl"));
+    hoverPath = ancestors(id);
+    hoverPath.forEach((a) => ribs[a] && ribs[a].classList.add("hl"));
+    const act = n.leaf ? (D.samples.length ? "Click to load a training row from here into Predict." : "")
+      : `Click to ${collapsed.has(id) ? "expand" : "collapse"} (${n.desc} nodes below).`;
+    S.tip(n.tip + (act ? `<div class="tt-act">${act}</div>` : ""));
+    S.hotFeatures(n.leaf ? [] : n.fs);
+  });
+  gNode.addEventListener("pointerout", (e) => {
+    const g = e.target.closest(".node");
+    if (g && !g.contains(e.relatedTarget)) {
+      hoverPath.forEach((a) => ribs[a] && ribs[a].classList.remove("hl"));
+      hoverPath = [];
+      S.hideTip();
+      S.hotFeatures([]);
+    }
+  });
+
+  // ---------- Predict: highlight the path(s) and mark the value in each chart
+  function syncPath() {
+    const x = S.x();
+    svg.classList.toggle("predicting", !!x);
+    for (const id in els) {
+      const on = !!x && path.has(+id);
+      els[id].classList.toggle("onpath", on);
+      if (N[id].p >= 0) { ribs[id] && ribs[id].classList.toggle("onpath", on); pills[id] && pills[id].classList.toggle("onpath", on); }
+      const mk = els[id].querySelector(".mk"), c = N[id].chart;
+      mk.innerHTML = "";
+      if (on && c && !simple && !N[id].leaf) {
+        const v = x[N[id].f], fr = Math.max(0, Math.min(1, (v - c.lo) / (c.hi - c.lo))), px = c.x0 + fr * (c.x1 - c.x0);
+        mk.innerHTML = `<line x1="${px}" x2="${px}" y1="${c.y0 - 3}" y2="${c.y1}" style="stroke:var(--dti-hl);stroke-width:2"/>` +
+          `<circle cx="${px}" cy="${c.y0 - 3}" r="3.5" style="fill:var(--dti-hl);stroke:var(--dti-card);stroke-width:1.5"/>`;
+      }
+    }
+  }
+  function show(x) {
+    if (!x) { path = new Set(); syncPath(); return; }
+    const p = D.roots.flatMap((r) => walk(x, r));
+    path = new Set(p);
+    let opened = false;
+    for (const id of p) if (collapsed.has(id)) { collapsed.delete(id); opened = true; }
+    if (opened) update(null, false); else syncPath();
+  }
+  function stepText(id, x) {  // one edge of the path, as read in the Predict panel
+    const par = N[N[id].p];
+    if (par.f >= 0) return `${esc(S.feat(par.f).name)} = ${esc(S.val(par.f, x[par.f]))} <span class="tt-m">(${esc(N[id].lab)})</span>`;
+    return `${esc(par.st)} <span class="tt-m">(${esc(N[id].lab)})</span>`;
+  }
+  function explain(x, p) {
+    if (MEAN) {  // each tree's vote, then the average
+      const k = S.isClf ? (D.classes.length === 2 ? 1 : p.cls) : null;
+      const vals = p.leaves.map((id) => (S.isClf ? N[id].pr[k] : N[id].v));
+      const lab = S.isClf ? `P(${esc(D.classes[k].name)})` : "prediction";
+      const rows = vals.slice(0, 12).map((v, i) => `<div class="lab">tree ${i + 1}</div><div class="val">${S.isClf ? S.pct(v) : fmt(v)}</div>`).join("");
+      return `<div class="wf">${rows}${vals.length > 12 ? `<div class="lab tt-m">+${vals.length - 12} more trees</div><div></div>` : ""}` +
+        `<div class="lab tot">average ${lab}</div><div class="val tot">${S.isClf ? S.pct(vals.reduce((a, b) => a + b, 0) / vals.length) : fmt(p.value)}</div></div>`;
+    }
+    if (SUM) {
+      const items = p.leaves.map((id, k) => [`tree ${k + 1}`, N[id].v]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+      if (D.intercept) items.unshift(["baseline", D.intercept]);
+      const pos = S.isClf ? D.classes[1].col : "var(--dti-c0)", neg = S.isClf ? D.classes[0].col : "var(--dti-c7)";
+      return S.waterfall(items, S.isClf ? "log-odds" : "prediction", p.total, pos, neg);
+    }
+    const steps = walk(x, ROOT0).slice(1).map((id) => `<li>${stepText(id, x)}</li>`).join("");
+    return `<ul class="tt-r path">${steps}</ul>`;
+  }
+  function exportSvg() {
+    const [x0, y0, x1, y1] = bounds(cur), m = 24;
+    const clone = svg.cloneNode(true);
+    clone.querySelector("#vp").setAttribute("transform", `translate(${m - x0},${m - y0})`);
+    clone.setAttribute("width", x1 - x0 + 2 * m); clone.setAttribute("height", y1 - y0 + 2 * m);
+    clone.setAttribute("viewBox", `0 0 ${x1 - x0 + 2 * m} ${y1 - y0 + 2 * m}`);
+    clone.removeAttribute("id");
+    clone.querySelectorAll('[style*="display: none"]').forEach((e) => e.remove());
+    let text = new XMLSerializer().serializeToString(clone);
+    const style = `<style>.stack,.badge,.ring{display:none}.collapsed .stack,.collapsed .badge{display:inline}.rib{fill-opacity:.32}</style>`;
+    return text.replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="${S.surface()}"/>`);
+  }
+
+  S.start({
+    word: CASCADE ? "rule" : "split",
+    hint: CASCADE ? "Set feature values to see which rule applies first. Click an outcome to load a training row it covers."
+      : SUM ? "Set feature values to follow each tree's path; their leaf values add up. Click a leaf to load a training row from it."
+        : "Set feature values to follow the decision path. Click a leaf to load a training row from it.",
+    predict, explain, show, exportSvg,
+    highlight(f) {
+      svg.classList.toggle("feat-mode", f != null);
+      for (const id in els) els[id].classList.toggle("feat", f != null && N[id].fs.includes(f));
+    },
+    onOpen: () => update(null, true),
+    onClose: () => update(null, true),
+  });
+
+  // ---------- init
+  setOrientLabel();
+  if (CASCADE) orientBtn.style.display = "none";  // rule lists have one layout
+  const d0 = Math.min(D.initialDepth, D.maxDepth || 1);
+  collapsed = new Set(N.filter((n) => !n.leaf && n.d >= d0).map((n) => n.id));
+  depthEl.value = d0; depthV.textContent = d0;
+  const t0 = layout();
+  render(t0, {view: fitView(t0), instant: true});
+  addEventListener("resize", () => { if (!anim) update(null, true); });
+})();
+
+</script>
+</body>
+</html>

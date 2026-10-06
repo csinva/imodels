@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLIM, breast cancer</title>
+<style>
+:root{--dti-page:#f9f9f7;--dti-surface:#fcfcfb;--dti-card:#ffffff;--dti-ink:#0b0b0b;--dti-ink2:#52514e;--dti-muted:#898781;--dti-grid:#e1e0d9;--dti-axis:#c3c2b7;--dti-ring:#e4e3dd;--dti-ribbon:#b9b8b0;--dti-hl:#0b0b0b;--dti-shadow:#1a1a1a;--dti-c0:#2a78d6;--dti-c1:#eb6834;--dti-c2:#1baf7a;--dti-c3:#eda100;--dti-c4:#e87ba4;--dti-c5:#008300;--dti-c6:#4a3aa7;--dti-c7:#e34948;--dti-c8:#7a6a58;--dti-c9:#5f7f8f;--dti-c10:#9a9a2a;--dti-c11:#8a8a8a;--dti-s0:#6da7ec;--dti-s1:#5598e7;--dti-s2:#3987e5;--dti-s3:#2a78d6;--dti-s4:#256abf;--dti-s5:#1c5cab;--dti-s6:#184f95;--dti-s7:#104281;--dti-s8:#0d366b; --dti-font:Helvetica, 'Helvetica Neue', Arial, 'Nimbus Sans', 'Liberation Sans', sans-serif; color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}}
+:root[data-theme="dark"]{--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}
+/* Shared page shell for every imodels.viz interactive page (trees, rule lists, rule sets, scorecards, GAMs). */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--dti-surface);color:var(--dti-ink);font:13px/1.4 var(--dti-font);-webkit-font-smoothing:antialiased}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr) auto auto;height:100%}
+header{grid-column:1/4;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px;padding:18px 22px 10px}
+.ttl{flex:1 1 320px;min-width:0}
+h1{font-size:18px;font-weight:650;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--dti-ink2);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;color:var(--dti-ink2);font-size:11.5px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .grad{width:140px;height:8px;border-radius:4px;display:inline-block;margin:0 6px;vertical-align:0}
+.legend .lnote{color:var(--dti-muted)}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tools .sep{width:1px;height:20px;background:var(--dti-ring);margin:0 4px}
+button,.ctl{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:8px;height:30px;padding:0 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--dti-axis)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--dti-ink);outline-offset:1px}
+button.on{background:var(--dti-ink);color:var(--dti-card);border-color:var(--dti-ink)}
+button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ctl{cursor:default;gap:8px;padding-right:8px}
+.ctl input[type=range]{width:84px;accent-color:var(--dti-ink)}
+.ctl b{min-width:14px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ctl select{font:inherit;font-size:12px;color:var(--dti-ink);background:transparent;border:0;cursor:pointer}
+#stage{position:relative;min-width:0;min-height:0}
+.hint-bar{position:absolute;left:14px;bottom:12px;font-size:11px;color:var(--dti-muted);pointer-events:none}
+.hint-bar kbd{font:inherit;border:1px solid var(--dti-ring);border-bottom-width:2px;border-radius:4px;padding:0 4px;margin:0 2px;background:var(--dti-card);color:var(--dti-ink2)}
+
+/* features column */
+#hudcol{min-height:0;display:flex;padding:0 12px 12px 0}
+.hud{width:288px;max-height:100%;align-self:flex-start;display:flex;flex-direction:column;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.08);overflow:hidden;font-size:12px}
+.hud.min{width:auto}
+.hud-h{display:flex;align-items:center;gap:8px;padding:9px 8px 8px 12px;border-bottom:1px solid var(--dti-ring)}
+.hud-h b{font-weight:650;font-size:12.5px}
+.hud-h .tt-m{flex:1;font-size:11px}
+.hud-h button{height:24px;width:24px;padding:0;justify-content:center;border:0;background:transparent}
+.hud-h button svg{transition:transform .2s}
+.hud.min .hud-body,.hud.min .hud-note,.hud.min .hud-f,.hud.min .hud-h .tt-m{display:none}
+.hud.min .hud-h{border-bottom:0}
+.hud.min .hud-h button svg{transform:rotate(90deg)}
+.hud-body{overflow-y:auto;padding:4px 0;min-height:0}
+.frow{padding:7px 12px 7px 10px;cursor:pointer;border-left:2px solid transparent}
+.frow:hover,.frow.hot{background:var(--dti-page)}
+.frow.pin{border-left-color:var(--dti-ink);background:var(--dti-page)}
+.frow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.frow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.frow .im{font-variant-numeric:tabular-nums;color:var(--dti-ink2);font-size:11.5px}
+.frow .ib{height:3px;border-radius:2px;background:var(--dti-grid);margin:4px 0 6px}
+.frow .ib span{display:block;height:100%;border-radius:2px;background:var(--dti-ink)}
+.frow svg{display:block;width:100%;height:36px}
+.frow .xv{display:none}
+.predicting .frow .xv{display:inline}
+.frow .meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--dti-muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.hud-note{padding:8px 12px 2px;border-top:1px solid var(--dti-ring);font-size:10.5px;line-height:1.45;color:var(--dti-ink2)}
+.hud-note b{font-weight:600;color:var(--dti-ink)}
+.hud-note code{font-size:10px}
+.hud-f{padding:4px 12px 8px;font-size:10.5px;color:var(--dti-muted)}
+
+/* tooltip */
+#tip{position:fixed;pointer-events:none;max-width:340px;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;z-index:9}
+#tip.show{opacity:1;transform:none}
+.tt-h{font-size:12.5px;margin-bottom:6px}
+.tt-k{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dti-muted);margin-right:4px}
+.tt-r{margin:0 0 8px;padding:0;list-style:none;color:var(--dti-ink2);font-size:11.5px}
+.tt-r li{padding:1px 0 1px 12px;position:relative}
+.tt-r li:before{content:"";position:absolute;left:2px;top:8px;width:4px;height:4px;border-radius:2px;background:var(--dti-axis)}
+.tt-m{color:var(--dti-muted)}
+.tt-act{margin-top:6px;font-size:11px;color:var(--dti-muted)}
+#tip table,#panel table{border-collapse:collapse;width:100%;font-size:11.5px}
+#tip td,#panel td{padding:2px 0;color:var(--dti-ink2)}
+#tip td:first-child{padding-right:12px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--dti-ink);padding-left:12px}
+td i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+td.bar{width:70px;padding-left:10px}
+td.bar span{display:block;height:5px;border-radius:3px}
+tr.sep td{height:6px}
+
+/* predict panel */
+#panel{width:0;overflow:hidden;border-left:1px solid var(--dti-ring);background:var(--dti-page);transition:width .25s ease}
+#panel.open{width:320px}
+#panel .in{width:320px;height:100%;overflow-y:auto;padding:16px 18px 24px}
+#panel h2{font-size:13px;margin:0 0 2px;font-weight:650}
+#panel h3{font-size:10px;margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--dti-muted)}
+#panel .hint{font-size:11.5px;color:var(--dti-muted);margin-bottom:12px}
+.res{background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.res .big{font-size:20px;font-weight:650;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.res .big i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.res .meta{font-size:11.5px;color:var(--dti-ink2);margin-top:2px}
+.res .truth{font-size:11px;color:var(--dti-muted);margin-top:2px}
+.res .truth b{color:var(--dti-ink2)}
+.probs{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:8px 0 2px;background:var(--dti-grid)}
+.probs span{display:block;height:100%}
+.plabs{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:10.5px;color:var(--dti-ink2);font-variant-numeric:tabular-nums}
+.plabs i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.wf{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;font-size:11.5px;align-items:center}
+.wf .lab{color:var(--dti-ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.wf .bar{grid-column:1/3;height:4px;border-radius:2px;margin-bottom:4px}
+.wf .tot{border-top:1px solid var(--dti-ring);padding-top:4px;color:var(--dti-ink);font-weight:600}
+.path{margin:8px 0 0}
+.wi{display:flex;flex-direction:column;gap:6px}
+.wi button{height:auto;padding:7px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;align-items:center;width:100%}
+.wi .what{font-size:11.5px;color:var(--dti-ink);overflow-wrap:anywhere}
+.wi .what b{font-weight:600}
+.wi .to{font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.wi .to i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.wi .how{grid-column:1/3;font-size:10.5px;color:var(--dti-muted)}
+.wi .none{font-size:11.5px;color:var(--dti-muted)}
+.fld{margin-bottom:10px}
+.fld label{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--dti-ink2);margin-bottom:3px;gap:8px}
+.fld label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld input[type=number]{width:84px;font:inherit;font-size:12px;text-align:right;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.fld input[type=range]{width:100%;accent-color:var(--dti-ink);margin:0}
+.fld select{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;max-width:150px}
+.fld .ctl2{display:flex;align-items:center;gap:8px;overflow:visible}
+.fld .miss{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--dti-muted);margin:0;cursor:pointer}
+.fld .miss input{margin:0;accent-color:var(--dti-ink)}
+.fld.hot label span{color:var(--dti-ink);font-weight:600}
+.fld.changed input[type=number]{border-color:var(--dti-ink)}
+.row{display:flex;gap:6px;margin-bottom:6px}
+.row button{flex:1;justify-content:center}
+@media (max-width:900px){#hudcol{display:none}}
+@media (max-width:700px){#app{grid-template-columns:minmax(0,1fr)}#panel.open{width:100%;position:absolute;inset:auto 0 0 0;height:55%;border-left:0;border-top:1px solid var(--dti-ring);z-index:6}#panel .in{width:100%}.hint-bar{display:none}}
+
+#stage{overflow:auto;padding:8px 16px 40px 22px}
+#canvas{display:block;max-width:100%;height:auto;font-family:var(--dti-font)}
+.term{transition:opacity .2s,transform .35s ease}
+.term.rule,.panel{cursor:pointer}
+.rowbg{transition:fill-opacity .15s}
+.term.rule:hover .rowbg{fill-opacity:1!important}
+.predicting .term:not(.on){opacity:.32}
+.predicting .term.near{opacity:.7}
+.predicting .term .chip.no{opacity:.45}
+.predicting .term .chip.ok rect{stroke:var(--dti-ink);stroke-width:1.2px}
+.predicting .term.on .chip.ok rect{fill:var(--dti-hl)!important;fill-opacity:1!important}
+.predicting .term.on .chip.ok text{fill:var(--dti-card)!important}
+.predicting .term.rule.near .tag.near,.predicting .term.rule.on .tag.on{display:inline!important}
+.panel{transition:opacity .2s}
+.panel:hover>rect:first-of-type{stroke:var(--dti-axis)!important}
+.feat-mode .term:not(.feat),.feat-mode .panel:not(.feat){opacity:.25}
+.mk line,.mk circle,.mk text{pointer-events:none}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="ttl"><h1>SLIM, breast cancer</h1><div class="sub">SLIMClassifier  ·  7 scoring items  ·  569 training samples</div><div class="legend" id="legend"></div></div>
+    <div class="tools">
+      
+      <label class="ctl" id="sortctl" title="Order the rows">Sort <select id="sort" aria-label="Sort rows">
+        <option value="effect">by effect</option><option value="coverage">by coverage</option><option value="model">model order</option></select></label>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-theme" title="Switch light / dark theme" aria-label="Switch light or dark theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg></button>
+      <button id="b-svg" title="Download the current view as SVG"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13.5h10"/></svg>SVG</button>
+      <button id="b-pred" title="Try a sample: see the prediction, how it is reached and what would change it"><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><path d="M4 5.6V8a2 2 0 0 0 2 2h4a2 2 0 0 1 2 2"/></svg>Predict</button>
+    </div>
+  </header>
+  <div id="stage"><svg id="canvas" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 902 398" width="902" font-family="Helvetica, &#x27;Helvetica Neue&#x27;, Arial, &#x27;Nimbus Sans&#x27;, &#x27;Liberation Sans&#x27;, sans-serif"><defs><filter id="dti70-sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="1" stdDeviation="1" style="flood-color:var(--dti-shadow);flood-opacity:0.06"/><feDropShadow dx="0" dy="6" stdDeviation="8" style="flood-color:var(--dti-shadow);flood-opacity:0.07"/></filter></defs><rect x="0" y="0" width="412" height="390" rx="12" filter="url(#dti70-sh)" style="fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1"/><rect x="430" y="0" width="460" height="362" rx="12" filter="url(#dti70-sh)" style="fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1"/><g transform="translate(16,16)"><text x="0" y="10" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">IF</text><text x="380" y="10" text-anchor="end" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">POINTS</text><line x1="0" x2="380" y1="22" y2="22" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="0"><rect class="rowbg" x="-8" y="26" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="31" width="132.1" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="66.1" y="46" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_radius_high = 1</text></g><rect class="pts" x="346.1" y="31" width="33.9" height="22" rx="11" style="fill:var(--dti-c0);fill-opacity:0.16"/><text x="363.1" y="46.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">−1</text></g><line x1="0" x2="380" y1="62" y2="62" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="1"><rect class="rowbg" x="-8" y="66" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="71" width="135.9" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="68" y="86" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_texture_high = 1</text></g><rect class="pts" x="346.1" y="71" width="33.9" height="22" rx="11" style="fill:var(--dti-c0);fill-opacity:0.16"/><text x="363.1" y="86.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">−2</text></g><line x1="0" x2="380" y1="102" y2="102" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="2"><rect class="rowbg" x="-8" y="106" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="111" width="123.8" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="61.9" y="126" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_area_high = 1</text></g><rect class="pts" x="346.1" y="111" width="33.9" height="22" rx="11" style="fill:var(--dti-c0);fill-opacity:0.16"/><text x="363.1" y="126.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">−1</text></g><line x1="0" x2="380" y1="142" y2="142" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="3"><rect class="rowbg" x="-8" y="146" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="151" width="162.8" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="81.4" y="166" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_smoothness_high = 1</text></g><rect class="pts" x="346.1" y="151" width="33.9" height="22" rx="11" style="fill:var(--dti-c0);fill-opacity:0.16"/><text x="363.1" y="166.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">−1</text></g><line x1="0" x2="380" y1="182" y2="182" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="4"><rect class="rowbg" x="-8" y="186" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="191" width="148.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="74.4" y="206" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_concavity_high = 1</text></g><rect class="pts" x="346.1" y="191" width="33.9" height="22" rx="11" style="fill:var(--dti-c0);fill-opacity:0.16"/><text x="363.1" y="206.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">−2</text></g><line x1="0" x2="380" y1="222" y2="222" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="5"><rect class="rowbg" x="-8" y="226" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="231" width="180.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="90.3" y="246" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_concave_points_high = 1</text></g><rect class="pts" x="346.1" y="231" width="33.9" height="22" rx="11" style="fill:var(--dti-c0);fill-opacity:0.16"/><text x="363.1" y="246.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">−1</text></g><line x1="0" x2="380" y1="262" y2="262" style="stroke:var(--dti-grid);stroke-width:1"/><g class="term rule" data-t="6"><rect class="rowbg" x="-8" y="266" width="396" height="32" rx="6" style="fill:var(--dti-page);fill-opacity:0"/><g class="chip" data-c="0"><rect x="0" y="271" width="190.9" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="95.5" y="286" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean_fractal_dimension_high = 1</text></g><rect class="pts" x="346.3" y="271" width="33.7" height="22" rx="11" style="fill:var(--dti-c1);fill-opacity:0.16"/><text x="363.2" y="286.5" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+1</text></g><line x1="0" x2="380" y1="302" y2="302" style="stroke:var(--dti-ink);stroke-width:1.5"/><text x="0" y="325" style="font-size:13px;font-weight:650;fill:var(--dti-ink)">Total score</text><text x="370" y="325" text-anchor="end" style="font-size:12px;font-weight:400;fill:var(--dti-muted)">= sum of points</text><text x="0" y="350" style="font-size:11px;font-weight:400;fill:var(--dti-muted)">P(benign) = sigmoid(score + 5.95)</text></g><g transform="translate(20,16)"><text x="470" y="6" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">RISK BY SCORE: P(BENIGN)</text><line x1="470" x2="870" y1="232" y2="232" style="stroke:var(--dti-grid);stroke-width:1"/><text x="464" y="235.5" text-anchor="end" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">0%</text><line x1="470" x2="870" y1="179.5" y2="179.5" style="stroke:var(--dti-grid);stroke-width:1"/><text x="464" y="183" text-anchor="end" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">25%</text><line x1="470" x2="870" y1="127" y2="127" style="stroke:var(--dti-grid);stroke-width:1"/><text x="464" y="130.5" text-anchor="end" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">50%</text><line x1="470" x2="870" y1="74.5" y2="74.5" style="stroke:var(--dti-grid);stroke-width:1"/><text x="464" y="78" text-anchor="end" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">75%</text><line x1="470" x2="870" y1="22" y2="22" style="stroke:var(--dti-grid);stroke-width:1"/><text x="464" y="25.5" text-anchor="end" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">100%</text><path d="M473,312V296.2H495V312Z" style="fill:var(--dti-c0)"/><path d="M473,296.2V296.2Q473,295.8 473.4,295.8H494.6Q495,295.8 495,296.2V296.2Z" style="fill:var(--dti-c1)"/><path d="M514.3,312V267.8H536.3V312Z" style="fill:var(--dti-c0)"/><path d="M514.3,267.8V267.8Q514.3,266 516.1,266H534.6Q536.3,266 536.3,267.8V267.8Z" style="fill:var(--dti-c1)"/><path d="M555.7,312V303.2H577.7V312Z" style="fill:var(--dti-c0)"/><path d="M555.7,303.2V302.3Q555.7,299.3 558.7,299.3H574.7Q577.7,299.3 577.7,302.3V303.2Z" style="fill:var(--dti-c1)"/><path d="M597,312V295.8H619V312Z" style="fill:var(--dti-c0)"/><path d="M597,295.8V289.6Q597,286.6 600,286.6H616Q619,286.6 619,289.6V295.8Z" style="fill:var(--dti-c1)"/><path d="M638.3,312V308.1H660.3V312Z" style="fill:var(--dti-c0)"/><path d="M638.3,308.1V298.8Q638.3,295.8 641.3,295.8H657.3Q660.3,295.8 660.3,298.8V308.1Z" style="fill:var(--dti-c1)"/><path d="M679.7,312V308.9H701.7V312Z" style="fill:var(--dti-c0)"/><path d="M679.7,308.9V293.1Q679.7,290.1 682.7,290.1H698.7Q701.7,290.1 701.7,293.1V308.9Z" style="fill:var(--dti-c1)"/><path d="M721,312V311.6H743V312Z" style="fill:var(--dti-c0)"/><path d="M721,311.6V274.7Q721,271.7 724,271.7H740Q743,271.7 743,274.7V311.6Z" style="fill:var(--dti-c1)"/><path d="M762.3,312V311.6H784.3V312Z" style="fill:var(--dti-c0)"/><path d="M762.3,311.6V299.2Q762.3,296.2 765.3,296.2H781.3Q784.3,296.2 784.3,299.2V311.6Z" style="fill:var(--dti-c1)"/><path d="M803.7,312V271.2Q803.7,268.2 806.7,268.2H822.7Q825.7,268.2 825.7,271.2V312Z" style="fill:var(--dti-c1)"/><path d="M845,312V304Q845,301 848,301H864Q867,301 867,304V312Z" style="fill:var(--dti-c1)"/><line x1="470" x2="870" y1="312.5" y2="312.5" style="stroke:var(--dti-axis);stroke-width:1"/><text x="470" y="328" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">training samples by score</text><polyline points="484,208 525.3,177.5 566.7,129.6 608,80.5 649.3,48.1 690.7,32.4 732,26 773.3,23.5 814.7,22.5 856,22.2" style="fill:none;stroke:var(--dti-ink);stroke-width:2;stroke-linejoin:round"/><circle class="rk" data-s="-8" cx="484" cy="208" r="4.5" style="fill:var(--dti-c0);stroke:var(--dti-surface);stroke-width:2"/><text x="484" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−8</text><text x="484" y="199" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">11%</text><circle class="rk" data-s="-7" cx="525.3" cy="177.5" r="4.5" style="fill:var(--dti-c0);stroke:var(--dti-surface);stroke-width:2"/><text x="525.3" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−7</text><text x="525.3" y="168.5" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">26%</text><circle class="rk" data-s="-6" cx="566.7" cy="129.6" r="4.5" style="fill:var(--dti-c0);stroke:var(--dti-surface);stroke-width:2"/><text x="566.7" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−6</text><text x="566.7" y="120.6" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">49%</text><circle class="rk" data-s="-5" cx="608" cy="80.5" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="608" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−5</text><text x="608" y="71.5" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">72%</text><circle class="rk" data-s="-4" cx="649.3" cy="48.1" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="649.3" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−4</text><text x="649.3" y="39.1" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">88%</text><circle class="rk" data-s="-3" cx="690.7" cy="32.4" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="690.7" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−3</text><text x="690.7" y="49.4" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">95%</text><circle class="rk" data-s="-2" cx="732" cy="26" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="732" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−2</text><text x="732" y="43" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">98%</text><circle class="rk" data-s="-1" cx="773.3" cy="23.5" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="773.3" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">−1</text><text x="773.3" y="40.5" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">99%</text><circle class="rk" data-s="0" cx="814.7" cy="22.5" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="814.7" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">0</text><text x="814.7" y="39.5" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">100%</text><circle class="rk" data-s="1" cx="856" cy="22.2" r="4.5" style="fill:var(--dti-c1);stroke:var(--dti-surface);stroke-width:2"/><text x="856" y="248" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">1</text><text x="856" y="39.2" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-ink)">100%</text></g></svg></div>
+  <div id="hudcol"><div id="hud" class="hud" aria-label="Features">
+    <div class="hud-h"><b>Features</b><span class="tt-m" id="hud-sub"></span>
+      <button id="hud-x" title="Show or hide the features panel" aria-label="Show or hide the features panel"><svg viewBox="0 0 16 16"><path d="M4 6.5 8 10l4-3.5"/></svg></button></div>
+    <div class="hud-body" id="hud-body"></div>
+    <div class="hud-note" id="hud-note"></div>
+    <div class="hud-f" id="hud-f"></div>
+  </div></div>
+  <aside id="panel" aria-label="Predict"><div class="in">
+    <h2>Try a sample</h2>
+    <div class="hint" id="p-hint"></div>
+    <div class="res" id="res"></div>
+    <div class="row"><button id="b-rand">Random training row</button><button id="b-reset">Reset</button></div>
+    <h3>What would change the prediction</h3>
+    <div class="wi" id="whatif"></div>
+    <h3>Feature values</h3>
+    <div id="fields"></div>
+  </div></aside>
+</div>
+<div id="tip" role="tooltip"></div>
+<script type="application/json" id="dti-data">{"family":"scorecard","task":"classification","terms":[{"k":"rule","w":-1.0,"c":[[0,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[0],"txt":"mean_radius_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_radius_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>\u22121 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>195 (69%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>89 (31%)<\/td><\/tr><\/table>","sup":0.4991212653778559},{"k":"rule","w":-2.0,"c":[[1,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[1],"txt":"mean_texture_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_texture_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>\u22122 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>166 (58%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>118 (42%)<\/td><\/tr><\/table>","sup":0.4991212653778559},{"k":"rule","w":-1.0,"c":[[3,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[3],"txt":"mean_area_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_area_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>\u22121 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>195 (69%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>89 (31%)<\/td><\/tr><\/table>","sup":0.4991212653778559},{"k":"rule","w":-1.0,"c":[[4,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[4],"txt":"mean_smoothness_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_smoothness_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>\u22121 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>147 (52%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>137 (48%)<\/td><\/tr><\/table>","sup":0.4991212653778559},{"k":"rule","w":-2.0,"c":[[6,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[6],"txt":"mean_concavity_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_concavity_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>\u22122 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>198 (70%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>86 (30%)<\/td><\/tr><\/table>","sup":0.4991212653778559},{"k":"rule","w":-1.0,"c":[[7,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[7],"txt":"mean_concave_points_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_concave_points_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>\u22121 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>201 (71%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>83 (29%)<\/td><\/tr><\/table>","sup":0.4991212653778559},{"k":"rule","w":1.0,"c":[[9,">",0.5]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[9],"txt":"mean_fractal_dimension_high = 1","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>mean_fractal_dimension_high = 1<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+1 to the score when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>49.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>106 (37%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>178 (63%)<\/td><\/tr><\/table>","sup":0.4991212653778559}],"intercept":0.0,"link":"logistic","threshold":0.0,"linkScale":1.0,"linkOffset":5.950596347717077,"feats":[{"i":1,"name":"mean_texture_high","imp":0.22222222222222224,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[46,239],[166,118]],"ends":["0","1"]},{"i":6,"name":"mean_concavity_high","imp":0.22222222222222224,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[14,271],[198,86]],"ends":["0","1"]},{"i":0,"name":"mean_radius_high","imp":0.11111111111111112,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[17,268],[195,89]],"ends":["0","1"]},{"i":3,"name":"mean_area_high","imp":0.11111111111111112,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[17,268],[195,89]],"ends":["0","1"]},{"i":4,"name":"mean_smoothness_high","imp":0.11111111111111112,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[65,220],[147,137]],"ends":["0","1"]},{"i":7,"name":"mean_concave_points_high","imp":0.11111111111111112,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[11,274],[201,83]],"ends":["0","1"]},{"i":9,"name":"mean_fractal_dimension_high","imp":0.11111111111111112,"lo":0.0,"hi":1.0,"v":0,"step":1,"kind":"binary","levels":null,"missing":false,"nsplit":1,"thr":[0.5],"hlo":-0.5,"hhi":1.5,"hist":[[106,179],[106,178]],"ends":["0","1"]}],"samples":[{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":0.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":1.0,"9":1.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":1.0,"7":0.0,"9":1.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":0.0},"y":"malignant"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":1.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":0.0,"0":1.0,"3":1.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"},{"x":{"1":0.0,"6":1.0,"0":1.0,"3":1.0,"4":1.0,"7":1.0,"9":1.0},"y":"malignant"},{"x":{"1":1.0,"6":0.0,"0":0.0,"3":0.0,"4":0.0,"7":0.0,"9":0.0},"y":"benign"}],"scoreName":"score","legend":[{"k":"dot","col":"var(--dti-c0)","label":"malignant"},{"k":"dot","col":"var(--dti-c1)","label":"benign"},{"k":"note","label":"bars are colored by the class a term favors"}],"impNote":"<b>%<\/b> is the feature's share of how much the model's items move the score across the training data (standard deviation of each item's contribution, split evenly among the features it uses). Bars are relative to the top feature; ticks mark thresholds the model uses.","classes":[{"name":"malignant","col":"var(--dti-c0)"},{"name":"benign","col":"var(--dti-c1)"}],"pos":"var(--dti-c1)","neg":"var(--dti-c0)","target":"target","chart":{"x0":504,"x1":876,"smin":-8.0,"smax":1.0,"y0":38,"y1":248},"sig":3,"rowsTop":0,"note":"P(benign) = sigmoid(score + 5.95)","fileName":"SLIMClassifier"}</script>
+<script>
+/* Shared runtime for imodels.viz interactive pages.
+ * A model script calls DTI.init() for utilities, draws its view, then calls S.start(hooks):
+ *   predict(x)        -> {cls, proba} for classifiers or {value} for regressors (pure)
+ *   explain(x, pred)  -> HTML shown under the prediction (path, waterfall, ...)
+ *   show(x, pred)     -> update the drawing for input x (x = null clears it)
+ *   highlight(f)      -> emphasize what uses feature f (null clears)
+ *   exportSvg()       -> SVG text of the current view
+ *   onOpen / onClose  -> optional layout hooks when the Predict panel opens / closes
+ */
+window.DTI = (function () {
+  "use strict";
+
+  function init() {
+    const D = JSON.parse(document.getElementById("dti-data").textContent);
+    const S = {D};
+    const $ = (id) => document.getElementById(id);
+    const sig = D.sig || 3;
+
+    // ---------- formatting
+    S.esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    S.fmt = (v, digits) => {
+      if (v == null || !isFinite(v)) return String(v);
+      if (Math.abs(v) < 1e-12) return "0";
+      const g = digits || sig, a = Math.abs(v);
+      if (a >= 1e6 || a < 1e-3) return v.toExponential(g - 1).replace("e+", "e").replace("-", "−");
+      const d = Math.max(g - Math.floor(Math.log10(a)) - 1, 0);
+      return Number(v.toFixed(d)).toLocaleString("en-US", {maximumFractionDigits: d}).replace("-", "−");
+    };
+    S.signed = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + S.fmt(Math.abs(v));
+    S.pct = (p) => (p >= 0.995 && p < 1 ? ">99" : p > 0 && p <= 0.005 ? "<1" : (100 * p).toFixed(0)) + "%";
+    const isClf = D.task === "classification";
+    S.isClf = isClf;
+    S.classDot = (k) => `<i style="background:${D.classes[k].col}"></i>${S.esc(D.classes[k].name)}`;
+
+    // ---------- legend (same look on every page)
+    $("legend").innerHTML = (D.legend || []).map((it) => {
+      if (it.k === "dot") return `<span><i style="background:${it.col}"></i>${S.esc(it.label)}</span>`;
+      if (it.k === "grad") return `<span>${S.esc(it.label)}</span><span class="tt-m">${S.fmt(it.lo)}</span>` +
+        `<span class="grad" style="background:linear-gradient(90deg,${it.stops.join(",")})"></span><span class="tt-m">${S.fmt(it.hi)}</span>`;
+      return `<span class="lnote">${S.esc(it.label)}</span>`;
+    }).join("");
+
+    // ---------- tooltip
+    const tip = $("tip");
+    let tipOn = false;
+    S.tip = (html) => { tip.innerHTML = html; tip.classList.add("show"); tipOn = true; };
+    S.hideTip = () => { tip.classList.remove("show"); tipOn = false; };
+    addEventListener("pointermove", (e) => {
+      if (!tipOn) return;
+      let x = e.clientX + 16, y = e.clientY + 16;
+      if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - tip.offsetWidth - 16;
+      if (y + tip.offsetHeight > innerHeight - 8) y = Math.max(8, innerHeight - tip.offsetHeight - 8);
+      tip.style.left = x + "px"; tip.style.top = y + "px";
+    });
+
+    // ---------- theme
+    const root = document.documentElement;
+    $("b-theme").onclick = () => {
+      const dark = root.dataset.theme === "dark" || (root.dataset.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      root.dataset.theme = dark ? "light" : "dark";
+    };
+    S.resolveVars = (text) => {
+      const cs = getComputedStyle(root);
+      return text.replace(/var\((--dti-[a-z0-9]+)\)/g, (_, v) => cs.getPropertyValue(v).trim());
+    };
+    S.surface = () => getComputedStyle(root).getPropertyValue("--dti-surface").trim();
+
+    // ---------- features column
+    const hud = $("hud"), hudBody = $("hud-body");
+    const FW = 264, FH = 26;
+    let hoverF = null, pinned = null, H = {};
+    function sparkline(f) {
+      const sx = (v) => Math.max(0, Math.min(1, (v - f.hlo) / (f.hhi - f.hlo || 1))) * FW;
+      let out = `<line x1="0" x2="${FW}" y1="${FH + 0.5}" y2="${FH + 0.5}" style="stroke:var(--dti-axis)"/>`;
+      if (f.hist) {
+        const nb = f.hist.length, bw = FW / nb, top = Math.max(1, ...f.hist.map((b) => b.reduce((a, c) => a + c, 0)));
+        const w = Math.min(bw - 1, 22);
+        f.hist.forEach((b, i) => {
+          let y = FH;
+          b.forEach((c, k) => {
+            if (!c) return;
+            const h = (c / top) * (FH - 2);
+            y -= h;
+            const col = isClf && b.length > 1 ? D.classes[k].col : "var(--dti-s4)";
+            out += `<rect x="${(i * bw + (bw - w) / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" style="fill:${col}"/>`;
+          });
+        });
+      }
+      for (const t of f.thr) out += `<line x1="${sx(t).toFixed(1)}" x2="${sx(t).toFixed(1)}" y1="${FH + 2}" y2="${FH + 8}" style="stroke:var(--dti-ink);stroke-width:1.5"/>`;
+      out += `<line class="xv" y1="-1" y2="${FH}" style="stroke:var(--dti-hl);stroke-width:2"/>`;
+      return `<svg viewBox="0 -2 ${FW} ${FH + 12}" preserveAspectRatio="none" aria-hidden="true">${out}</svg>`;
+    }
+    function buildHud(word) {
+      const tot = D.feats.reduce((a, f) => a + f.imp, 0) || 1, maxImp = Math.max(...D.feats.map((f) => f.imp), 1e-12);
+      $("hud-sub").textContent = `${D.feats.length} used · sorted by importance`;
+      $("hud-note").innerHTML = D.impNote || "";
+      $("hud-f").textContent = `Hover a feature to highlight the ${word}s that use it. Click to pin.`;
+      hudBody.innerHTML = D.feats.map((f) => {
+        const ends = f.ends || [S.fmt(f.hlo), S.fmt(f.hhi)], n = f.nsplit;
+        return `<div class="frow" data-f="${f.i}">
+          <div class="top"><span class="nm" title="${S.esc(f.name)}">${S.esc(f.name)}</span><span class="im">${(100 * f.imp / tot).toFixed(1)}%</span></div>
+          <div class="ib"><span style="width:${(100 * f.imp / maxImp).toFixed(1)}%"></span></div>
+          ${sparkline(f)}
+          <div class="meta"><span>${S.esc(ends[0])}</span><span>${n} ${word}${n === 1 ? "" : "s"}</span><span>${S.esc(ends[1])}</span></div></div>`;
+      }).join("");
+      hudBody.querySelectorAll(".frow").forEach((row) => {
+        const f = +row.dataset.f;
+        row.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        row.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+        row.addEventListener("click", () => { pinned = pinned === f ? null : f; applyFeat(); });
+      });
+      $("hud-x").onclick = () => hud.classList.toggle("min");
+      if (innerWidth < 1100) hud.classList.add("min");  // keep the model in view on smaller screens
+    }
+    function applyFeat() {
+      const f = hoverF ?? pinned;
+      if (H.highlight) H.highlight(f);
+      hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("pin", +r.dataset.f === pinned));
+    }
+    S.reapplyHighlight = applyFeat;
+    S.hotFeatures = (fs) => hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("hot", fs.includes(+r.dataset.f)));
+
+    // ---------- predict panel
+    const panel = $("panel"), fields = $("fields"), res = $("res"), wi = $("whatif"), predBtn = $("b-pred");
+    let x = null, truth = null, truthLabel = "";
+    const featByIdx = {};
+    D.feats.forEach((f) => (featByIdx[f.i] = f));
+    S.feat = (i) => featByIdx[i];
+    // a feature value as read by people: level name, "missing", or the number
+    S.val = (i, v, digits) => {
+      const f = featByIdx[i];
+      if (v == null || Number.isNaN(v)) return "missing";
+      if (f && f.levels) return f.levels[Math.round(v)] ?? S.fmt(v);
+      return S.fmt(v, digits);
+    };
+    const isMissing = (v) => v == null || Number.isNaN(v);
+    // samples store missing values as null
+    const fromSample = (sx) => { const o = {}; for (const k in sx) o[k] = sx[k] == null ? NaN : sx[k]; return o; };
+    S.x = () => x;
+    S.predicting = () => !!x;
+    function defaults() { const o = {}; D.feats.forEach((f) => (o[f.i] = f.v)); return o; }
+    function buildFields() {
+      fields.innerHTML = D.feats.map((f) => {
+        const nm = S.esc(f.name);
+        if (f.levels) {  // categorical: pick a level (or missing)
+          return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span>
+            <select aria-label="${nm}">${f.levels.map((l, k) => `<option value="${k}">${S.esc(l)}</option>`).join("")}` +
+            `${f.missing ? `<option value="nan">(missing)</option>` : ""}</select></label></div>`;
+        }
+        return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span><span class="ctl2">` +
+          (f.missing ? `<label class="miss" title="Treat ${nm} as missing"><input type="checkbox"> missing</label>` : "") +
+          `<input type="number" step="${f.step}" value="${+(+f.v).toPrecision(6)}" aria-label="${nm}"></span></label>
+          <input type="range" min="${f.lo}" max="${f.hi}" step="${f.step}" value="${f.v}" aria-label="${nm} slider"></div>`;
+      }).join("");
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, ft = featByIdx[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        const changed = () => { truth = null; refresh(); };
+        if (sel) sel.addEventListener("change", () => { x[f] = sel.value === "nan" ? NaN : +sel.value; changed(); });
+        if (num) num.addEventListener("input", () => {
+          if (num.value === "") return;
+          x[f] = +num.value; rng.value = num.value; if (miss) miss.checked = false; changed();
+        });
+        if (rng) rng.addEventListener("input", () => {
+          x[f] = +rng.value; num.value = +(+rng.value).toPrecision(6); if (miss) miss.checked = false; changed();
+        });
+        if (miss) miss.addEventListener("change", () => { x[f] = miss.checked ? NaN : +num.value || ft.v; changed(); });
+        el.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        el.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+      });
+    }
+    function setFields() {
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, v = x[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        if (sel) { sel.value = isMissing(v) ? "nan" : String(Math.round(v)); return; }
+        if (miss) miss.checked = isMissing(v);
+        if (isMissing(v)) { num.value = ""; return; }
+        num.value = +(+v).toPrecision(6);
+        rng.value = v;
+      });
+    }
+    function resultHtml(p) {
+      let html = `<div class="tt-k">Prediction</div>`;
+      if (isClf) {
+        const k = p.cls;
+        html += `<div class="big">${S.classDot(k)}</div>`;
+        if (p.proba) {
+          const shown = D.classes.length === 2 ? 1 : k;
+          html += `<div class="meta">P(${S.esc(D.classes[shown].name)}) = ${S.pct(p.proba[shown])}${p.note ? " \u00b7 " + p.note : ""}</div>`;
+          html += `<div class="probs">${p.proba.map((q, j) => q > 0 ? `<span style="width:${(100 * q).toFixed(2)}%;background:${D.classes[j].col}" title="${S.esc(D.classes[j].name)} ${S.pct(q)}"></span>` : "").join("")}</div>`;
+          html += `<div class="plabs">${p.proba.map((q, j) => q > 0.005 ? `<span><i style="background:${D.classes[j].col}"></i>${S.esc(D.classes[j].name)} ${S.pct(q)}</span>` : "").join("")}</div>`;
+        } else if (p.note) html += `<div class="meta">${p.note}</div>`;
+      } else {
+        html += `<div class="big">${S.fmt(p.value, Math.max(sig, 4))}</div>`;
+        if (p.note) html += `<div class="meta">${p.note}</div>`;
+      }
+      if (truth != null) html += `<div class="truth">${S.esc(truthLabel)} <b>${S.esc(truth)}</b></div>`;
+      return html + (H.explain ? H.explain(x, p) : "");
+    }
+    function refresh() {
+      const p = H.predict(x);
+      res.innerHTML = resultHtml(p);
+      if (H.show) H.show(x, p);
+      for (const f of D.feats) {
+        const ln = hudBody.querySelector(`.frow[data-f="${f.i}"] .xv`);
+        if (!ln) continue;
+        ln.style.visibility = isMissing(x[f.i]) ? "hidden" : "";
+        const px = (Math.max(0, Math.min(1, (x[f.i] - f.hlo) / (f.hhi - f.hlo || 1))) * FW).toFixed(1);
+        ln.setAttribute("x1", px); ln.setAttribute("x2", px);
+      }
+      hud.classList.add("predicting");
+      whatIf(p);
+      applyFeat();
+    }
+    S.refresh = () => { if (x) refresh(); };
+
+    // ---------- what would change the prediction
+    // the roundest number just past threshold t (above when up, else below) that crosses no other
+    // threshold, so an applied change reads cleanly (1.8 rather than 1.750001)
+    function nicePast(t, up, span, thr) {
+      const tol = span * 1e-3;
+      for (let p = 1; p <= 12; p++) {
+        const step = Math.pow(10, Math.floor(Math.log10(Math.abs(t) || 1)) - p + 1);
+        const v = +((up ? Math.floor(t / step) + 1 : Math.ceil(t / step) - 1) * step).toPrecision(p + 1);
+        const clear = thr.every((o) => !(up ? o > t && o < v : o < t && o > v));
+        if ((up ? v > t : v < t) && Math.abs(v - t) <= tol && clear) return v;
+      }
+      return up ? t + span * 1e-6 : t - span * 1e-6;
+    }
+    function candidates(f, cur) {
+      const span = (f.hi - f.lo) || 1, out = [];
+      if (f.missing && !isMissing(cur)) out.push({v: NaN, txt: "missing"});
+      if (f.levels) {
+        f.levels.forEach((l, k) => { if (isMissing(cur) || k !== Math.round(cur)) out.push({v: k, txt: l}); });
+        return out;
+      }
+      if (f.kind === "binary") return out.concat([{v: 0, txt: "0"}, {v: 1, txt: "1"}].filter((c) => c.v !== cur));
+      for (const t of f.thr) {
+        if (f.kind === "integer") {
+          out.push({v: Math.floor(t), txt: S.fmt(Math.floor(t), 12)}, {v: Math.floor(t) + 1, txt: S.fmt(Math.floor(t) + 1, 12)});
+        } else {
+          let dg = sig;  // enough digits that the threshold reads differently from the current value
+          // (only when they really differ: a value sitting on the cut keeps the short form)
+          while (dg < 8 && !isMissing(cur) && Math.abs(t - cur) > span * 1e-5 && S.fmt(t, dg) === S.fmt(cur, dg)) dg++;
+          out.push({v: nicePast(t, false, span, f.thr), txt: `\u2264 ${S.fmt(t, dg)}`, t},
+                   {v: nicePast(t, true, span, f.thr), txt: `> ${S.fmt(t, dg)}`, t});
+        }
+      }
+      for (let q = 0; q <= 8; q++) {
+        let v = f.lo + span * q / 8;
+        if (f.kind === "integer") v = Math.round(v);
+        out.push({v, txt: S.fmt(v)});
+      }
+      return out.filter((c) => isMissing(c.v) || isMissing(cur) || Math.abs(c.v - cur) > 1e-12);
+    }
+    // how big a change is, as a share of the feature's range (switching a level or to / from missing counts as half)
+    function dist(f, c, cur) {
+      if (f.levels || isMissing(c.v) || isMissing(cur)) return 0.5;
+      return Math.abs(c.v - cur) / ((f.hi - f.lo) || 1);
+    }
+    function whatIf(base) {
+      const rows = [];
+      for (const f of D.feats) {
+        const cur = x[f.i];
+        let best = null;
+        for (const c of candidates(f, cur)) {
+          const xx = Object.assign({}, x, {[f.i]: c.v});
+          const p = H.predict(xx), d = dist(f, c, cur);
+          if (isClf) {
+            const flips = p.cls !== base.cls;
+            // prefer the smallest change that flips the class; otherwise the biggest drop in the current class
+            const drop = p.proba && base.proba ? base.proba[base.cls] - p.proba[base.cls] : 0;
+            const key = flips ? [0, d] : [1, -drop];
+            if (!flips && drop < 0.005) continue;  // ignore changes that barely move the probability
+            if (!best || key[0] < best.key[0] || (key[0] === best.key[0] && key[1] < best.key[1])) best = {f, c, p, key, flips, drop};
+          } else {
+            const delta = p.value - base.value;
+            if (Math.abs(delta) <= 1e-9 * (1 + Math.abs(base.value))) continue;
+            const key = [0, -Math.abs(delta)];
+            if (!best || key[1] < best.key[1]) best = {f, c, p, key, delta};
+          }
+        }
+        if (best) rows.push(best);
+      }
+      rows.sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1]);
+      rows.forEach((r) => (r.changes = [{f: r.f, c: r.c}]));
+      const flipping = rows.filter((r) => r.flips), lowering = rows.filter((r) => !r.flips);
+      const pairs = isClf && !flipping.length ? pairFlips(base) : [];
+      const cls = S.esc(D.classes[base.cls] ? D.classes[base.cls].name : "");
+      const groups = isClf
+        ? [["Smallest single-feature changes that flip the class:", flipping.slice(0, 4)],
+           ["No single change flips the class. Smallest pairs of changes that do:", pairs],
+           [`Changes that lower P(${cls}) most without flipping it:`, lowering.slice(0, Math.max(0, 4 - flipping.length - pairs.length))]]
+        : [["Single-feature changes that move the prediction most:", rows.slice(0, 5)]];
+      const show = [];
+      let html = "";
+      for (const [lead, list] of groups) {
+        if (!list.length) continue;
+        html += `<div class="none">${lead}</div>`;
+        for (const r of list) {
+          const to = isClf
+            ? `${S.classDot(r.p.cls)}${r.p.proba ? " " + S.pct(r.p.proba[r.p.cls]) : ""}`
+            : `${S.fmt(r.p.value, Math.max(sig, 4))} <span class="tt-m">(${S.signed(r.delta)})</span>`;
+          const what = r.changes.map((ch) => {
+            let dg = sig;
+            while (dg < 8 && ch.c.t != null && !isMissing(x[ch.f.i]) &&
+                   Math.abs(ch.c.t - x[ch.f.i]) > ((ch.f.hi - ch.f.lo) || 1) * 1e-5 &&
+                   S.fmt(ch.c.t, dg) === S.fmt(x[ch.f.i], dg)) dg++;
+            return `<b>${S.esc(ch.f.name)}</b> ${S.esc(S.val(ch.f.i, x[ch.f.i], dg))} \u2192 ${S.esc(ch.c.txt)}`;
+          }).join(" and ");
+          html += `<button data-k="${show.length}" title="Apply ${r.changes.length > 1 ? "these changes" : "this change"}"><span class="what">${what}</span>` +
+            `<span class="to">${to}</span></button>`;
+          show.push(r);
+        }
+      }
+      wi.innerHTML = html || `<div class="none">No change to one or two features moves this prediction.</div>`;
+      wi.querySelectorAll("button").forEach((b) => {
+        const r = show[+b.dataset.k];
+        b.onclick = () => { for (const ch of r.changes) x[ch.f.i] = ch.c.v; truth = null; setFields(); refresh(); };
+      });
+    }
+    // two-feature changes that flip the class, nearest first (top features, nearest candidates only)
+    function pairFlips(base) {
+      const cand = D.feats.slice(0, 10).map((f) => {
+        const cur = x[f.i];
+        return {f, list: candidates(f, cur).map((c) => ({c, d: dist(f, c, cur)})).sort((a, b) => a.d - b.d).slice(0, 12)};
+      });
+      const best = [];
+      for (let a = 0; a < cand.length; a++) for (let b = a + 1; b < cand.length; b++) {
+        let top = null;
+        for (const ca of cand[a].list) for (const cb of cand[b].list) {
+          const d = ca.d + cb.d;
+          if (top && d >= top.key[1]) continue;
+          const p = H.predict(Object.assign({}, x, {[cand[a].f.i]: ca.c.v, [cand[b].f.i]: cb.c.v}));
+          if (p.cls !== base.cls) top = {changes: [{f: cand[a].f, c: ca.c}, {f: cand[b].f, c: cb.c}], p, key: [0, d], flips: true};
+        }
+        if (top) best.push(top);
+      }
+      return best.sort((a, b) => a.key[1] - b.key[1]).slice(0, 3);
+    }
+
+    function open(on) {
+      on = on ?? !panel.classList.contains("open");
+      panel.classList.toggle("open", on);
+      predBtn.classList.toggle("on", on);
+      if (on) {
+        if (!x) { x = defaults(); buildFields(); }
+        refresh();
+        if (H.onOpen) setTimeout(H.onOpen, 270);
+      } else {
+        x = null;
+        hud.classList.remove("predicting");
+        if (H.show) H.show(null, null);
+        if (H.onClose) setTimeout(H.onClose, 270);
+      }
+    }
+    S.open = open;
+    // load a training row into Predict (optionally one matching `keep`)
+    S.loadSample = (keep, why) => {
+      const pool = keep ? D.samples.filter((s) => keep(Object.assign(defaults(), fromSample(s.x)))) : D.samples;
+      if (!pool.length) return false;
+      const s = pool[Math.floor(Math.random() * pool.length)];
+      if (!x) { x = defaults(); buildFields(); }
+      Object.assign(x, fromSample(s.x));
+      truth = s.y;
+      truthLabel = why ? `${why}; true label` : "true label";
+      if (!panel.classList.contains("open")) open(true); else { setFields(); refresh(); }
+      setFields();
+      return true;
+    };
+    S.setValues = (vals) => { if (!x) open(true); Object.assign(x, vals); truth = null; setFields(); refresh(); };
+    S.withX = (vals) => Object.assign({}, x || defaults(), vals);
+    S.defaults = defaults;
+
+    S.start = (hooks) => {
+      H = hooks;
+      buildHud(hooks.word || "term");
+      $("p-hint").textContent = hooks.hint || "Set feature values to see the prediction. Features are ordered by importance.";
+      predBtn.onclick = () => open();
+      const rb = $("b-rand");
+      if (!D.samples.length) rb.style.display = "none";
+      rb.onclick = () => S.loadSample(null);
+      $("b-reset").onclick = () => { x = defaults(); truth = null; setFields(); refresh(); };
+      $("b-svg").onclick = () => {
+        const text = S.resolveVars(hooks.exportSvg());
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], {type: "image/svg+xml"}));
+        a.download = (D.fileName || "model") + ".svg";
+        a.click();
+      };
+    };
+    // a small horizontal waterfall used by additive models and sums of trees
+    S.waterfall = (items, totalLabel, total, pos, neg, limit = 12) => {
+      // the baseline is listed but not drawn: it would set the scale and flatten every contribution
+      const maxc = Math.max(...items.filter(([lab]) => lab !== "baseline").map(([, c]) => Math.abs(c)), 1e-12);
+      const line = (lab, c) => `<div class="lab" title="${S.esc(lab)}">${S.esc(lab)}</div><div class="val">${S.signed(c)}</div>` +
+        (lab === "baseline" ? `<div class="bar"></div>` :
+          `<div class="bar" style="width:${(100 * Math.abs(c) / maxc).toFixed(1)}%;background:${c >= 0 ? pos : neg}"></div>`);
+      let html = items.slice(0, limit).map(([lab, c]) => line(lab, c)).join("");
+      if (items.length > limit) html += `<div class="lab tt-m">+${items.length - limit} smaller terms</div><div></div>`;
+      return `<div class="wf">${html}<div class="lab tot">${S.esc(totalLabel)}</div><div class="val tot">${S.fmt(total, Math.max(sig, 4))}</div></div>`;
+    };
+    return S;
+  }
+  return {init};
+})();
+
+</script>
+<script>
+/* Additive-model pages: rule sets, scorecards, shape functions (GAMs) and linear models. */
+(function () {
+  "use strict";
+  const S = DTI.init(), D = S.D, T = D.terms, esc = S.esc, fmt = S.fmt;
+  const svg = document.getElementById("canvas"), NS = "http://www.w3.org/2000/svg";
+  const OPS = {"<=": (a, b) => a <= b, "<": (a, b) => a < b, ">": (a, b) => a > b, ">=": (a, b) => a >= b, "==": (a, b) => a === b,
+    "!=": (a, b) => a !== b, "isnan": (a) => Number.isNaN(a), "notnan": (a) => !Number.isNaN(a)};
+  const NEG = {"<=": ">", "<": ">=", ">": "<=", ">=": "<", "==": "!=", "!=": "==", "isnan": "notnan", "notnan": "isnan"};
+
+  // ---------- model evaluation (mirrors AdditiveView.score in Python)
+  function interp(v, g, y) {  // np.interp: linear between points, flat beyond the ends
+    if (v <= g[0]) return y[0];
+    if (v >= g[g.length - 1]) return y[y.length - 1];
+    let i = 1;
+    while (g[i] < v) i++;
+    return y[i - 1] + (y[i] - y[i - 1]) * (v - g[i - 1]) / (g[i] - g[i - 1]);
+  }
+  function contrib(t, x) {
+    if (t.k === "rule") return t.c.every(([f, op, v]) => OPS[op](x[f], v)) ? t.w : 0;
+    const v = x[t.f];
+    if (t.k === "linear") return t.w * ((t.clip ? Math.min(t.clip[1], Math.max(t.clip[0], v)) : v) - t.ctr);
+    if (t.k === "curve") {
+      if (!t.tied || t.tied.every(Boolean) || !t.tied.some(Boolean)) return interp(v, t.g, t.vals);
+      let b = 0;  // bin of v: searchsorted(edges, v, "right")
+      while (b < t.e.length && t.e[b] <= v) b++;
+      if (t.tied[b]) return interp(v, t.g, t.vals);
+      const keep = t.tied.map((q) => !q);
+      return interp(v, t.g.filter((_, i) => keep[i]), t.vals.filter((_, i) => keep[i]));
+    }
+    const e = t.e.map((q, i) => (q == null ? (i === 0 ? -Infinity : Infinity) : q));
+    let i = 0;  // bins are (e[i], e[i+1]], matching tree splits
+    while (i < t.vals.length - 1 && v > e[i + 1]) i++;
+    return t.vals[i];
+  }
+  function output(s) {
+    if (D.link === "logistic") return 1 / (1 + Math.exp(-(D.linkScale * s + D.linkOffset)));
+    if (D.link === "clip") return Math.min(1, Math.max(0, s));
+    if (D.link === "exp") return Math.exp(s);
+    if (D.link === "threshold") return s > D.threshold ? 1 : 0;
+    return s;
+  }
+  function predict(x) {
+    const parts = T.map((t) => contrib(t, x));
+    const s = D.intercept + parts.reduce((a, c) => a + c, 0), out = output(s);
+    if (!S.isClf) return {value: out, parts, s};
+    const k = out >= 0.5 ? D.classes.length - 1 : 0;
+    if (D.link === "threshold") {
+      const fired = T.filter((t, i) => t.k === "rule" && parts[i] !== 0).length;
+      return {cls: k, parts, s, note: `${fired} rule${fired === 1 ? "" : "s"} hold${fired === 1 ? "s" : ""}`};
+    }
+    const note = D.scoreName.startsWith("P(") ? "" : `${esc(D.scoreName)} ${fmt(s)}`;
+    return {cls: k, proba: [1 - out, out], parts, s, note};
+  }
+  function explain(x, p) {
+    const items = p.parts.map((c, i) => [T[i].txt, c]).filter(([, c]) => Math.abs(c) > 1e-12)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    if (D.intercept) items.unshift(["baseline", D.intercept]);
+    return S.waterfall(items, D.scoreName, p.s, D.pos, D.neg) + (D.note ? `<div class="tt-m" style="font-size:11px;margin-top:6px">${esc(D.note)}</div>` : "");
+  }
+
+  // ---------- rows (rule sets / scorecards) and panels (GAMs)
+  const rows = [...svg.querySelectorAll(".term")], panels = [...svg.querySelectorAll(".panel")];
+  const condHolds = (c, x) => OPS[c[1]](x[c[0]], c[2]);
+  // smallest input change that makes condition (f, op, v) hold
+  function satisfy(f, op, v) {
+    const ft = S.feat(f), span = (ft.hi - ft.lo) || 1, eps = span * 1e-6;
+    if (op === "isnan") return NaN;
+    if (op === "notnan") return ft.v;
+    if (ft.levels && op === "!=") return v === 0 ? 1 : 0;  // any other level
+    if (ft.kind !== "continuous") {
+      return {"<=": Math.floor(v), "<": Math.ceil(v) - 1, ">": Math.floor(v) + 1, ">=": Math.ceil(v), "==": v,
+        "!=": ft.kind === "binary" ? 1 - v : v + 1}[op];
+    }
+    return {"<=": v, "<": v - eps, ">": v + eps, ">=": v, "==": v, "!=": v + span * 0.01}[op];
+  }
+  function toggleRule(t) {
+    const x = S.x();
+    if (t.c.every((c) => condHolds(c, x))) {  // break it with the smallest single change
+      let best = null;
+      for (const [f, op, v] of t.c) {
+        const nv = satisfy(f, NEG[op], v);
+        const d = Number.isNaN(nv) || Number.isNaN(x[f]) || S.feat(f).levels ? 0.5 : Math.abs(nv - x[f]) / ((S.feat(f).hi - S.feat(f).lo) || 1);
+        if (!best || d < best.d) best = {f, nv, d};
+      }
+      if (best) S.setValues({[best.f]: best.nv});
+    } else {  // make every failing condition hold
+      const vals = {};
+      for (const c of t.c) if (!condHolds(c, Object.assign({}, x, vals))) vals[c[0]] = satisfy(c[0], c[1], c[2]);
+      S.setValues(vals);
+    }
+  }
+  rows.forEach((g) => {
+    const t = T[+g.dataset.t];
+    const act = t.k !== "rule" ? "" : D.samples.length ? "Click to load a training row this rule covers (while predicting, click to switch the rule on or off)."
+      : "While predicting, click to switch the rule on or off.";
+    g.addEventListener("pointerenter", () => { S.tip(t.tip + (act ? `<div class="tt-act">${act}</div>` : "")); S.hotFeatures(t.fs); });
+    g.addEventListener("pointerleave", () => { S.hideTip(); S.hotFeatures([]); });
+    if (t.k === "rule") g.addEventListener("click", () => {
+      if (S.predicting()) toggleRule(t);
+      else if (!S.loadSample((x) => t.c.every((c) => condHolds(c, x)), `training row covered by rule ${g.dataset.rank || ""}`.trim())) S.open(true);
+    });
+  });
+  // GAM panels: click to set the feature to the clicked value
+  panels.forEach((g) => {
+    const m = (D.chart || []).find((c) => c.f === +g.dataset.f);
+    g.addEventListener("pointerenter", () => { S.tip(`<div class="tt-h"><b>${esc(S.feat(m.f).name)}</b></div><div class="tt-act">Click to set ${esc(S.feat(m.f).name)} to the value under the pointer.</div>`); S.hotFeatures([m.f]); });
+    g.addEventListener("pointerleave", () => { S.hideTip(); S.hotFeatures([]); });
+    g.addEventListener("click", (e) => {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      const local = pt.matrixTransform(g.getScreenCTM().inverse());
+      const fr = Math.max(0, Math.min(1, (local.x - m.x0) / (m.x1 - m.x0)));
+      let v = m.lo + fr * (m.hi - m.lo);
+      if (S.feat(m.f).kind !== "continuous") v = Math.round(v);
+      S.setValues({[m.f]: v});
+    });
+  });
+
+  // ---------- sort control (rule sets only)
+  const sortSel = document.getElementById("sort"), sortCtl = document.getElementById("sortctl");
+  if (D.family !== "ruleset" || rows.length < 2) sortCtl.style.display = "none";
+  sortSel.onchange = () => {
+    const key = sortSel.value;
+    const order = rows.slice().sort((a, b) => {
+      const ta = T[+a.dataset.t], tb = T[+b.dataset.t];
+      if (key === "coverage") return (tb.sup ?? -1) - (ta.sup ?? -1);
+      if (key === "model") return +a.dataset.t - +b.dataset.t;
+      return +a.dataset.rank - +b.dataset.rank;
+    });
+    let y = D.rowsTop;
+    for (const g of order) { g.style.transform = `translate(0px, ${y}px)`; y += +g.dataset.h; }
+  };
+
+  // ---------- markers
+  // label: [text, x, y, anchor] placed clear of chart titles
+  function marker(g, x, y0, y1, yDot, label) {
+    let mk = g.querySelector(":scope > .mk");
+    if (!mk) { mk = document.createElementNS(NS, "g"); mk.setAttribute("class", "mk"); g.appendChild(mk); }
+    mk.innerHTML = x == null ? "" : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y1}" style="stroke:var(--dti-hl);stroke-width:2"/>` +
+      (yDot != null ? `<circle cx="${x}" cy="${yDot}" r="4.5" style="fill:var(--dti-hl);stroke:var(--dti-card);stroke-width:1.5"/>` : "") +
+      (label ? `<text x="${label[1]}" y="${label[2]}" text-anchor="${label[3]}" style="font-size:10.5px;font-weight:700;fill:var(--dti-hl);paint-order:stroke;stroke:var(--dti-card);stroke-width:3px">${label[0]}</text>` : "");
+  }
+  function show(x, p) {
+    svg.classList.toggle("predicting", !!x);
+    if (!x) {
+      svg.querySelectorAll(".mk").forEach((m) => (m.innerHTML = ""));
+      svg.querySelectorAll(".rk").forEach((d) => d.setAttribute("r", 4.5));
+      return;
+    }
+    rows.forEach((g) => {
+      const i = +g.dataset.t, t = T[i];
+      if (t.k !== "rule") { g.classList.add("on"); return; }
+      const ok = t.c.map((c) => condHolds(c, x)), n = ok.filter(Boolean).length;
+      g.classList.toggle("on", n === ok.length);
+      g.classList.toggle("near", n === ok.length - 1 && ok.length > 1);
+      g.querySelectorAll(".chip").forEach((ch) => {
+        const j = +ch.dataset.c;
+        ch.classList.toggle("ok", !!ok[j]);
+        ch.classList.toggle("no", !ok[j]);
+      });
+    });
+    if (D.family === "gam" && D.chart) for (const m of D.chart) {
+      const g = svg.querySelector(`.panel[data-f="${m.f}"]`);
+      if (Number.isNaN(x[m.f])) { marker(g, null); continue; }
+      const v = Math.max(m.lo, Math.min(m.hi, x[m.f])), px = m.x0 + (v - m.lo) / (m.hi - m.lo) * (m.x1 - m.x0);
+      const c = T.filter((t) => t.f === m.f).reduce((a, t) => a + contrib(t, x), 0);
+      const py = m.y0 + (m.y1 - m.y0) / 2 - c / m.ymax * (m.y1 - m.y0) / 2;
+      const right = px > (m.x0 + m.x1) / 2;
+      marker(g, px.toFixed(1), m.y0, m.y1, py.toFixed(1), [S.signed(c), (px + (right ? -8 : 8)).toFixed(1), (py - 8).toFixed(1), right ? "end" : "start"]);
+    }
+    if (D.family === "scorecard" && D.chart) {
+      const c = D.chart, v = Math.max(c.smin, Math.min(c.smax, p.s)), px = c.x0 + (v - c.smin) / (c.smax - c.smin || 1) * (c.x1 - c.x0);
+      marker(svg, px.toFixed(1), c.y0, c.y1, null, [`score ${fmt(p.s)}`, (px + 6).toFixed(1), (c.y0 + 14).toFixed(1), "start"]);
+      svg.querySelectorAll(".rk").forEach((d) => d.setAttribute("r", Math.abs(+d.dataset.s - p.s) < 1e-9 ? 7 : 4.5));
+    }
+  }
+
+  S.start({
+    word: D.family === "gam" ? "shape function" : D.family === "scorecard" ? "item" : "term",
+    hint: D.family === "gam" ? "Set feature values, or click inside a panel, to see each feature's contribution. They add up to the prediction."
+      : D.family === "scorecard" ? "Set feature values to see which items score. Click an item to switch it on or off."
+        : "Set feature values to see which rules hold and how the terms add up. Click a rule to switch it on or off.",
+    predict, explain, show,
+    highlight(f) {
+      svg.classList.toggle("feat-mode", f != null);
+      rows.forEach((g) => g.classList.toggle("feat", f != null && T[+g.dataset.t].fs.includes(f)));
+      panels.forEach((g) => g.classList.toggle("feat", f != null && +g.dataset.f === f));
+    },
+    exportSvg() {
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.querySelectorAll(".mk").forEach((m) => m.remove());
+      const text = new XMLSerializer().serializeToString(clone);
+      return text.replace(/(<svg[^>]*>)/, `$1<rect x="-4" y="-4" width="100%" height="100%" fill="${S.surface()}"/>`);
+    },
+  });
+})();
+
+</script>
+</body>
+</html>

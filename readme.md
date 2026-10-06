@@ -58,6 +58,20 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 |   |--- value: [0.42]
 ```
 
+### Visualizing models
+
+`imodels.viz` draws a fitted model as a static figure (SVG, PNG, PDF) or as an interactive page where you can fold the model, run a sample through it and see what would change its prediction. It works for the models here (trees, rule lists, rule sets, scoring systems, additive models) and for scikit-learn trees, forests, boosting and linear models. See [the gallery post](https://csinva.io/imodels/viz.html).
+
+```python
+from imodels import viz
+viz.draw(model, X, y).save("model.svg")          # static figure
+viz.interactive(model, X, y).save("model.html")  # interactive page (also renders inline in Jupyter)
+```
+
+Every tree-based model (CART variants, HSTree, TAO, C4.5, FastSmallTree, FIGS, IRF) can also be exported to an equivalent fitted scikit-learn estimator with `imodels.to_sklearn(model)`, with identical predictions. `imodels.viz` draws trees through this export, and it also lets [dtreeviz](https://github.com/parrt/dtreeviz), `sklearn.tree.plot_tree` or `export_text` draw any of these models: `dtreeviz.model(imodels.to_sklearn(model), X, y)`.
+
+<p align="center"><img src="docs/viz_gallery/static/im_figs.svg" width="85%" alt="A FIGS model drawn by imodels.viz"></p>
+
 ### Installation
 
 Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help).

@@ -19,7 +19,8 @@ def shadow_tree(model, X, y, feature_names=None, target_name='target',
     ----------
     model
         A fitted tree-based imodels model (FIGS, hierarchical shrinkage, CART,
-        TAO, boosted rules, ...).
+        TAO, C4.5, FastSmallTree, IRF, boosted rules, ...). Single trees and IRF
+        are drawn through their exact scikit-learn export (`imodels.to_sklearn`).
     X, y : the data to annotate the tree with, as dtreeviz requires.
     feature_names : list of str, optional
         Defaults to the names the model was fitted with, else X0, X1, ... .
@@ -58,7 +59,7 @@ def shadow_tree(model, X, y, feature_names=None, target_name='target',
             "('pip install dtreeviz'). It is not a dependency of imodels."
         ) from error
 
-    trees = sklearn_trees(model)
+    trees = _trees(model, X)
     if trees is None:
         raise ValueError(
             f"Don't know how to draw {type(model).__name__}. dtreeviz support "
@@ -77,6 +78,25 @@ def shadow_tree(model, X, y, feature_names=None, target_name='target',
 
     return ShadowSKDTree(trees[tree_num], X, np.asarray(y),
                          list(feature_names), target_name, class_names)
+
+
+def _trees(model, X):
+    """The model's trees as scikit-learn trees, via `imodels.to_sklearn` where it applies.
+
+    FIGS keeps its class-count trees (dtreeviz shows class distributions from them);
+    models `to_sklearn` does not cover (e.g. boosted rules) fall back to the trees
+    they are built from.
+    """
+    if hasattr(model, 'trees_') or hasattr(getattr(model, 'figs', None), 'trees_'):
+        return sklearn_trees(model)
+    from imodels.util.sklearn_export import to_sklearn
+    try:
+        exported = to_sklearn(model, X)
+    except (TypeError, NotImplementedError):
+        return sklearn_trees(model)
+    if hasattr(exported, 'estimators_'):
+        return [getattr(e, 'estimator_', e) for e in exported.estimators_]
+    return [exported]
 
 
 def _feature_names(model, n_features):

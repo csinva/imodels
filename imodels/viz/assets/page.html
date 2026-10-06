@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-theme="__THEME__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{__CSS_LIGHT__ --dti-font:__FONT__; color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){__CSS_DARK__ color-scheme:dark}}
+:root[data-theme="dark"]{__CSS_DARK__ color-scheme:dark}
+__SHARED_CSS__
+__MODEL_CSS__
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="ttl"><h1>__TITLE__</h1><div class="sub">__SUBTITLE__</div><div class="legend" id="legend"></div></div>
+    <div class="tools">
+      __TOOLS__
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-theme" title="Switch light / dark theme" aria-label="Switch light or dark theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg></button>
+      <button id="b-svg" title="Download the current view as SVG"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13.5h10"/></svg>SVG</button>
+      <button id="b-pred" title="Try a sample: see the prediction, how it is reached and what would change it"><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><path d="M4 5.6V8a2 2 0 0 0 2 2h4a2 2 0 0 1 2 2"/></svg>Predict</button>
+    </div>
+  </header>
+  <div id="stage">__STAGE__</div>
+  <div id="hudcol"><div id="hud" class="hud" aria-label="Features">
+    <div class="hud-h"><b>Features</b><span class="tt-m" id="hud-sub"></span>
+      <button id="hud-x" title="Show or hide the features panel" aria-label="Show or hide the features panel"><svg viewBox="0 0 16 16"><path d="M4 6.5 8 10l4-3.5"/></svg></button></div>
+    <div class="hud-body" id="hud-body"></div>
+    <div class="hud-note" id="hud-note"></div>
+    <div class="hud-f" id="hud-f"></div>
+  </div></div>
+  <aside id="panel" aria-label="Predict"><div class="in">
+    <h2>Try a sample</h2>
+    <div class="hint" id="p-hint"></div>
+    <div class="res" id="res"></div>
+    <div class="row"><button id="b-rand">Random training row</button><button id="b-reset">Reset</button></div>
+    <h3>What would change the prediction</h3>
+    <div class="wi" id="whatif"></div>
+    <h3>Feature values</h3>
+    <div id="fields"></div>
+  </div></aside>
+</div>
+<div id="tip" role="tooltip"></div>
+<script type="application/json" id="dti-data">__DATA__</script>
+<script>
+__SHARED_JS__
+</script>
+<script>
+__MODEL_JS__
+</script>
+</body>
+</html>

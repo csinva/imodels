@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isotonic regression, diabetes progression by bmi</title>
+<style>
+:root{--dti-page:#f9f9f7;--dti-surface:#fcfcfb;--dti-card:#ffffff;--dti-ink:#0b0b0b;--dti-ink2:#52514e;--dti-muted:#898781;--dti-grid:#e1e0d9;--dti-axis:#c3c2b7;--dti-ring:#e4e3dd;--dti-ribbon:#b9b8b0;--dti-hl:#0b0b0b;--dti-shadow:#1a1a1a;--dti-c0:#2a78d6;--dti-c1:#eb6834;--dti-c2:#1baf7a;--dti-c3:#eda100;--dti-c4:#e87ba4;--dti-c5:#008300;--dti-c6:#4a3aa7;--dti-c7:#e34948;--dti-c8:#7a6a58;--dti-c9:#5f7f8f;--dti-c10:#9a9a2a;--dti-c11:#8a8a8a;--dti-s0:#6da7ec;--dti-s1:#5598e7;--dti-s2:#3987e5;--dti-s3:#2a78d6;--dti-s4:#256abf;--dti-s5:#1c5cab;--dti-s6:#184f95;--dti-s7:#104281;--dti-s8:#0d366b; --dti-font:Helvetica, 'Helvetica Neue', Arial, 'Nimbus Sans', 'Liberation Sans', sans-serif; color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}}
+:root[data-theme="dark"]{--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}
+/* Shared page shell for every imodels.viz interactive page (trees, rule lists, rule sets, scorecards, GAMs). */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--dti-surface);color:var(--dti-ink);font:13px/1.4 var(--dti-font);-webkit-font-smoothing:antialiased}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr) auto auto;height:100%}
+header{grid-column:1/4;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px;padding:18px 22px 10px}
+.ttl{flex:1 1 320px;min-width:0}
+h1{font-size:18px;font-weight:650;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--dti-ink2);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;color:var(--dti-ink2);font-size:11.5px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .grad{width:140px;height:8px;border-radius:4px;display:inline-block;margin:0 6px;vertical-align:0}
+.legend .lnote{color:var(--dti-muted)}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tools .sep{width:1px;height:20px;background:var(--dti-ring);margin:0 4px}
+button,.ctl{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:8px;height:30px;padding:0 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--dti-axis)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--dti-ink);outline-offset:1px}
+button.on{background:var(--dti-ink);color:var(--dti-card);border-color:var(--dti-ink)}
+button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ctl{cursor:default;gap:8px;padding-right:8px}
+.ctl input[type=range]{width:84px;accent-color:var(--dti-ink)}
+.ctl b{min-width:14px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ctl select{font:inherit;font-size:12px;color:var(--dti-ink);background:transparent;border:0;cursor:pointer}
+#stage{position:relative;min-width:0;min-height:0}
+.hint-bar{position:absolute;left:14px;bottom:12px;font-size:11px;color:var(--dti-muted);pointer-events:none}
+.hint-bar kbd{font:inherit;border:1px solid var(--dti-ring);border-bottom-width:2px;border-radius:4px;padding:0 4px;margin:0 2px;background:var(--dti-card);color:var(--dti-ink2)}
+
+/* features column */
+#hudcol{min-height:0;display:flex;padding:0 12px 12px 0}
+.hud{width:288px;max-height:100%;align-self:flex-start;display:flex;flex-direction:column;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.08);overflow:hidden;font-size:12px}
+.hud.min{width:auto}
+.hud-h{display:flex;align-items:center;gap:8px;padding:9px 8px 8px 12px;border-bottom:1px solid var(--dti-ring)}
+.hud-h b{font-weight:650;font-size:12.5px}
+.hud-h .tt-m{flex:1;font-size:11px}
+.hud-h button{height:24px;width:24px;padding:0;justify-content:center;border:0;background:transparent}
+.hud-h button svg{transition:transform .2s}
+.hud.min .hud-body,.hud.min .hud-note,.hud.min .hud-f,.hud.min .hud-h .tt-m{display:none}
+.hud.min .hud-h{border-bottom:0}
+.hud.min .hud-h button svg{transform:rotate(90deg)}
+.hud-body{overflow-y:auto;padding:4px 0;min-height:0}
+.frow{padding:7px 12px 7px 10px;cursor:pointer;border-left:2px solid transparent}
+.frow:hover,.frow.hot{background:var(--dti-page)}
+.frow.pin{border-left-color:var(--dti-ink);background:var(--dti-page)}
+.frow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.frow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.frow .im{font-variant-numeric:tabular-nums;color:var(--dti-ink2);font-size:11.5px}
+.frow .ib{height:3px;border-radius:2px;background:var(--dti-grid);margin:4px 0 6px}
+.frow .ib span{display:block;height:100%;border-radius:2px;background:var(--dti-ink)}
+.frow svg{display:block;width:100%;height:36px}
+.frow .xv{display:none}
+.predicting .frow .xv{display:inline}
+.frow .meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--dti-muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.hud-note{padding:8px 12px 2px;border-top:1px solid var(--dti-ring);font-size:10.5px;line-height:1.45;color:var(--dti-ink2)}
+.hud-note b{font-weight:600;color:var(--dti-ink)}
+.hud-note code{font-size:10px}
+.hud-f{padding:4px 12px 8px;font-size:10.5px;color:var(--dti-muted)}
+
+/* tooltip */
+#tip{position:fixed;pointer-events:none;max-width:340px;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;z-index:9}
+#tip.show{opacity:1;transform:none}
+.tt-h{font-size:12.5px;margin-bottom:6px}
+.tt-k{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dti-muted);margin-right:4px}
+.tt-r{margin:0 0 8px;padding:0;list-style:none;color:var(--dti-ink2);font-size:11.5px}
+.tt-r li{padding:1px 0 1px 12px;position:relative}
+.tt-r li:before{content:"";position:absolute;left:2px;top:8px;width:4px;height:4px;border-radius:2px;background:var(--dti-axis)}
+.tt-m{color:var(--dti-muted)}
+.tt-act{margin-top:6px;font-size:11px;color:var(--dti-muted)}
+#tip table,#panel table{border-collapse:collapse;width:100%;font-size:11.5px}
+#tip td,#panel td{padding:2px 0;color:var(--dti-ink2)}
+#tip td:first-child{padding-right:12px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--dti-ink);padding-left:12px}
+td i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+td.bar{width:70px;padding-left:10px}
+td.bar span{display:block;height:5px;border-radius:3px}
+tr.sep td{height:6px}
+
+/* predict panel */
+#panel{width:0;overflow:hidden;border-left:1px solid var(--dti-ring);background:var(--dti-page);transition:width .25s ease}
+#panel.open{width:320px}
+#panel .in{width:320px;height:100%;overflow-y:auto;padding:16px 18px 24px}
+#panel h2{font-size:13px;margin:0 0 2px;font-weight:650}
+#panel h3{font-size:10px;margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--dti-muted)}
+#panel .hint{font-size:11.5px;color:var(--dti-muted);margin-bottom:12px}
+.res{background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.res .big{font-size:20px;font-weight:650;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.res .big i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.res .meta{font-size:11.5px;color:var(--dti-ink2);margin-top:2px}
+.res .truth{font-size:11px;color:var(--dti-muted);margin-top:2px}
+.res .truth b{color:var(--dti-ink2)}
+.probs{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:8px 0 2px;background:var(--dti-grid)}
+.probs span{display:block;height:100%}
+.plabs{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:10.5px;color:var(--dti-ink2);font-variant-numeric:tabular-nums}
+.plabs i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.wf{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;font-size:11.5px;align-items:center}
+.wf .lab{color:var(--dti-ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.wf .bar{grid-column:1/3;height:4px;border-radius:2px;margin-bottom:4px}
+.wf .tot{border-top:1px solid var(--dti-ring);padding-top:4px;color:var(--dti-ink);font-weight:600}
+.path{margin:8px 0 0}
+.wi{display:flex;flex-direction:column;gap:6px}
+.wi button{height:auto;padding:7px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;align-items:center;width:100%}
+.wi .what{font-size:11.5px;color:var(--dti-ink);overflow-wrap:anywhere}
+.wi .what b{font-weight:600}
+.wi .to{font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.wi .to i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.wi .how{grid-column:1/3;font-size:10.5px;color:var(--dti-muted)}
+.wi .none{font-size:11.5px;color:var(--dti-muted)}
+.fld{margin-bottom:10px}
+.fld label{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--dti-ink2);margin-bottom:3px;gap:8px}
+.fld label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld input[type=number]{width:84px;font:inherit;font-size:12px;text-align:right;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.fld input[type=range]{width:100%;accent-color:var(--dti-ink);margin:0}
+.fld select{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;max-width:150px}
+.fld .ctl2{display:flex;align-items:center;gap:8px;overflow:visible}
+.fld .miss{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--dti-muted);margin:0;cursor:pointer}
+.fld .miss input{margin:0;accent-color:var(--dti-ink)}
+.fld.hot label span{color:var(--dti-ink);font-weight:600}
+.fld.changed input[type=number]{border-color:var(--dti-ink)}
+.row{display:flex;gap:6px;margin-bottom:6px}
+.row button{flex:1;justify-content:center}
+@media (max-width:900px){#hudcol{display:none}}
+@media (max-width:700px){#app{grid-template-columns:minmax(0,1fr)}#panel.open{width:100%;position:absolute;inset:auto 0 0 0;height:55%;border-left:0;border-top:1px solid var(--dti-ring);z-index:6}#panel .in{width:100%}.hint-bar{display:none}}
+
+#stage{overflow:auto;padding:8px 16px 40px 22px}
+#canvas{display:block;max-width:100%;height:auto;font-family:var(--dti-font)}
+.term{transition:opacity .2s,transform .35s ease}
+.term.rule,.panel{cursor:pointer}
+.rowbg{transition:fill-opacity .15s}
+.term.rule:hover .rowbg{fill-opacity:1!important}
+.predicting .term:not(.on){opacity:.32}
+.predicting .term.near{opacity:.7}
+.predicting .term .chip.no{opacity:.45}
+.predicting .term .chip.ok rect{stroke:var(--dti-ink);stroke-width:1.2px}
+.predicting .term.on .chip.ok rect{fill:var(--dti-hl)!important;fill-opacity:1!important}
+.predicting .term.on .chip.ok text{fill:var(--dti-card)!important}
+.predicting .term.rule.near .tag.near,.predicting .term.rule.on .tag.on{display:inline!important}
+.panel{transition:opacity .2s}
+.panel:hover>rect:first-of-type{stroke:var(--dti-axis)!important}
+.feat-mode .term:not(.feat),.feat-mode .panel:not(.feat){opacity:.25}
+.mk line,.mk circle,.mk text{pointer-events:none}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="ttl"><h1>Isotonic regression, diabetes progression by bmi</h1><div class="sub">IsotonicRegression  ·  1 shape functions added together  ·  442 training samples</div><div class="legend" id="legend"></div></div>
+    <div class="tools">
+      
+      <label class="ctl" id="sortctl" title="Order the rows">Sort <select id="sort" aria-label="Sort rows">
+        <option value="effect">by effect</option><option value="coverage">by coverage</option><option value="model">model order</option></select></label>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-theme" title="Switch light / dark theme" aria-label="Switch light or dark theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg></button>
+      <button id="b-svg" title="Download the current view as SVG"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13.5h10"/></svg>SVG</button>
+      <button id="b-pred" title="Try a sample: see the prediction, how it is reached and what would change it"><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><path d="M4 5.6V8a2 2 0 0 0 2 2h4a2 2 0 0 1 2 2"/></svg>Predict</button>
+    </div>
+  </header>
+  <div id="stage"><svg id="canvas" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 288 230" width="288" font-family="Helvetica, &#x27;Helvetica Neue&#x27;, Arial, &#x27;Nimbus Sans&#x27;, &#x27;Liberation Sans&#x27;, sans-serif"><defs><filter id="dti34-sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="1" stdDeviation="1" style="flood-color:var(--dti-shadow);flood-opacity:0.06"/><feDropShadow dx="0" dy="6" stdDeviation="8" style="flood-color:var(--dti-shadow);flood-opacity:0.07"/></filter></defs><g class="panel" data-f="0" transform="translate(0,0)"><rect width="280" height="190" rx="10" filter="url(#dti34-sh)" style="fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1"/><text x="12" y="20" style="font-size:12.5px;font-weight:600;fill:var(--dti-ink)">bmi</text><text x="268" y="20" text-anchor="end" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted);font-variant-numeric:tabular-nums">±48 typical</text><path d="M12,87L12,70.6L13.1,70.6L14.1,70.6L15.2,70.6L16.3,70.6L17.3,70.6L18.4,70.6L19.5,70.6L20.5,70.6L21.6,70.6L22.7,70.6L23.7,70.6L24.8,70.6L25.9,70.6L26.9,70.6L28,70.6L29.1,70.6L30.1,70.6L31.2,70.6L32.3,70.6L33.3,70.3L34.4,69.2L35.5,69.2L36.5,69.2L37.6,69.2L38.7,69.2L39.7,69.2L40.8,69.2L41.9,69.1L42.9,66.9L44,66.5L45.1,66.5L46.1,66.5L47.2,66.5L48.3,66.5L49.3,66.5L50.4,66.5L51.5,66.5L52.5,66.5L53.6,66.5L54.7,66.5L55.7,66.5L56.8,66.5L57.9,66.5L58.9,66.5L60,66.5L61.1,66.5L62.1,66.5L63.2,66.5L64.3,66.5L65.3,65.6L66.4,65.2L67.5,65.2L68.5,65.2L69.6,65.2L70.7,65.2L71.7,65.2L72.8,65.2L73.9,65.2L74.9,65.2L76,65.1L77.1,64.5L78.1,64.5L79.2,64.5L80.3,64.5L81.3,64.5L82.4,64.5L83.5,64.5L84.5,64.4L85.6,61L86.7,60.6L87.7,60.6L88.8,60.6L89.9,60.6L90.9,60.6L92,60.6L93.1,60.6L94.1,60.6L95.2,60.6L96.3,60.6L97.3,60.6L98.4,60.6L99.5,60.6L100.5,60.6L101.6,59.4L102.7,58.5L103.7,58.3L104.8,58.3L105.9,58.3L106.9,58.3L108,58.3L109.1,58.3L110.1,58.3L111.2,58.3L112.3,58.3L113.3,58.3L114.4,58.3L115.5,58.3L116.5,57.3L117.6,56.6L118.7,56.6L119.7,56.6L120.8,56.6L121.9,53.3L122.9,52.6L124,52.6L125.1,52.6L126.1,52.6L127.2,52.6L128.3,52.6L129.3,52.6L130.4,52.6L131.5,51.5L132.5,50.3L133.6,50.3L134.7,50.3L135.7,50.3L136.8,50.3L137.9,50.3L138.9,50.3L140,50.3L141.1,50.3L142.1,50.3L143.2,50.3L144.3,50.3L145.3,50.3L146.4,50.3L147.5,50.3L148.5,50.3L149.6,50.3L150.7,50.3L151.7,50.3L152.8,50.3L153.9,50.3L154.9,50.3L156,50.3L157.1,50.3L158.1,50.3L159.2,50.3L160.3,50.3L161.3,50.3L162.4,50.2L163.5,49.9L164.5,49.9L165.6,49.2L166.7,48.9L167.7,48.9L168.8,48.9L169.9,48.9L170.9,48.9L172,48.9L173.1,48.9L174.1,48.9L175.2,48.9L176.3,48.9L177.3,48.9L178.4,48.9L179.5,48.9L180.5,48.9L181.6,48.9L182.7,48.9L183.7,48.9L184.8,48.9L185.9,48.9L186.9,48.9L188,48.9L189.1,48.9L190.1,48.4L191.2,46.7L192.3,46.7L193.3,46.7L194.4,46.7L195.5,43.1L196.5,39.6L197.6,39.6L198.7,39.6L199.7,39.6L200.8,39.6L201.9,39.6L202.9,39.6L204,39.6L205.1,39.6L206.1,39.6L207.2,39.6L208.3,39.6L209.3,39.6L210.4,39.6L211.5,39.6L212.5,39.6L213.6,39.6L214.7,39.6L215.7,39.6L216.8,39.6L217.9,39.6L218.9,38.9L220,36.3L221.1,36.2L222.1,36.1L223.2,36.1L224.3,36.1L225.3,35.9L226.4,35.4L227.5,34.9L228.5,34.3L229.6,33.8L230.7,33.3L231.7,32.8L232.8,32.4L233.9,32.4L234.9,32.4L236,32.4L237.1,32.4L238.1,32.4L239.2,32.3L240.3,32.1L241.3,32.1L242.4,32.1L243.5,32.1L244.5,32.1L245.6,32.1L246.7,32.1L247.7,32.1L248.8,32.1L249.9,32.1L250.9,32.1L252,32.1L253.1,32.1L254.1,32.1L255.2,32L256.3,32L257.3,32L258.4,32L259.5,32L260.5,32L261.6,32L262.7,32L263.7,32L264.8,32L265.9,32L266.9,32L268,32L268,87Z" style="fill:var(--dti-c0);fill-opacity:0.16"/><path d="M12,87L12,87L13.1,87L14.1,87L15.2,87L16.3,87L17.3,87L18.4,87L19.5,87L20.5,87L21.6,87L22.7,87L23.7,87L24.8,87L25.9,87L26.9,87L28,87L29.1,87L30.1,87L31.2,87L32.3,87L33.3,87L34.4,87L35.5,87L36.5,87L37.6,87L38.7,87L39.7,87L40.8,87L41.9,87L42.9,87L44,87L45.1,87L46.1,87L47.2,87L48.3,87L49.3,87L50.4,87L51.5,87L52.5,87L53.6,87L54.7,87L55.7,87L56.8,87L57.9,87L58.9,87L60,87L61.1,87L62.1,87L63.2,87L64.3,87L65.3,87L66.4,87L67.5,87L68.5,87L69.6,87L70.7,87L71.7,87L72.8,87L73.9,87L74.9,87L76,87L77.1,87L78.1,87L79.2,87L80.3,87L81.3,87L82.4,87L83.5,87L84.5,87L85.6,87L86.7,87L87.7,87L88.8,87L89.9,87L90.9,87L92,87L93.1,87L94.1,87L95.2,87L96.3,87L97.3,87L98.4,87L99.5,87L100.5,87L101.6,87L102.7,87L103.7,87L104.8,87L105.9,87L106.9,87L108,87L109.1,87L110.1,87L111.2,87L112.3,87L113.3,87L114.4,87L115.5,87L116.5,87L117.6,87L118.7,87L119.7,87L120.8,87L121.9,87L122.9,87L124,87L125.1,87L126.1,87L127.2,87L128.3,87L129.3,87L130.4,87L131.5,87L132.5,87L133.6,87L134.7,87L135.7,87L136.8,87L137.9,87L138.9,87L140,87L141.1,87L142.1,87L143.2,87L144.3,87L145.3,87L146.4,87L147.5,87L148.5,87L149.6,87L150.7,87L151.7,87L152.8,87L153.9,87L154.9,87L156,87L157.1,87L158.1,87L159.2,87L160.3,87L161.3,87L162.4,87L163.5,87L164.5,87L165.6,87L166.7,87L167.7,87L168.8,87L169.9,87L170.9,87L172,87L173.1,87L174.1,87L175.2,87L176.3,87L177.3,87L178.4,87L179.5,87L180.5,87L181.6,87L182.7,87L183.7,87L184.8,87L185.9,87L186.9,87L188,87L189.1,87L190.1,87L191.2,87L192.3,87L193.3,87L194.4,87L195.5,87L196.5,87L197.6,87L198.7,87L199.7,87L200.8,87L201.9,87L202.9,87L204,87L205.1,87L206.1,87L207.2,87L208.3,87L209.3,87L210.4,87L211.5,87L212.5,87L213.6,87L214.7,87L215.7,87L216.8,87L217.9,87L218.9,87L220,87L221.1,87L222.1,87L223.2,87L224.3,87L225.3,87L226.4,87L227.5,87L228.5,87L229.6,87L230.7,87L231.7,87L232.8,87L233.9,87L234.9,87L236,87L237.1,87L238.1,87L239.2,87L240.3,87L241.3,87L242.4,87L243.5,87L244.5,87L245.6,87L246.7,87L247.7,87L248.8,87L249.9,87L250.9,87L252,87L253.1,87L254.1,87L255.2,87L256.3,87L257.3,87L258.4,87L259.5,87L260.5,87L261.6,87L262.7,87L263.7,87L264.8,87L265.9,87L266.9,87L268,87L268,87Z" style="fill:var(--dti-c7);fill-opacity:0.16"/><line x1="12" x2="268" y1="87" y2="87" style="stroke:var(--dti-axis);stroke-width:1"/><path d="M12,70.6 L13.1,70.6 L14.1,70.6 L15.2,70.6 L16.3,70.6 L17.3,70.6 L18.4,70.6 L19.5,70.6 L20.5,70.6 L21.6,70.6 L22.7,70.6 L23.7,70.6 L24.8,70.6 L25.9,70.6 L26.9,70.6 L28,70.6 L29.1,70.6 L30.1,70.6 L31.2,70.6 L32.3,70.6 L33.3,70.3 L34.4,69.2 L35.5,69.2 L36.5,69.2 L37.6,69.2 L38.7,69.2 L39.7,69.2 L40.8,69.2 L41.9,69.1 L42.9,66.9 L44,66.5 L45.1,66.5 L46.1,66.5 L47.2,66.5 L48.3,66.5 L49.3,66.5 L50.4,66.5 L51.5,66.5 L52.5,66.5 L53.6,66.5 L54.7,66.5 L55.7,66.5 L56.8,66.5 L57.9,66.5 L58.9,66.5 L60,66.5 L61.1,66.5 L62.1,66.5 L63.2,66.5 L64.3,66.5 L65.3,65.6 L66.4,65.2 L67.5,65.2 L68.5,65.2 L69.6,65.2 L70.7,65.2 L71.7,65.2 L72.8,65.2 L73.9,65.2 L74.9,65.2 L76,65.1 L77.1,64.5 L78.1,64.5 L79.2,64.5 L80.3,64.5 L81.3,64.5 L82.4,64.5 L83.5,64.5 L84.5,64.4 L85.6,61 L86.7,60.6 L87.7,60.6 L88.8,60.6 L89.9,60.6 L90.9,60.6 L92,60.6 L93.1,60.6 L94.1,60.6 L95.2,60.6 L96.3,60.6 L97.3,60.6 L98.4,60.6 L99.5,60.6 L100.5,60.6 L101.6,59.4 L102.7,58.5 L103.7,58.3 L104.8,58.3 L105.9,58.3 L106.9,58.3 L108,58.3 L109.1,58.3 L110.1,58.3 L111.2,58.3 L112.3,58.3 L113.3,58.3 L114.4,58.3 L115.5,58.3 L116.5,57.3 L117.6,56.6 L118.7,56.6 L119.7,56.6 L120.8,56.6 L121.9,53.3 L122.9,52.6 L124,52.6 L125.1,52.6 L126.1,52.6 L127.2,52.6 L128.3,52.6 L129.3,52.6 L130.4,52.6 L131.5,51.5 L132.5,50.3 L133.6,50.3 L134.7,50.3 L135.7,50.3 L136.8,50.3 L137.9,50.3 L138.9,50.3 L140,50.3 L141.1,50.3 L142.1,50.3 L143.2,50.3 L144.3,50.3 L145.3,50.3 L146.4,50.3 L147.5,50.3 L148.5,50.3 L149.6,50.3 L150.7,50.3 L151.7,50.3 L152.8,50.3 L153.9,50.3 L154.9,50.3 L156,50.3 L157.1,50.3 L158.1,50.3 L159.2,50.3 L160.3,50.3 L161.3,50.3 L162.4,50.2 L163.5,49.9 L164.5,49.9 L165.6,49.2 L166.7,48.9 L167.7,48.9 L168.8,48.9 L169.9,48.9 L170.9,48.9 L172,48.9 L173.1,48.9 L174.1,48.9 L175.2,48.9 L176.3,48.9 L177.3,48.9 L178.4,48.9 L179.5,48.9 L180.5,48.9 L181.6,48.9 L182.7,48.9 L183.7,48.9 L184.8,48.9 L185.9,48.9 L186.9,48.9 L188,48.9 L189.1,48.9 L190.1,48.4 L191.2,46.7 L192.3,46.7 L193.3,46.7 L194.4,46.7 L195.5,43.1 L196.5,39.6 L197.6,39.6 L198.7,39.6 L199.7,39.6 L200.8,39.6 L201.9,39.6 L202.9,39.6 L204,39.6 L205.1,39.6 L206.1,39.6 L207.2,39.6 L208.3,39.6 L209.3,39.6 L210.4,39.6 L211.5,39.6 L212.5,39.6 L213.6,39.6 L214.7,39.6 L215.7,39.6 L216.8,39.6 L217.9,39.6 L218.9,38.9 L220,36.3 L221.1,36.2 L222.1,36.1 L223.2,36.1 L224.3,36.1 L225.3,35.9 L226.4,35.4 L227.5,34.9 L228.5,34.3 L229.6,33.8 L230.7,33.3 L231.7,32.8 L232.8,32.4 L233.9,32.4 L234.9,32.4 L236,32.4 L237.1,32.4 L238.1,32.4 L239.2,32.3 L240.3,32.1 L241.3,32.1 L242.4,32.1 L243.5,32.1 L244.5,32.1 L245.6,32.1 L246.7,32.1 L247.7,32.1 L248.8,32.1 L249.9,32.1 L250.9,32.1 L252,32.1 L253.1,32.1 L254.1,32.1 L255.2,32 L256.3,32 L257.3,32 L258.4,32 L259.5,32 L260.5,32 L261.6,32 L262.7,32 L263.7,32 L264.8,32 L265.9,32 L266.9,32 L268,32" style="fill:none;stroke:var(--dti-ink);stroke-width:2;stroke-linejoin:round"/><text x="12" y="34" style="font-size:9.5px;font-weight:400;fill:var(--dti-muted)">+285</text><text x="12" y="143" style="font-size:9.5px;font-weight:400;fill:var(--dti-muted)">−285</text><rect x="12.5" y="159.7" width="5.4" height="4.3" style="fill:var(--dti-axis)"/><rect x="18.9" y="161.3" width="5.4" height="2.7" style="fill:var(--dti-axis)"/><rect x="25.3" y="159.7" width="5.4" height="4.3" style="fill:var(--dti-axis)"/><rect x="31.7" y="157" width="5.4" height="7" style="fill:var(--dti-axis)"/><rect x="38.1" y="156.5" width="5.4" height="7.5" style="fill:var(--dti-axis)"/><rect x="44.5" y="158.1" width="5.4" height="5.9" style="fill:var(--dti-axis)"/><rect x="50.9" y="159.2" width="5.4" height="4.8" style="fill:var(--dti-axis)"/><rect x="57.3" y="152.7" width="5.4" height="11.3" style="fill:var(--dti-axis)"/><rect x="63.7" y="152.7" width="5.4" height="11.3" style="fill:var(--dti-axis)"/><rect x="70.1" y="150" width="5.4" height="14" style="fill:var(--dti-axis)"/><rect x="76.5" y="153.8" width="5.4" height="10.2" style="fill:var(--dti-axis)"/><rect x="82.9" y="152.7" width="5.4" height="11.3" style="fill:var(--dti-axis)"/><rect x="89.3" y="155.4" width="5.4" height="8.6" style="fill:var(--dti-axis)"/><rect x="95.7" y="150" width="5.4" height="14" style="fill:var(--dti-axis)"/><rect x="102.1" y="152.2" width="5.4" height="11.8" style="fill:var(--dti-axis)"/><rect x="108.5" y="154.8" width="5.4" height="9.2" style="fill:var(--dti-axis)"/><rect x="114.9" y="154.3" width="5.4" height="9.7" style="fill:var(--dti-axis)"/><rect x="121.3" y="154.8" width="5.4" height="9.2" style="fill:var(--dti-axis)"/><rect x="127.7" y="154.8" width="5.4" height="9.2" style="fill:var(--dti-axis)"/><rect x="134.1" y="158.6" width="5.4" height="5.4" style="fill:var(--dti-axis)"/><rect x="140.5" y="157.5" width="5.4" height="6.5" style="fill:var(--dti-axis)"/><rect x="146.9" y="159.2" width="5.4" height="4.8" style="fill:var(--dti-axis)"/><rect x="153.3" y="157.5" width="5.4" height="6.5" style="fill:var(--dti-axis)"/><rect x="159.7" y="157.5" width="5.4" height="6.5" style="fill:var(--dti-axis)"/><rect x="166.1" y="160.2" width="5.4" height="3.8" style="fill:var(--dti-axis)"/><rect x="172.5" y="158.6" width="5.4" height="5.4" style="fill:var(--dti-axis)"/><rect x="178.9" y="154.8" width="5.4" height="9.2" style="fill:var(--dti-axis)"/><rect x="185.3" y="160.2" width="5.4" height="3.8" style="fill:var(--dti-axis)"/><rect x="191.7" y="159.2" width="5.4" height="4.8" style="fill:var(--dti-axis)"/><rect x="198.1" y="162.4" width="5.4" height="1.6" style="fill:var(--dti-axis)"/><rect x="204.5" y="162.4" width="5.4" height="1.6" style="fill:var(--dti-axis)"/><rect x="210.9" y="162.4" width="5.4" height="1.6" style="fill:var(--dti-axis)"/><rect x="217.3" y="161.3" width="5.4" height="2.7" style="fill:var(--dti-axis)"/><rect x="223.7" y="162.9" width="5.4" height="1.1" style="fill:var(--dti-axis)"/><rect x="230.1" y="162.9" width="5.4" height="1.1" style="fill:var(--dti-axis)"/><rect x="236.5" y="162.9" width="5.4" height="1.1" style="fill:var(--dti-axis)"/><rect x="242.9" y="163.5" width="5.4" height="0.5" style="fill:var(--dti-axis)"/><rect x="249.3" y="163.5" width="5.4" height="0.5" style="fill:var(--dti-axis)"/><rect x="255.7" y="162.4" width="5.4" height="1.6" style="fill:var(--dti-axis)"/><rect x="262.1" y="162.4" width="5.4" height="1.6" style="fill:var(--dti-axis)"/><text x="12" y="180" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">−0.0847</text><text x="268" y="180" text-anchor="end" style="font-size:10px;font-weight:400;fill:var(--dti-muted)">0.135</text></g><text x="0" y="214" style="font-size:11.5px;font-weight:400;fill:var(--dti-ink2)">A monotone step-and-ramp function of one feature.</text></svg></div>
+  <div id="hudcol"><div id="hud" class="hud" aria-label="Features">
+    <div class="hud-h"><b>Features</b><span class="tt-m" id="hud-sub"></span>
+      <button id="hud-x" title="Show or hide the features panel" aria-label="Show or hide the features panel"><svg viewBox="0 0 16 16"><path d="M4 6.5 8 10l4-3.5"/></svg></button></div>
+    <div class="hud-body" id="hud-body"></div>
+    <div class="hud-note" id="hud-note"></div>
+    <div class="hud-f" id="hud-f"></div>
+  </div></div>
+  <aside id="panel" aria-label="Predict"><div class="in">
+    <h2>Try a sample</h2>
+    <div class="hint" id="p-hint"></div>
+    <div class="res" id="res"></div>
+    <div class="row"><button id="b-rand">Random training row</button><button id="b-reset">Reset</button></div>
+    <h3>What would change the prediction</h3>
+    <div class="wi" id="whatif"></div>
+    <h3>Feature values</h3>
+    <div id="fields"></div>
+  </div></aside>
+</div>
+<div id="tip" role="tooltip"></div>
+<script type="application/json" id="dti-data">{"family":"gam","task":"regression","terms":[{"k":"curve","w":0.0,"c":[],"f":0,"ctr":0.0,"e":null,"vals":[84.96,84.96,92.55555555555556,92.55555555555556,106.18,106.18,112.93023255813954,112.93023255813954,116.44827586206897,116.44827586206897,136.79245283018867,136.79245283018867,146.4,148.78571428571428,148.78571428571428,157.66666666666666,157.66666666666666,178.64,178.64,190.44642857142858,190.44642857142858,192.33333333333334,192.33333333333334,197.35897435897434,197.35897435897434,208.77777777777777,208.77777777777777,245.71428571428572,245.71428571428572,263.0,264.0,264.0,283.0,283.0,284.6666666666667,284.6666666666667,285.25,285.25,294.0,294.0],"g":[-0.09027529589850945,-0.06656343027313188,-0.06548561819925106,-0.05901874575596628,-0.05794093368208547,-0.039618128426111884,-0.03854031635223107,-0.029917819761184662,-0.028840007687303888,-0.022373135244019075,-0.0212953231701383,-0.008361578283568675,-0.007283766209687899,-0.006205954135807083,0.004572166603000912,0.005649978676881689,0.008883414898524095,0.009961226972404908,0.0175059114895705,0.018583723563451313,0.04445121333659049,0.045529025410471304,0.04660683748435208,0.04768464955823289,0.0681630789619681,0.06924089103584885,0.0724743272574913,0.0735521393313721,0.09295275666122646,0.09403056873510728,0.09618619288286882,0.09834181703063047,0.10480868947391528,0.11019774984331929,0.11127556191720007,0.12313149472988882,0.12528711887765046,0.13714305169033927,0.16085491731571683,0.17055522598064407],"clip":null,"tied":null,"fs":[0],"txt":"bmi","tip":"<div class='tt-h'><span class='tt-k'>curve<\/span> <b>bmi<\/b><\/div><table><tr><td>range<\/td><td class='num' colspan=3>+85 to +294<\/td><\/tr><\/table>","sup":null}],"intercept":0.0,"link":"identity","threshold":0.0,"linkScale":1.0,"linkOffset":0.0,"feats":[{"i":0,"name":"bmi","imp":1.0,"lo":-0.09027529589850945,"hi":0.17055522598064407,"v":-0.007283766209687899,"step":0.0013,"kind":"continuous","levels":null,"missing":false,"nsplit":1,"thr":[],"hlo":-0.09027529589850945,"hhi":0.17055522598064407,"hist":[[6],[10],[18],[24],[21],[31],[37],[41],[35],[34],[29],[26],[19],[16],[19],[17],[18],[14],[5],[7],[5],[3],[1],[3],[1],[0],[1],[1]],"ends":["\u22120.0903","0.171"]}],"samples":[{"x":{"0":-0.05794093368208547},"y":"252"},{"x":{"0":0.06061839444480248},"y":"245"},{"x":{"0":0.011039039046285686},"y":"111"},{"x":{"0":-0.012672826579091896},"y":"202"},{"x":{"0":0.04445121333659049},"y":"129"},{"x":{"0":-0.08380842345522464},"y":"101"},{"x":{"0":-0.039618128426111884},"y":"65"},{"x":{"0":0.009961226972404908},"y":"210"},{"x":{"0":0.1274427430254121},"y":"308"},{"x":{"0":-0.008361578283568675},"y":"177"},{"x":{"0":-0.010517202431330305},"y":"61"},{"x":{"0":-0.04285156464775429},"y":"64"},{"x":{"0":0.08109682384853766},"y":"180"},{"x":{"0":-0.02452875939178067},"y":"200"},{"x":{"0":0.05199589785375607},"y":"230"},{"x":{"0":-0.03422906805670789},"y":"190"},{"x":{"0":-0.007283766209687899},"y":"52"},{"x":{"0":-0.03746250427835029},"y":"113"},{"x":{"0":-0.06009655782984706},"y":"70"},{"x":{"0":-0.04608500086939666},"y":"74"},{"x":{"0":-0.008361578283568675},"y":"161"},{"x":{"0":0.08864150836570328},"y":"279"},{"x":{"0":-0.041773752573873474},"y":"75"},{"x":{"0":-0.03099563183506548},"y":"102"},{"x":{"0":0.055229334075398484},"y":"68"},{"x":{"0":0.0013387303813585058},"y":"142"},{"x":{"0":-0.06332999405148947},"y":"65"},{"x":{"0":0.023972783932855315},"y":"265"},{"x":{"0":-0.047162812943277475},"y":"200"},{"x":{"0":-0.006205954135807083},"y":"219"},{"x":{"0":-0.012672826579091896},"y":"91"},{"x":{"0":-0.01698407487461508},"y":"90"},{"x":{"0":0.04121777711494808},"y":"52"},{"x":{"0":-0.018061886948495892},"y":"171"},{"x":{"0":-0.020217511096257485},"y":"47"},{"x":{"0":-0.018061886948495892},"y":"150"},{"x":{"0":0.006727790750762504},"y":"67"},{"x":{"0":0.009961226972404908},"y":"150"},{"x":{"0":-0.0320734439089463},"y":"104"},{"x":{"0":-0.08488623552910546},"y":"90"},{"x":{"0":0.12528711887765046},"y":"341"},{"x":{"0":0.04013996504106731},"y":"155"},{"x":{"0":-0.08165279930746305},"y":"85"},{"x":{"0":0.061696206518683294},"y":"242"},{"x":{"0":-0.05255187331268147},"y":"181"},{"x":{"0":-0.05901874575596628},"y":"86"},{"x":{"0":-0.0018947058402839008},"y":"63"},{"x":{"0":0.008883414898524095},"y":"174"},{"x":{"0":-0.03854031635223107},"y":"127"},{"x":{"0":-0.020217511096257485},"y":"148"},{"x":{"0":0.07678557555301448},"y":"332"},{"x":{"0":-0.010517202431330305},"y":"25"},{"x":{"0":-0.022373135244019075},"y":"51"},{"x":{"0":0.006727790750762504},"y":"277"},{"x":{"0":-0.02560657146566148},"y":"71"},{"x":{"0":0.005649978676881689},"y":"138"},{"x":{"0":-0.03099563183506548},"y":"154"},{"x":{"0":-0.06440780612537028},"y":"83"},{"x":{"0":0.08540807214406083},"y":"306"},{"x":{"0":0.04660683748435208},"y":"99"},{"x":{"0":-0.03854031635223107},"y":"93"},{"x":{"0":0.05954058237092167},"y":"178"},{"x":{"0":0.04013996504106731},"y":"147"},{"x":{"0":0.02505059600673609},"y":"122"},{"x":{"0":0.0175059114895705},"y":"173"},{"x":{"0":-0.0018947058402839008},"y":"44"},{"x":{"0":0.06924089103584885},"y":"220"},{"x":{"0":-0.0212953231701383},"y":"107"},{"x":{"0":0.03475090467166331},"y":"84"},{"x":{"0":-0.011595014505211082},"y":"94"},{"x":{"0":0.018583723563451313},"y":"248"},{"x":{"0":-0.02452875939178067},"y":"89"},{"x":{"0":-0.00943939035744949},"y":"197"},{"x":{"0":0.06061839444480248},"y":"243"},{"x":{"0":-0.03746250427835029},"y":"129"},{"x":{"0":0.13714305169033927},"y":"233"},{"x":{"0":0.03475090467166331},"y":"236"},{"x":{"0":-0.07303030271641665},"y":"57"},{"x":{"0":-0.0018947058402839008},"y":"185"},{"x":{"0":0.07786338762689529},"y":"233"},{"x":{"0":-0.011595014505211082},"y":"200"},{"x":{"0":0.031517468450020895},"y":"296"},{"x":{"0":0.02505059600673609},"y":"182"},{"x":{"0":-0.014828450726853487},"y":"124"},{"x":{"0":0.07139651518361048},"y":"220"},{"x":{"0":-0.061174369903727877},"y":"89"},{"x":{"0":0.06492964274032566},"y":"95"},{"x":{"0":-0.033151255982827074},"y":"214"},{"x":{"0":-0.03638469220446948},"y":"135"},{"x":{"0":0.006727790750762504},"y":"182"},{"x":{"0":-0.04608500086939666},"y":"77"},{"x":{"0":-0.04392937672163507},"y":"71"},{"x":{"0":0.014272475267928093},"y":"297"},{"x":{"0":0.04984027370599448},"y":"144"},{"x":{"0":-0.040695940499992665},"y":"72"},{"x":{"0":-0.006205954135807083},"y":"164"},{"x":{"0":-0.049318437091039065},"y":"128"},{"x":{"0":-0.011595014505211082},"y":"206"},{"x":{"0":-0.039618128426111884},"y":"91"},{"x":{"0":-0.06225218197760866},"y":"45"},{"x":{"0":-0.07087467856865506},"y":"49"},{"x":{"0":-0.014828450726853487},"y":"97"},{"x":{"0":-0.035306880130588664},"y":"52"},{"x":{"0":-0.02560657146566148},"y":"252"},{"x":{"0":-0.00943939035744949},"y":"60"},{"x":{"0":0.05954058237092167},"y":"85"},{"x":{"0":-0.03099563183506548},"y":"43"},{"x":{"0":0.08864150836570328},"y":"264"},{"x":{"0":-0.03854031635223107},"y":"40"},{"x":{"0":-0.03638469220446948},"y":"50"},{"x":{"0":-0.05794093368208547},"y":"88"},{"x":{"0":-0.06548561819925106},"y":"96"},{"x":{"0":0.0013387303813585058},"y":"229"},{"x":{"0":-0.004050329988045492},"y":"88"},{"x":{"0":-0.06656343027313188},"y":"59"},{"x":{"0":-0.029917819761184662},"y":"108"},{"x":{"0":-0.008361578283568675},"y":"100"},{"x":{"0":-0.06332999405148947},"y":"37"},{"x":{"0":-0.02560657146566148},"y":"199"},{"x":{"0":0.09403056873510728},"y":"263"},{"x":{"0":-0.03638469220446948},"y":"146"},{"x":{"0":0.002416542455239321},"y":"245"},{"x":{"0":-0.03854031635223107},"y":"206"},{"x":{"0":-0.06548561819925106},"y":"59"},{"x":{"0":0.01966153563733209},"y":"237"},{"x":{"0":-0.05578530953432388},"y":"135"},{"x":{"0":0.0681630789619681},"y":"121"},{"x":{"0":-0.05578530953432388},"y":"39"},{"x":{"0":-0.02452875939178067},"y":"65"},{"x":{"0":-0.050396249164919873},"y":"189"},{"x":{"0":-0.02452875939178067},"y":"58"},{"x":{"0":-0.007283766209687899},"y":"248"},{"x":{"0":-0.06548561819925106},"y":"153"},{"x":{"0":0.05415152200151766},"y":"293"},{"x":{"0":-0.06548561819925106},"y":"214"},{"x":{"0":-0.08919748382462865},"y":"104"},{"x":{"0":-0.007283766209687899},"y":"95"},{"x":{"0":0.004572166603000912},"y":"48"},{"x":{"0":0.0369065288194249},"y":"70"},{"x":{"0":0.016428099415689682},"y":"268"},{"x":{"0":0.026128408080616904},"y":"196"},{"x":{"0":0.04337340126270967},"y":"103"},{"x":{"0":-0.006205954135807083},"y":"262"},{"x":{"0":0.08540807214406083},"y":"261"},{"x":{"0":-0.05578530953432388},"y":"63"},{"x":{"0":-0.027762195613423073},"y":"209"},{"x":{"0":0.009961226972404908},"y":"235"},{"x":{"0":-0.007283766209687899},"y":"182"},{"x":{"0":0.09726400495674965},"y":"275"},{"x":{"0":0.07462995140525285},"y":"275"},{"x":{"0":-0.033151255982827074},"y":"84"},{"x":{"0":-0.03422906805670789},"y":"120"},{"x":{"0":0.04984027370599448},"y":"221"},{"x":{"0":0.01966153563733209},"y":"178"},{"x":{"0":-0.018061886948495892},"y":"168"},{"x":{"0":0.032595280523901676},"y":"208"},{"x":{"0":-0.05470749746044306},"y":"42"},{"x":{"0":-0.023450947317899894},"y":"150"},{"x":{"0":0.05954058237092167},"y":"91"},{"x":{"0":-0.008361578283568675},"y":"131"},{"x":{"0":0.05415152200151766},"y":"187"},{"x":{"0":-0.022373135244019075},"y":"49"},{"x":{"0":-0.04500718879551588},"y":"93"},{"x":{"0":-0.047162812943277475},"y":"72"},{"x":{"0":0.0013387303813585058},"y":"258"},{"x":{"0":0.005649978676881689},"y":"67"},{"x":{"0":0.0724743272574913},"y":"131"},{"x":{"0":-0.05794093368208547},"y":"162"},{"x":{"0":-0.00943939035744949},"y":"59"},{"x":{"0":0.03582871674554409},"y":"248"},{"x":{"0":-0.04608500086939666},"y":"178"},{"x":{"0":0.09295275666122646},"y":"128"},{"x":{"0":-0.020217511096257485},"y":"233"},{"x":{"0":-0.06009655782984706},"y":"72"},{"x":{"0":-0.07949717515970146},"y":"101"},{"x":{"0":-0.029917819761184662},"y":"118"},{"x":{"0":0.004572166603000912},"y":"59"},{"x":{"0":0.0013387303813585058},"y":"51"},{"x":{"0":-0.023450947317899894},"y":"71"},{"x":{"0":-0.04608500086939666},"y":"114"},{"x":{"0":0.055229334075398484},"y":"173"},{"x":{"0":-0.008361578283568675},"y":"31"},{"x":{"0":0.07031870310972965},"y":"288"},{"x":{"0":-0.020217511096257485},"y":"97"},{"x":{"0":0.045529025410471304},"y":"272"},{"x":{"0":-0.048240625017158284},"y":"111"},{"x":{"0":0.17055522598064407},"y":"242"},{"x":{"0":-0.041773752573873474},"y":"178"},{"x":{"0":0.004572166603000912},"y":"200"},{"x":{"0":-0.023450947317899894},"y":"92"},{"x":{"0":0.06061839444480248},"y":"132"},{"x":{"0":-0.01698407487461508},"y":"80"},{"x":{"0":-0.004050329988045492},"y":"198"},{"x":{"0":0.08001901177465684},"y":"257"},{"x":{"0":0.061696206518683294},"y":"151"},{"x":{"0":0.07139651518361048},"y":"141"},{"x":{"0":-0.013750638652972673},"y":"216"},{"x":{"0":-0.0320734439089463},"y":"53"},{"x":{"0":-0.03638469220446948},"y":"102"},{"x":{"0":0.05846277029704089},"y":"136"},{"x":{"0":0.018583723563451313},"y":"113"},{"x":{"0":0.020739347711212906},"y":"246"},{"x":{"0":0.004572166603000912},"y":"107"},{"x":{"0":0.014272475267928093},"y":"220"},{"x":{"0":0.10480868947391528},"y":"270"},{"x":{"0":0.020739347711212906},"y":"281"},{"x":{"0":0.05954058237092167},"y":"263"},{"x":{"0":-0.039618128426111884},"y":"78"},{"x":{"0":0.030439656376140087},"y":"244"},{"x":{"0":0.002416542455239321},"y":"123"},{"x":{"0":-0.011595014505211082},"y":"181"},{"x":{"0":-0.015906262800734303},"y":"151"},{"x":{"0":-0.05362968538656229},"y":"83"},{"x":{"0":-0.028840007687303888},"y":"179"},{"x":{"0":-0.035306880130588664},"y":"53"},{"x":{"0":0.0175059114895705},"y":"69"},{"x":{"0":0.011039039046285686},"y":"276"},{"x":{"0":0.005649978676881689},"y":"249"},{"x":{"0":-0.0018947058402839008},"y":"109"},{"x":{"0":0.028284032228378497},"y":"302"},{"x":{"0":0.012116851120166501},"y":"144"},{"x":{"0":-0.00943939035744949},"y":"257"},{"x":{"0":0.039062152967186486},"y":"220"},{"x":{"0":0.009961226972404908},"y":"151"},{"x":{"0":-0.02452875939178067},"y":"110"},{"x":{"0":-0.06764124234701265},"y":"55"},{"x":{"0":-0.03746250427835029},"y":"128"},{"x":{"0":0.06061839444480248},"y":"215"},{"x":{"0":0.0013387303813585058},"y":"196"},{"x":{"0":-0.020217511096257485},"y":"111"},{"x":{"0":-0.04500718879551588},"y":"90"},{"x":{"0":-0.029917819761184662},"y":"160"},{"x":{"0":-0.006205954135807083},"y":"134"},{"x":{"0":-0.07518592686417827},"y":"55"},{"x":{"0":0.16085491731571683},"y":"346"},{"x":{"0":-0.022373135244019075},"y":"156"},{"x":{"0":-0.033151255982827074},"y":"54"},{"x":{"0":0.016428099415689682},"y":"212"},{"x":{"0":0.030439656376140087},"y":"172"},{"x":{"0":-0.07195249064253588},"y":"77"},{"x":{"0":-0.05686312160820465},"y":"183"},{"x":{"0":-0.05794093368208547},"y":"158"},{"x":{"0":0.018583723563451313},"y":"265"},{"x":{"0":0.0670852668880873},"y":"78"},{"x":{"0":0.12852055509929283},"y":"259"},{"x":{"0":-0.05578530953432388},"y":"109"},{"x":{"0":0.0563071461492793},"y":"303"},{"x":{"0":0.014272475267928093},"y":"142"},{"x":{"0":-0.039618128426111884},"y":"124"},{"x":{"0":-0.051474061238800654},"y":"75"},{"x":{"0":0.04768464955823289},"y":"258"},{"x":{"0":-0.0212953231701383},"y":"281"},{"x":{"0":-0.006205954135807083},"y":"283"},{"x":{"0":0.022894971858974496},"y":"232"},{"x":{"0":-0.03638469220446948},"y":"200"},{"x":{"0":-0.06440780612537028},"y":"96"},{"x":{"0":0.12313149472988882},"y":"281"},{"x":{"0":0.0013387303813585058},"y":"49"},{"x":{"0":0.11450899813884247},"y":"237"},{"x":{"0":0.06061839444480248},"y":"186"},{"x":{"0":0.022894971858974496},"y":"265"},{"x":{"0":0.015350287341808908},"y":"242"},{"x":{"0":-0.0051281420619263066},"y":"126"},{"x":{"0":-0.05470749746044306},"y":"60"},{"x":{"0":0.03367309259778249},"y":"270"},{"x":{"0":-0.04608500086939666},"y":"72"},{"x":{"0":0.0422955891888289},"y":"137"},{"x":{"0":-0.061174369903727877},"y":"99"},{"x":{"0":0.053073709927636895},"y":"163"},{"x":{"0":0.05415152200151766},"y":"142"},{"x":{"0":-0.015906262800734303},"y":"104"},{"x":{"0":0.020739347711212906},"y":"197"},{"x":{"0":0.04121777711494808},"y":"198"},{"x":{"0":-0.06871905442089347},"y":"72"},{"x":{"0":-0.041773752573873474},"y":"103"},{"x":{"0":-0.018061886948495892},"y":"77"},{"x":{"0":-0.033151255982827074},"y":"94"},{"x":{"0":-0.06656343027313188},"y":"77"},{"x":{"0":0.028284032228378497},"y":"145"},{"x":{"0":0.04013996504106731},"y":"180"},{"x":{"0":0.06924089103584885},"y":"277"},{"x":{"0":0.09295275666122646},"y":"140"},{"x":{"0":-0.023450947317899894},"y":"71"},{"x":{"0":-0.02452875939178067},"y":"66"},{"x":{"0":0.045529025410471304},"y":"232"},{"x":{"0":0.004572166603000912},"y":"191"},{"x":{"0":0.021817159785093684},"y":"178"},{"x":{"0":-0.02560657146566148},"y":"118"},{"x":{"0":-0.028840007687303888},"y":"88"},{"x":{"0":-0.0212953231701383},"y":"131"},{"x":{"0":-0.035306880130588664},"y":"185"},{"x":{"0":0.028284032228378497},"y":"170"},{"x":{"0":-0.023450947317899894},"y":"64"},{"x":{"0":0.015350287341808908},"y":"96"},{"x":{"0":-0.048240625017158284},"y":"96"},{"x":{"0":-0.08165279930746305},"y":"51"},{"x":{"0":0.11127556191720007},"y":"336"},{"x":{"0":-0.0051281420619263066},"y":"116"},{"x":{"0":0.014272475267928093},"y":"118"},{"x":{"0":-0.06440780612537028},"y":"170"},{"x":{"0":0.09295275666122646},"y":"200"},{"x":{"0":0.045529025410471304},"y":"202"},{"x":{"0":0.004572166603000912},"y":"144"},{"x":{"0":0.06492964274032566},"y":"109"},{"x":{"0":0.030439656376140087},"y":"122"},{"x":{"0":-0.012672826579091896},"y":"292"},{"x":{"0":-0.04608500086939666},"y":"47"},{"x":{"0":0.026128408080616904},"y":"52"},{"x":{"0":-0.012672826579091896},"y":"160"},{"x":{"0":-0.008361578283568675},"y":"81"},{"x":{"0":0.039062152967186486},"y":"85"},{"x":{"0":0.03367309259778249},"y":"198"},{"x":{"0":0.039062152967186486},"y":"310"},{"x":{"0":-0.035306880130588664},"y":"125"},{"x":{"0":-0.03099563183506548},"y":"55"},{"x":{"0":0.015350287341808908},"y":"201"},{"x":{"0":-0.029917819761184662},"y":"88"},{"x":{"0":-0.06979686649477428},"y":"48"},{"x":{"0":0.0175059114895705},"y":"128"},{"x":{"0":0.030439656376140087},"y":"222"},{"x":{"0":-0.015906262800734303},"y":"132"},{"x":{"0":0.0422955891888289},"y":"166"},{"x":{"0":-0.06656343027313188},"y":"79"},{"x":{"0":-0.040695940499992665},"y":"71"},{"x":{"0":-0.03422906805670789},"y":"140"},{"x":{"0":-0.09027529589850945},"y":"94"},{"x":{"0":-0.07626373893805906},"y":"134"},{"x":{"0":-0.06225218197760866},"y":"115"},{"x":{"0":-0.03099563183506548},"y":"91"},{"x":{"0":-0.004050329988045492},"y":"61"},{"x":{"0":-0.004050329988045492},"y":"202"},{"x":{"0":-0.04608500086939666},"y":"69"},{"x":{"0":-0.03854031635223107},"y":"253"},{"x":{"0":0.008883414898524095},"y":"127"},{"x":{"0":0.0034943545291200974},"y":"73"},{"x":{"0":-0.022373135244019075},"y":"84"},{"x":{"0":0.0034943545291200974},"y":"129"},{"x":{"0":0.061696206518683294},"y":"110"},{"x":{"0":-0.0051281420619263066},"y":"230"},{"x":{"0":0.012116851120166501},"y":"143"},{"x":{"0":-0.04500718879551588},"y":"102"},{"x":{"0":-0.01913969902237667},"y":"214"},{"x":{"0":-0.020217511096257485},"y":"241"},{"x":{"0":0.016428099415689682},"y":"225"},{"x":{"0":-0.0051281420619263066},"y":"92"},{"x":{"0":-0.050396249164919873},"y":"87"},{"x":{"0":-0.08057498723358228},"y":"72"},{"x":{"0":-0.029917819761184662},"y":"69"},{"x":{"0":-0.07734155101193986},"y":"116"},{"x":{"0":-0.010517202431330305},"y":"97"},{"x":{"0":0.0175059114895705},"y":"139"},{"x":{"0":-0.015906262800734303},"y":"104"},{"x":{"0":-0.07734155101193986},"y":"137"},{"x":{"0":-0.011595014505211082},"y":"190"},{"x":{"0":0.07139651518361048},"y":"252"},{"x":{"0":0.03367309259778249},"y":"150"},{"x":{"0":-0.02560657146566148},"y":"170"},{"x":{"0":0.04768464955823289},"y":"317"},{"x":{"0":-0.05794093368208547},"y":"63"},{"x":{"0":-0.002972517914164677},"y":"217"},{"x":{"0":0.006727790750762504},"y":"109"},{"x":{"0":-0.02560657146566148},"y":"98"},{"x":{"0":-0.010517202431330305},"y":"168"},{"x":{"0":-0.008361578283568675},"y":"39"},{"x":{"0":-0.033151255982827074},"y":"65"},{"x":{"0":0.05199589785375607},"y":"164"},{"x":{"0":0.10480868947391528},"y":"321"},{"x":{"0":-0.033151255982827074},"y":"168"},{"x":{"0":-0.05470749746044306},"y":"143"},{"x":{"0":0.04337340126270967},"y":"195"},{"x":{"0":-0.047162812943277475},"y":"138"},{"x":{"0":0.012116851120166501},"y":"235"},{"x":{"0":-0.023450947317899894},"y":"144"},{"x":{"0":-0.07410811479029747},"y":"48"},{"x":{"0":-0.02452875939178067},"y":"163"},{"x":{"0":-0.06979686649477428},"y":"63"},{"x":{"0":-0.002972517914164677},"y":"141"},{"x":{"0":-0.013750638652972673},"y":"83"},{"x":{"0":-0.00943939035744949},"y":"81"},{"x":{"0":0.06385183066644486},"y":"217"},{"x":{"0":0.05415152200151766},"y":"192"},{"x":{"0":0.0563071461492793},"y":"310"},{"x":{"0":0.0369065288194249},"y":"90"},{"x":{"0":0.039062152967186486},"y":"246"},{"x":{"0":0.04445121333659049},"y":"141"},{"x":{"0":-0.03099563183506548},"y":"42"},{"x":{"0":0.006727790750762504},"y":"131"},{"x":{"0":-0.01913969902237667},"y":"219"},{"x":{"0":0.002416542455239321},"y":"85"},{"x":{"0":0.045529025410471304},"y":"175"},{"x":{"0":-0.0008168937664030856},"y":"115"},{"x":{"0":0.0735521393313721},"y":"275"},{"x":{"0":-0.010517202431330305},"y":"179"},{"x":{"0":0.03582871674554409},"y":"184"},{"x":{"0":-0.03099563183506548},"y":"172"},{"x":{"0":0.07139651518361048},"y":"295"},{"x":{"0":0.05846277029704089},"y":"275"},{"x":{"0":0.005649978676881689},"y":"311"},{"x":{"0":-0.0266843835395423},"y":"152"},{"x":{"0":-0.06979686649477428},"y":"158"}],"scoreName":"prediction","legend":[{"k":"dot","col":"var(--dti-c0)","label":"raises target"},{"k":"dot","col":"var(--dti-c7)","label":"lowers target"}],"impNote":"<b>%<\/b> is the feature's share of how much the model's shape functions move the prediction across the training data (standard deviation of each shape function's contribution, split evenly among the features it uses). Bars are relative to the top feature; ticks mark thresholds the model uses.","classes":[],"pos":"var(--dti-c0)","neg":"var(--dti-c7)","target":"target","chart":[{"f":0,"ox":0,"oy":0,"x0":12,"x1":268,"y0":32,"y1":142,"lo":-0.08466528405395989,"hi":0.1353754398891749,"ymax":285.25}],"sig":3,"rowsTop":0,"note":"A monotone step-and-ramp function of one feature.","fileName":"IsotonicRegression"}</script>
+<script>
+/* Shared runtime for imodels.viz interactive pages.
+ * A model script calls DTI.init() for utilities, draws its view, then calls S.start(hooks):
+ *   predict(x)        -> {cls, proba} for classifiers or {value} for regressors (pure)
+ *   explain(x, pred)  -> HTML shown under the prediction (path, waterfall, ...)
+ *   show(x, pred)     -> update the drawing for input x (x = null clears it)
+ *   highlight(f)      -> emphasize what uses feature f (null clears)
+ *   exportSvg()       -> SVG text of the current view
+ *   onOpen / onClose  -> optional layout hooks when the Predict panel opens / closes
+ */
+window.DTI = (function () {
+  "use strict";
+
+  function init() {
+    const D = JSON.parse(document.getElementById("dti-data").textContent);
+    const S = {D};
+    const $ = (id) => document.getElementById(id);
+    const sig = D.sig || 3;
+
+    // ---------- formatting
+    S.esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    S.fmt = (v, digits) => {
+      if (v == null || !isFinite(v)) return String(v);
+      if (Math.abs(v) < 1e-12) return "0";
+      const g = digits || sig, a = Math.abs(v);
+      if (a >= 1e6 || a < 1e-3) return v.toExponential(g - 1).replace("e+", "e").replace("-", "−");
+      const d = Math.max(g - Math.floor(Math.log10(a)) - 1, 0);
+      return Number(v.toFixed(d)).toLocaleString("en-US", {maximumFractionDigits: d}).replace("-", "−");
+    };
+    S.signed = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + S.fmt(Math.abs(v));
+    S.pct = (p) => (p >= 0.995 && p < 1 ? ">99" : p > 0 && p <= 0.005 ? "<1" : (100 * p).toFixed(0)) + "%";
+    const isClf = D.task === "classification";
+    S.isClf = isClf;
+    S.classDot = (k) => `<i style="background:${D.classes[k].col}"></i>${S.esc(D.classes[k].name)}`;
+
+    // ---------- legend (same look on every page)
+    $("legend").innerHTML = (D.legend || []).map((it) => {
+      if (it.k === "dot") return `<span><i style="background:${it.col}"></i>${S.esc(it.label)}</span>`;
+      if (it.k === "grad") return `<span>${S.esc(it.label)}</span><span class="tt-m">${S.fmt(it.lo)}</span>` +
+        `<span class="grad" style="background:linear-gradient(90deg,${it.stops.join(",")})"></span><span class="tt-m">${S.fmt(it.hi)}</span>`;
+      return `<span class="lnote">${S.esc(it.label)}</span>`;
+    }).join("");
+
+    // ---------- tooltip
+    const tip = $("tip");
+    let tipOn = false;
+    S.tip = (html) => { tip.innerHTML = html; tip.classList.add("show"); tipOn = true; };
+    S.hideTip = () => { tip.classList.remove("show"); tipOn = false; };
+    addEventListener("pointermove", (e) => {
+      if (!tipOn) return;
+      let x = e.clientX + 16, y = e.clientY + 16;
+      if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - tip.offsetWidth - 16;
+      if (y + tip.offsetHeight > innerHeight - 8) y = Math.max(8, innerHeight - tip.offsetHeight - 8);
+      tip.style.left = x + "px"; tip.style.top = y + "px";
+    });
+
+    // ---------- theme
+    const root = document.documentElement;
+    $("b-theme").onclick = () => {
+      const dark = root.dataset.theme === "dark" || (root.dataset.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      root.dataset.theme = dark ? "light" : "dark";
+    };
+    S.resolveVars = (text) => {
+      const cs = getComputedStyle(root);
+      return text.replace(/var\((--dti-[a-z0-9]+)\)/g, (_, v) => cs.getPropertyValue(v).trim());
+    };
+    S.surface = () => getComputedStyle(root).getPropertyValue("--dti-surface").trim();
+
+    // ---------- features column
+    const hud = $("hud"), hudBody = $("hud-body");
+    const FW = 264, FH = 26;
+    let hoverF = null, pinned = null, H = {};
+    function sparkline(f) {
+      const sx = (v) => Math.max(0, Math.min(1, (v - f.hlo) / (f.hhi - f.hlo || 1))) * FW;
+      let out = `<line x1="0" x2="${FW}" y1="${FH + 0.5}" y2="${FH + 0.5}" style="stroke:var(--dti-axis)"/>`;
+      if (f.hist) {
+        const nb = f.hist.length, bw = FW / nb, top = Math.max(1, ...f.hist.map((b) => b.reduce((a, c) => a + c, 0)));
+        const w = Math.min(bw - 1, 22);
+        f.hist.forEach((b, i) => {
+          let y = FH;
+          b.forEach((c, k) => {
+            if (!c) return;
+            const h = (c / top) * (FH - 2);
+            y -= h;
+            const col = isClf && b.length > 1 ? D.classes[k].col : "var(--dti-s4)";
+            out += `<rect x="${(i * bw + (bw - w) / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" style="fill:${col}"/>`;
+          });
+        });
+      }
+      for (const t of f.thr) out += `<line x1="${sx(t).toFixed(1)}" x2="${sx(t).toFixed(1)}" y1="${FH + 2}" y2="${FH + 8}" style="stroke:var(--dti-ink);stroke-width:1.5"/>`;
+      out += `<line class="xv" y1="-1" y2="${FH}" style="stroke:var(--dti-hl);stroke-width:2"/>`;
+      return `<svg viewBox="0 -2 ${FW} ${FH + 12}" preserveAspectRatio="none" aria-hidden="true">${out}</svg>`;
+    }
+    function buildHud(word) {
+      const tot = D.feats.reduce((a, f) => a + f.imp, 0) || 1, maxImp = Math.max(...D.feats.map((f) => f.imp), 1e-12);
+      $("hud-sub").textContent = `${D.feats.length} used · sorted by importance`;
+      $("hud-note").innerHTML = D.impNote || "";
+      $("hud-f").textContent = `Hover a feature to highlight the ${word}s that use it. Click to pin.`;
+      hudBody.innerHTML = D.feats.map((f) => {
+        const ends = f.ends || [S.fmt(f.hlo), S.fmt(f.hhi)], n = f.nsplit;
+        return `<div class="frow" data-f="${f.i}">
+          <div class="top"><span class="nm" title="${S.esc(f.name)}">${S.esc(f.name)}</span><span class="im">${(100 * f.imp / tot).toFixed(1)}%</span></div>
+          <div class="ib"><span style="width:${(100 * f.imp / maxImp).toFixed(1)}%"></span></div>
+          ${sparkline(f)}
+          <div class="meta"><span>${S.esc(ends[0])}</span><span>${n} ${word}${n === 1 ? "" : "s"}</span><span>${S.esc(ends[1])}</span></div></div>`;
+      }).join("");
+      hudBody.querySelectorAll(".frow").forEach((row) => {
+        const f = +row.dataset.f;
+        row.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        row.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+        row.addEventListener("click", () => { pinned = pinned === f ? null : f; applyFeat(); });
+      });
+      $("hud-x").onclick = () => hud.classList.toggle("min");
+      if (innerWidth < 1100) hud.classList.add("min");  // keep the model in view on smaller screens
+    }
+    function applyFeat() {
+      const f = hoverF ?? pinned;
+      if (H.highlight) H.highlight(f);
+      hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("pin", +r.dataset.f === pinned));
+    }
+    S.reapplyHighlight = applyFeat;
+    S.hotFeatures = (fs) => hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("hot", fs.includes(+r.dataset.f)));
+
+    // ---------- predict panel
+    const panel = $("panel"), fields = $("fields"), res = $("res"), wi = $("whatif"), predBtn = $("b-pred");
+    let x = null, truth = null, truthLabel = "";
+    const featByIdx = {};
+    D.feats.forEach((f) => (featByIdx[f.i] = f));
+    S.feat = (i) => featByIdx[i];
+    // a feature value as read by people: level name, "missing", or the number
+    S.val = (i, v, digits) => {
+      const f = featByIdx[i];
+      if (v == null || Number.isNaN(v)) return "missing";
+      if (f && f.levels) return f.levels[Math.round(v)] ?? S.fmt(v);
+      return S.fmt(v, digits);
+    };
+    const isMissing = (v) => v == null || Number.isNaN(v);
+    // samples store missing values as null
+    const fromSample = (sx) => { const o = {}; for (const k in sx) o[k] = sx[k] == null ? NaN : sx[k]; return o; };
+    S.x = () => x;
+    S.predicting = () => !!x;
+    function defaults() { const o = {}; D.feats.forEach((f) => (o[f.i] = f.v)); return o; }
+    function buildFields() {
+      fields.innerHTML = D.feats.map((f) => {
+        const nm = S.esc(f.name);
+        if (f.levels) {  // categorical: pick a level (or missing)
+          return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span>
+            <select aria-label="${nm}">${f.levels.map((l, k) => `<option value="${k}">${S.esc(l)}</option>`).join("")}` +
+            `${f.missing ? `<option value="nan">(missing)</option>` : ""}</select></label></div>`;
+        }
+        return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span><span class="ctl2">` +
+          (f.missing ? `<label class="miss" title="Treat ${nm} as missing"><input type="checkbox"> missing</label>` : "") +
+          `<input type="number" step="${f.step}" value="${+(+f.v).toPrecision(6)}" aria-label="${nm}"></span></label>
+          <input type="range" min="${f.lo}" max="${f.hi}" step="${f.step}" value="${f.v}" aria-label="${nm} slider"></div>`;
+      }).join("");
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, ft = featByIdx[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        const changed = () => { truth = null; refresh(); };
+        if (sel) sel.addEventListener("change", () => { x[f] = sel.value === "nan" ? NaN : +sel.value; changed(); });
+        if (num) num.addEventListener("input", () => {
+          if (num.value === "") return;
+          x[f] = +num.value; rng.value = num.value; if (miss) miss.checked = false; changed();
+        });
+        if (rng) rng.addEventListener("input", () => {
+          x[f] = +rng.value; num.value = +(+rng.value).toPrecision(6); if (miss) miss.checked = false; changed();
+        });
+        if (miss) miss.addEventListener("change", () => { x[f] = miss.checked ? NaN : +num.value || ft.v; changed(); });
+        el.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        el.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+      });
+    }
+    function setFields() {
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, v = x[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        if (sel) { sel.value = isMissing(v) ? "nan" : String(Math.round(v)); return; }
+        if (miss) miss.checked = isMissing(v);
+        if (isMissing(v)) { num.value = ""; return; }
+        num.value = +(+v).toPrecision(6);
+        rng.value = v;
+      });
+    }
+    function resultHtml(p) {
+      let html = `<div class="tt-k">Prediction</div>`;
+      if (isClf) {
+        const k = p.cls;
+        html += `<div class="big">${S.classDot(k)}</div>`;
+        if (p.proba) {
+          const shown = D.classes.length === 2 ? 1 : k;
+          html += `<div class="meta">P(${S.esc(D.classes[shown].name)}) = ${S.pct(p.proba[shown])}${p.note ? " \u00b7 " + p.note : ""}</div>`;
+          html += `<div class="probs">${p.proba.map((q, j) => q > 0 ? `<span style="width:${(100 * q).toFixed(2)}%;background:${D.classes[j].col}" title="${S.esc(D.classes[j].name)} ${S.pct(q)}"></span>` : "").join("")}</div>`;
+          html += `<div class="plabs">${p.proba.map((q, j) => q > 0.005 ? `<span><i style="background:${D.classes[j].col}"></i>${S.esc(D.classes[j].name)} ${S.pct(q)}</span>` : "").join("")}</div>`;
+        } else if (p.note) html += `<div class="meta">${p.note}</div>`;
+      } else {
+        html += `<div class="big">${S.fmt(p.value, Math.max(sig, 4))}</div>`;
+        if (p.note) html += `<div class="meta">${p.note}</div>`;
+      }
+      if (truth != null) html += `<div class="truth">${S.esc(truthLabel)} <b>${S.esc(truth)}</b></div>`;
+      return html + (H.explain ? H.explain(x, p) : "");
+    }
+    function refresh() {
+      const p = H.predict(x);
+      res.innerHTML = resultHtml(p);
+      if (H.show) H.show(x, p);
+      for (const f of D.feats) {
+        const ln = hudBody.querySelector(`.frow[data-f="${f.i}"] .xv`);
+        if (!ln) continue;
+        ln.style.visibility = isMissing(x[f.i]) ? "hidden" : "";
+        const px = (Math.max(0, Math.min(1, (x[f.i] - f.hlo) / (f.hhi - f.hlo || 1))) * FW).toFixed(1);
+        ln.setAttribute("x1", px); ln.setAttribute("x2", px);
+      }
+      hud.classList.add("predicting");
+      whatIf(p);
+      applyFeat();
+    }
+    S.refresh = () => { if (x) refresh(); };
+
+    // ---------- what would change the prediction
+    // the roundest number just past threshold t (above when up, else below) that crosses no other
+    // threshold, so an applied change reads cleanly (1.8 rather than 1.750001)
+    function nicePast(t, up, span, thr) {
+      const tol = span * 1e-3;
+      for (let p = 1; p <= 12; p++) {
+        const step = Math.pow(10, Math.floor(Math.log10(Math.abs(t) || 1)) - p + 1);
+        const v = +((up ? Math.floor(t / step) + 1 : Math.ceil(t / step) - 1) * step).toPrecision(p + 1);
+        const clear = thr.every((o) => !(up ? o > t && o < v : o < t && o > v));
+        if ((up ? v > t : v < t) && Math.abs(v - t) <= tol && clear) return v;
+      }
+      return up ? t + span * 1e-6 : t - span * 1e-6;
+    }
+    function candidates(f, cur) {
+      const span = (f.hi - f.lo) || 1, out = [];
+      if (f.missing && !isMissing(cur)) out.push({v: NaN, txt: "missing"});
+      if (f.levels) {
+        f.levels.forEach((l, k) => { if (isMissing(cur) || k !== Math.round(cur)) out.push({v: k, txt: l}); });
+        return out;
+      }
+      if (f.kind === "binary") return out.concat([{v: 0, txt: "0"}, {v: 1, txt: "1"}].filter((c) => c.v !== cur));
+      for (const t of f.thr) {
+        if (f.kind === "integer") {
+          out.push({v: Math.floor(t), txt: S.fmt(Math.floor(t), 12)}, {v: Math.floor(t) + 1, txt: S.fmt(Math.floor(t) + 1, 12)});
+        } else {
+          let dg = sig;  // enough digits that the threshold reads differently from the current value
+          // (only when they really differ: a value sitting on the cut keeps the short form)
+          while (dg < 8 && !isMissing(cur) && Math.abs(t - cur) > span * 1e-5 && S.fmt(t, dg) === S.fmt(cur, dg)) dg++;
+          out.push({v: nicePast(t, false, span, f.thr), txt: `\u2264 ${S.fmt(t, dg)}`, t},
+                   {v: nicePast(t, true, span, f.thr), txt: `> ${S.fmt(t, dg)}`, t});
+        }
+      }
+      for (let q = 0; q <= 8; q++) {
+        let v = f.lo + span * q / 8;
+        if (f.kind === "integer") v = Math.round(v);
+        out.push({v, txt: S.fmt(v)});
+      }
+      return out.filter((c) => isMissing(c.v) || isMissing(cur) || Math.abs(c.v - cur) > 1e-12);
+    }
+    // how big a change is, as a share of the feature's range (switching a level or to / from missing counts as half)
+    function dist(f, c, cur) {
+      if (f.levels || isMissing(c.v) || isMissing(cur)) return 0.5;
+      return Math.abs(c.v - cur) / ((f.hi - f.lo) || 1);
+    }
+    function whatIf(base) {
+      const rows = [];
+      for (const f of D.feats) {
+        const cur = x[f.i];
+        let best = null;
+        for (const c of candidates(f, cur)) {
+          const xx = Object.assign({}, x, {[f.i]: c.v});
+          const p = H.predict(xx), d = dist(f, c, cur);
+          if (isClf) {
+            const flips = p.cls !== base.cls;
+            // prefer the smallest change that flips the class; otherwise the biggest drop in the current class
+            const drop = p.proba && base.proba ? base.proba[base.cls] - p.proba[base.cls] : 0;
+            const key = flips ? [0, d] : [1, -drop];
+            if (!flips && drop < 0.005) continue;  // ignore changes that barely move the probability
+            if (!best || key[0] < best.key[0] || (key[0] === best.key[0] && key[1] < best.key[1])) best = {f, c, p, key, flips, drop};
+          } else {
+            const delta = p.value - base.value;
+            if (Math.abs(delta) <= 1e-9 * (1 + Math.abs(base.value))) continue;
+            const key = [0, -Math.abs(delta)];
+            if (!best || key[1] < best.key[1]) best = {f, c, p, key, delta};
+          }
+        }
+        if (best) rows.push(best);
+      }
+      rows.sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1]);
+      rows.forEach((r) => (r.changes = [{f: r.f, c: r.c}]));
+      const flipping = rows.filter((r) => r.flips), lowering = rows.filter((r) => !r.flips);
+      const pairs = isClf && !flipping.length ? pairFlips(base) : [];
+      const cls = S.esc(D.classes[base.cls] ? D.classes[base.cls].name : "");
+      const groups = isClf
+        ? [["Smallest single-feature changes that flip the class:", flipping.slice(0, 4)],
+           ["No single change flips the class. Smallest pairs of changes that do:", pairs],
+           [`Changes that lower P(${cls}) most without flipping it:`, lowering.slice(0, Math.max(0, 4 - flipping.length - pairs.length))]]
+        : [["Single-feature changes that move the prediction most:", rows.slice(0, 5)]];
+      const show = [];
+      let html = "";
+      for (const [lead, list] of groups) {
+        if (!list.length) continue;
+        html += `<div class="none">${lead}</div>`;
+        for (const r of list) {
+          const to = isClf
+            ? `${S.classDot(r.p.cls)}${r.p.proba ? " " + S.pct(r.p.proba[r.p.cls]) : ""}`
+            : `${S.fmt(r.p.value, Math.max(sig, 4))} <span class="tt-m">(${S.signed(r.delta)})</span>`;
+          const what = r.changes.map((ch) => {
+            let dg = sig;
+            while (dg < 8 && ch.c.t != null && !isMissing(x[ch.f.i]) &&
+                   Math.abs(ch.c.t - x[ch.f.i]) > ((ch.f.hi - ch.f.lo) || 1) * 1e-5 &&
+                   S.fmt(ch.c.t, dg) === S.fmt(x[ch.f.i], dg)) dg++;
+            return `<b>${S.esc(ch.f.name)}</b> ${S.esc(S.val(ch.f.i, x[ch.f.i], dg))} \u2192 ${S.esc(ch.c.txt)}`;
+          }).join(" and ");
+          html += `<button data-k="${show.length}" title="Apply ${r.changes.length > 1 ? "these changes" : "this change"}"><span class="what">${what}</span>` +
+            `<span class="to">${to}</span></button>`;
+          show.push(r);
+        }
+      }
+      wi.innerHTML = html || `<div class="none">No change to one or two features moves this prediction.</div>`;
+      wi.querySelectorAll("button").forEach((b) => {
+        const r = show[+b.dataset.k];
+        b.onclick = () => { for (const ch of r.changes) x[ch.f.i] = ch.c.v; truth = null; setFields(); refresh(); };
+      });
+    }
+    // two-feature changes that flip the class, nearest first (top features, nearest candidates only)
+    function pairFlips(base) {
+      const cand = D.feats.slice(0, 10).map((f) => {
+        const cur = x[f.i];
+        return {f, list: candidates(f, cur).map((c) => ({c, d: dist(f, c, cur)})).sort((a, b) => a.d - b.d).slice(0, 12)};
+      });
+      const best = [];
+      for (let a = 0; a < cand.length; a++) for (let b = a + 1; b < cand.length; b++) {
+        let top = null;
+        for (const ca of cand[a].list) for (const cb of cand[b].list) {
+          const d = ca.d + cb.d;
+          if (top && d >= top.key[1]) continue;
+          const p = H.predict(Object.assign({}, x, {[cand[a].f.i]: ca.c.v, [cand[b].f.i]: cb.c.v}));
+          if (p.cls !== base.cls) top = {changes: [{f: cand[a].f, c: ca.c}, {f: cand[b].f, c: cb.c}], p, key: [0, d], flips: true};
+        }
+        if (top) best.push(top);
+      }
+      return best.sort((a, b) => a.key[1] - b.key[1]).slice(0, 3);
+    }
+
+    function open(on) {
+      on = on ?? !panel.classList.contains("open");
+      panel.classList.toggle("open", on);
+      predBtn.classList.toggle("on", on);
+      if (on) {
+        if (!x) { x = defaults(); buildFields(); }
+        refresh();
+        if (H.onOpen) setTimeout(H.onOpen, 270);
+      } else {
+        x = null;
+        hud.classList.remove("predicting");
+        if (H.show) H.show(null, null);
+        if (H.onClose) setTimeout(H.onClose, 270);
+      }
+    }
+    S.open = open;
+    // load a training row into Predict (optionally one matching `keep`)
+    S.loadSample = (keep, why) => {
+      const pool = keep ? D.samples.filter((s) => keep(Object.assign(defaults(), fromSample(s.x)))) : D.samples;
+      if (!pool.length) return false;
+      const s = pool[Math.floor(Math.random() * pool.length)];
+      if (!x) { x = defaults(); buildFields(); }
+      Object.assign(x, fromSample(s.x));
+      truth = s.y;
+      truthLabel = why ? `${why}; true label` : "true label";
+      if (!panel.classList.contains("open")) open(true); else { setFields(); refresh(); }
+      setFields();
+      return true;
+    };
+    S.setValues = (vals) => { if (!x) open(true); Object.assign(x, vals); truth = null; setFields(); refresh(); };
+    S.withX = (vals) => Object.assign({}, x || defaults(), vals);
+    S.defaults = defaults;
+
+    S.start = (hooks) => {
+      H = hooks;
+      buildHud(hooks.word || "term");
+      $("p-hint").textContent = hooks.hint || "Set feature values to see the prediction. Features are ordered by importance.";
+      predBtn.onclick = () => open();
+      const rb = $("b-rand");
+      if (!D.samples.length) rb.style.display = "none";
+      rb.onclick = () => S.loadSample(null);
+      $("b-reset").onclick = () => { x = defaults(); truth = null; setFields(); refresh(); };
+      $("b-svg").onclick = () => {
+        const text = S.resolveVars(hooks.exportSvg());
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], {type: "image/svg+xml"}));
+        a.download = (D.fileName || "model") + ".svg";
+        a.click();
+      };
+    };
+    // a small horizontal waterfall used by additive models and sums of trees
+    S.waterfall = (items, totalLabel, total, pos, neg, limit = 12) => {
+      // the baseline is listed but not drawn: it would set the scale and flatten every contribution
+      const maxc = Math.max(...items.filter(([lab]) => lab !== "baseline").map(([, c]) => Math.abs(c)), 1e-12);
+      const line = (lab, c) => `<div class="lab" title="${S.esc(lab)}">${S.esc(lab)}</div><div class="val">${S.signed(c)}</div>` +
+        (lab === "baseline" ? `<div class="bar"></div>` :
+          `<div class="bar" style="width:${(100 * Math.abs(c) / maxc).toFixed(1)}%;background:${c >= 0 ? pos : neg}"></div>`);
+      let html = items.slice(0, limit).map(([lab, c]) => line(lab, c)).join("");
+      if (items.length > limit) html += `<div class="lab tt-m">+${items.length - limit} smaller terms</div><div></div>`;
+      return `<div class="wf">${html}<div class="lab tot">${S.esc(totalLabel)}</div><div class="val tot">${S.fmt(total, Math.max(sig, 4))}</div></div>`;
+    };
+    return S;
+  }
+  return {init};
+})();
+
+</script>
+<script>
+/* Additive-model pages: rule sets, scorecards, shape functions (GAMs) and linear models. */
+(function () {
+  "use strict";
+  const S = DTI.init(), D = S.D, T = D.terms, esc = S.esc, fmt = S.fmt;
+  const svg = document.getElementById("canvas"), NS = "http://www.w3.org/2000/svg";
+  const OPS = {"<=": (a, b) => a <= b, "<": (a, b) => a < b, ">": (a, b) => a > b, ">=": (a, b) => a >= b, "==": (a, b) => a === b,
+    "!=": (a, b) => a !== b, "isnan": (a) => Number.isNaN(a), "notnan": (a) => !Number.isNaN(a)};
+  const NEG = {"<=": ">", "<": ">=", ">": "<=", ">=": "<", "==": "!=", "!=": "==", "isnan": "notnan", "notnan": "isnan"};
+
+  // ---------- model evaluation (mirrors AdditiveView.score in Python)
+  function interp(v, g, y) {  // np.interp: linear between points, flat beyond the ends
+    if (v <= g[0]) return y[0];
+    if (v >= g[g.length - 1]) return y[y.length - 1];
+    let i = 1;
+    while (g[i] < v) i++;
+    return y[i - 1] + (y[i] - y[i - 1]) * (v - g[i - 1]) / (g[i] - g[i - 1]);
+  }
+  function contrib(t, x) {
+    if (t.k === "rule") return t.c.every(([f, op, v]) => OPS[op](x[f], v)) ? t.w : 0;
+    const v = x[t.f];
+    if (t.k === "linear") return t.w * ((t.clip ? Math.min(t.clip[1], Math.max(t.clip[0], v)) : v) - t.ctr);
+    if (t.k === "curve") {
+      if (!t.tied || t.tied.every(Boolean) || !t.tied.some(Boolean)) return interp(v, t.g, t.vals);
+      let b = 0;  // bin of v: searchsorted(edges, v, "right")
+      while (b < t.e.length && t.e[b] <= v) b++;
+      if (t.tied[b]) return interp(v, t.g, t.vals);
+      const keep = t.tied.map((q) => !q);
+      return interp(v, t.g.filter((_, i) => keep[i]), t.vals.filter((_, i) => keep[i]));
+    }
+    const e = t.e.map((q, i) => (q == null ? (i === 0 ? -Infinity : Infinity) : q));
+    let i = 0;  // bins are (e[i], e[i+1]], matching tree splits
+    while (i < t.vals.length - 1 && v > e[i + 1]) i++;
+    return t.vals[i];
+  }
+  function output(s) {
+    if (D.link === "logistic") return 1 / (1 + Math.exp(-(D.linkScale * s + D.linkOffset)));
+    if (D.link === "clip") return Math.min(1, Math.max(0, s));
+    if (D.link === "exp") return Math.exp(s);
+    if (D.link === "threshold") return s > D.threshold ? 1 : 0;
+    return s;
+  }
+  function predict(x) {
+    const parts = T.map((t) => contrib(t, x));
+    const s = D.intercept + parts.reduce((a, c) => a + c, 0), out = output(s);
+    if (!S.isClf) return {value: out, parts, s};
+    const k = out >= 0.5 ? D.classes.length - 1 : 0;
+    if (D.link === "threshold") {
+      const fired = T.filter((t, i) => t.k === "rule" && parts[i] !== 0).length;
+      return {cls: k, parts, s, note: `${fired} rule${fired === 1 ? "" : "s"} hold${fired === 1 ? "s" : ""}`};
+    }
+    const note = D.scoreName.startsWith("P(") ? "" : `${esc(D.scoreName)} ${fmt(s)}`;
+    return {cls: k, proba: [1 - out, out], parts, s, note};
+  }
+  function explain(x, p) {
+    const items = p.parts.map((c, i) => [T[i].txt, c]).filter(([, c]) => Math.abs(c) > 1e-12)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    if (D.intercept) items.unshift(["baseline", D.intercept]);
+    return S.waterfall(items, D.scoreName, p.s, D.pos, D.neg) + (D.note ? `<div class="tt-m" style="font-size:11px;margin-top:6px">${esc(D.note)}</div>` : "");
+  }
+
+  // ---------- rows (rule sets / scorecards) and panels (GAMs)
+  const rows = [...svg.querySelectorAll(".term")], panels = [...svg.querySelectorAll(".panel")];
+  const condHolds = (c, x) => OPS[c[1]](x[c[0]], c[2]);
+  // smallest input change that makes condition (f, op, v) hold
+  function satisfy(f, op, v) {
+    const ft = S.feat(f), span = (ft.hi - ft.lo) || 1, eps = span * 1e-6;
+    if (op === "isnan") return NaN;
+    if (op === "notnan") return ft.v;
+    if (ft.levels && op === "!=") return v === 0 ? 1 : 0;  // any other level
+    if (ft.kind !== "continuous") {
+      return {"<=": Math.floor(v), "<": Math.ceil(v) - 1, ">": Math.floor(v) + 1, ">=": Math.ceil(v), "==": v,
+        "!=": ft.kind === "binary" ? 1 - v : v + 1}[op];
+    }
+    return {"<=": v, "<": v - eps, ">": v + eps, ">=": v, "==": v, "!=": v + span * 0.01}[op];
+  }
+  function toggleRule(t) {
+    const x = S.x();
+    if (t.c.every((c) => condHolds(c, x))) {  // break it with the smallest single change
+      let best = null;
+      for (const [f, op, v] of t.c) {
+        const nv = satisfy(f, NEG[op], v);
+        const d = Number.isNaN(nv) || Number.isNaN(x[f]) || S.feat(f).levels ? 0.5 : Math.abs(nv - x[f]) / ((S.feat(f).hi - S.feat(f).lo) || 1);
+        if (!best || d < best.d) best = {f, nv, d};
+      }
+      if (best) S.setValues({[best.f]: best.nv});
+    } else {  // make every failing condition hold
+      const vals = {};
+      for (const c of t.c) if (!condHolds(c, Object.assign({}, x, vals))) vals[c[0]] = satisfy(c[0], c[1], c[2]);
+      S.setValues(vals);
+    }
+  }
+  rows.forEach((g) => {
+    const t = T[+g.dataset.t];
+    const act = t.k !== "rule" ? "" : D.samples.length ? "Click to load a training row this rule covers (while predicting, click to switch the rule on or off)."
+      : "While predicting, click to switch the rule on or off.";
+    g.addEventListener("pointerenter", () => { S.tip(t.tip + (act ? `<div class="tt-act">${act}</div>` : "")); S.hotFeatures(t.fs); });
+    g.addEventListener("pointerleave", () => { S.hideTip(); S.hotFeatures([]); });
+    if (t.k === "rule") g.addEventListener("click", () => {
+      if (S.predicting()) toggleRule(t);
+      else if (!S.loadSample((x) => t.c.every((c) => condHolds(c, x)), `training row covered by rule ${g.dataset.rank || ""}`.trim())) S.open(true);
+    });
+  });
+  // GAM panels: click to set the feature to the clicked value
+  panels.forEach((g) => {
+    const m = (D.chart || []).find((c) => c.f === +g.dataset.f);
+    g.addEventListener("pointerenter", () => { S.tip(`<div class="tt-h"><b>${esc(S.feat(m.f).name)}</b></div><div class="tt-act">Click to set ${esc(S.feat(m.f).name)} to the value under the pointer.</div>`); S.hotFeatures([m.f]); });
+    g.addEventListener("pointerleave", () => { S.hideTip(); S.hotFeatures([]); });
+    g.addEventListener("click", (e) => {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      const local = pt.matrixTransform(g.getScreenCTM().inverse());
+      const fr = Math.max(0, Math.min(1, (local.x - m.x0) / (m.x1 - m.x0)));
+      let v = m.lo + fr * (m.hi - m.lo);
+      if (S.feat(m.f).kind !== "continuous") v = Math.round(v);
+      S.setValues({[m.f]: v});
+    });
+  });
+
+  // ---------- sort control (rule sets only)
+  const sortSel = document.getElementById("sort"), sortCtl = document.getElementById("sortctl");
+  if (D.family !== "ruleset" || rows.length < 2) sortCtl.style.display = "none";
+  sortSel.onchange = () => {
+    const key = sortSel.value;
+    const order = rows.slice().sort((a, b) => {
+      const ta = T[+a.dataset.t], tb = T[+b.dataset.t];
+      if (key === "coverage") return (tb.sup ?? -1) - (ta.sup ?? -1);
+      if (key === "model") return +a.dataset.t - +b.dataset.t;
+      return +a.dataset.rank - +b.dataset.rank;
+    });
+    let y = D.rowsTop;
+    for (const g of order) { g.style.transform = `translate(0px, ${y}px)`; y += +g.dataset.h; }
+  };
+
+  // ---------- markers
+  // label: [text, x, y, anchor] placed clear of chart titles
+  function marker(g, x, y0, y1, yDot, label) {
+    let mk = g.querySelector(":scope > .mk");
+    if (!mk) { mk = document.createElementNS(NS, "g"); mk.setAttribute("class", "mk"); g.appendChild(mk); }
+    mk.innerHTML = x == null ? "" : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y1}" style="stroke:var(--dti-hl);stroke-width:2"/>` +
+      (yDot != null ? `<circle cx="${x}" cy="${yDot}" r="4.5" style="fill:var(--dti-hl);stroke:var(--dti-card);stroke-width:1.5"/>` : "") +
+      (label ? `<text x="${label[1]}" y="${label[2]}" text-anchor="${label[3]}" style="font-size:10.5px;font-weight:700;fill:var(--dti-hl);paint-order:stroke;stroke:var(--dti-card);stroke-width:3px">${label[0]}</text>` : "");
+  }
+  function show(x, p) {
+    svg.classList.toggle("predicting", !!x);
+    if (!x) {
+      svg.querySelectorAll(".mk").forEach((m) => (m.innerHTML = ""));
+      svg.querySelectorAll(".rk").forEach((d) => d.setAttribute("r", 4.5));
+      return;
+    }
+    rows.forEach((g) => {
+      const i = +g.dataset.t, t = T[i];
+      if (t.k !== "rule") { g.classList.add("on"); return; }
+      const ok = t.c.map((c) => condHolds(c, x)), n = ok.filter(Boolean).length;
+      g.classList.toggle("on", n === ok.length);
+      g.classList.toggle("near", n === ok.length - 1 && ok.length > 1);
+      g.querySelectorAll(".chip").forEach((ch) => {
+        const j = +ch.dataset.c;
+        ch.classList.toggle("ok", !!ok[j]);
+        ch.classList.toggle("no", !ok[j]);
+      });
+    });
+    if (D.family === "gam" && D.chart) for (const m of D.chart) {
+      const g = svg.querySelector(`.panel[data-f="${m.f}"]`);
+      if (Number.isNaN(x[m.f])) { marker(g, null); continue; }
+      const v = Math.max(m.lo, Math.min(m.hi, x[m.f])), px = m.x0 + (v - m.lo) / (m.hi - m.lo) * (m.x1 - m.x0);
+      const c = T.filter((t) => t.f === m.f).reduce((a, t) => a + contrib(t, x), 0);
+      const py = m.y0 + (m.y1 - m.y0) / 2 - c / m.ymax * (m.y1 - m.y0) / 2;
+      const right = px > (m.x0 + m.x1) / 2;
+      marker(g, px.toFixed(1), m.y0, m.y1, py.toFixed(1), [S.signed(c), (px + (right ? -8 : 8)).toFixed(1), (py - 8).toFixed(1), right ? "end" : "start"]);
+    }
+    if (D.family === "scorecard" && D.chart) {
+      const c = D.chart, v = Math.max(c.smin, Math.min(c.smax, p.s)), px = c.x0 + (v - c.smin) / (c.smax - c.smin || 1) * (c.x1 - c.x0);
+      marker(svg, px.toFixed(1), c.y0, c.y1, null, [`score ${fmt(p.s)}`, (px + 6).toFixed(1), (c.y0 + 14).toFixed(1), "start"]);
+      svg.querySelectorAll(".rk").forEach((d) => d.setAttribute("r", Math.abs(+d.dataset.s - p.s) < 1e-9 ? 7 : 4.5));
+    }
+  }
+
+  S.start({
+    word: D.family === "gam" ? "shape function" : D.family === "scorecard" ? "item" : "term",
+    hint: D.family === "gam" ? "Set feature values, or click inside a panel, to see each feature's contribution. They add up to the prediction."
+      : D.family === "scorecard" ? "Set feature values to see which items score. Click an item to switch it on or off."
+        : "Set feature values to see which rules hold and how the terms add up. Click a rule to switch it on or off.",
+    predict, explain, show,
+    highlight(f) {
+      svg.classList.toggle("feat-mode", f != null);
+      rows.forEach((g) => g.classList.toggle("feat", f != null && T[+g.dataset.t].fs.includes(f)));
+      panels.forEach((g) => g.classList.toggle("feat", f != null && +g.dataset.f === f));
+    },
+    exportSvg() {
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.querySelectorAll(".mk").forEach((m) => m.remove());
+      const text = new XMLSerializer().serializeToString(clone);
+      return text.replace(/(<svg[^>]*>)/, `$1<rect x="-4" y="-4" width="100%" height="100%" fill="${S.surface()}"/>`);
+    },
+  });
+})();
+
+</script>
+</body>
+</html>

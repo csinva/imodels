@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels &middot; Visualizing models</title>
+<meta name="description" content="Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use. Check out our new packages! …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+
+<body>
+<header id="site-header">
+<a href="index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+        <article id="content">
+<section id="section-intro">
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <h1 style="padding-bottom: 0px;">imodels.viz: figures you can read, pages you can explore</h1>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; October 2026</h3>
+                    <p class="post-links"><a href="viz/index.html">🗂 Doc</a>, <a href="https://github.com/csinva/imodels/tree/master/imodels/viz">💻 Code</a>, <a href="#gallery">🖼 Gallery</a></p>
+                    <hr>
+
+                    <p class="abstract">An interpretable model is only as useful as the picture you can make of it.
+                        <code>imodels.viz</code> draws a fitted model two ways: as a static figure (SVG, PNG, PDF) for a
+                        paper or slide, and as a single offline HTML page where you can fold the model, run a sample
+                        through it and ask what would change its prediction. It covers the models in <code>imodels</code>
+                        (trees, sums of trees, rule lists, rule sets, scoring systems and additive models) and
+                        scikit-learn's trees, forests, boosting and linear models, 40+ model classes in all.
+                        Every view is tested to reproduce its model's <code>predict</code> / <code>predict_proba</code>
+                        to machine precision, so the figure shows what the model computes.
+                        Each of the 32 figures below was made by the one call shown under it.</p>
+
+                    <nav class="toc-main">
+                      <a href="#quickstart"><span>1</span> Quickstart</a>
+                      <a href="#supported"><span>2</span> Supported models</a>
+                      <a href="#interactive"><span>3</span> Interactive mode</a>
+                      <a href="#gallery"><span>4</span> Gallery</a>
+                      <a href="#export"><span>5</span> Every tree is a scikit-learn tree</a>
+                      <a href="#compare"><span>6</span> Compared with plot_tree</a>
+                    </nav>
+
+                    <style>
+                      .vz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1.4rem; margin: 1.2rem 0 2.2rem; }
+                      .vz-card { display: flex; flex-direction: column; margin: 0; background: var(--surface); border: 1px solid var(--line);
+                        border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(27,31,35,.04), 0 6px 18px rgba(27,31,35,.05);
+                        transition: transform .15s ease, box-shadow .15s ease; min-width: 0; }
+                      .vz-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(27,31,35,.06), 0 12px 28px rgba(27,31,35,.09); }
+                      .vz-thumb { display: flex; align-items: center; justify-content: center; height: 17rem; padding: 0.8rem;
+                        background: #fff; border-bottom: 1px solid var(--line-soft); }
+                      .vz-thumb.dark { background: #1a1a19; }
+                      .vz-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                      .vz-body { padding: 0.9rem 1.1rem 1rem; display: flex; flex-direction: column; gap: 0.45rem; flex: 1; min-width: 0; }
+                      .vz-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; }
+                      .vz-card h3 { font-size: 1.02rem; margin: 0; line-height: 1.3; border: none; padding: 0; }
+                      .vz-num { white-space: nowrap; flex-shrink: 0; font: 500 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+                      .vz-card p { margin: 0; font-size: 0.88rem; line-height: 1.5; color: var(--ink-soft); }
+                      .vz-links { margin-top: auto; padding-top: 0.3rem; display: flex; gap: 1rem; font-size: 0.85rem; }
+                      .vz-card details summary { cursor: pointer; font-size: 0.82rem; color: var(--muted); }
+                      .vz-card details pre { font-size: 0.78rem; margin: 0.5rem 0 0; }
+                      .vz-group-blurb { color: var(--ink-soft); margin-top: -0.3rem; }
+                      .vz-demo { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 1rem 0 0.4rem; background: var(--surface); }
+                      .vz-demo iframe { display: block; width: 100%; height: min(78vh, 720px); border: 0; }
+                      .vz-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; margin: 1rem 0 0.6rem; }
+                      .vz-mcard { border: 1px solid var(--line); border-radius: 12px; padding: 0.85rem 1rem 1rem; background: var(--surface); }
+                      .vz-mcard h3 { font-size: 0.98rem; margin: 0 0 0.15rem; border: none; padding: 0; display: flex; justify-content: space-between; }
+                      .vz-mcard h3 span { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+                      .vz-mcard p { margin: 0 0 0.6rem; font-size: 0.84rem; color: var(--ink-soft); }
+                      .vz-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+                      .vz-chip { display: inline-flex; align-items: center; gap: 0.35rem; font: 0.74rem ui-monospace, SFMono-Regular, Menlo, monospace;
+                        background: var(--code-bg); border-radius: 999px; padding: 0.22rem 0.6rem 0.22rem 0.45rem; white-space: nowrap; }
+                      .vz-chip:before, .vz-key i { content: ""; display: inline-block; width: 0.45rem; height: 0.45rem; border-radius: 50%; }
+                      .vz-chip.sk:before, .vz-key i.sk { background: var(--accent); }
+                      .vz-chip.im:before, .vz-key i.im { background: var(--cat-rule-set); }
+                      .vz-key { color: var(--muted); font-size: 0.85rem; }
+                      .vz-key i { margin: 0 0.3rem 0 0.7rem; }
+                      .vz-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1.4rem; margin-top: 1rem; }
+                    </style>
+
+                    <h2 id="quickstart">1. Quickstart</h2>
+
+                    <pre><code class="language-python">from imodels import FIGSClassifier
+from imodels import viz
+from sklearn.datasets import load_breast_cancer
+
+X, y = load_breast_cancer(return_X_y=True, as_frame=True)
+model = FIGSClassifier(max_rules=8).fit(X, y)
+
+viz.draw(model, X, y).save("figs.svg")             # static: .svg .png .pdf .html
+viz.interactive(model, X, y).save("figs.html")     # one offline page; also renders inline in Jupyter</code></pre>
+
+                    <p>Both calls take the fitted model and, optionally, the training data. With data, every split shows
+                        the distribution of its feature and every leaf its class mix or target range; without it, the
+                        figure falls back to what the model stores. Other arguments set names
+                        (<code>feature_names</code>, <code>class_names</code>, <code>target_name</code>), highlight one
+                        sample's path (<code>x=</code>), limit the depth drawn (<code>max_depth</code>), and switch
+                        theme, orientation and style. See the <a href="viz/index.html">API docs</a>.</p>
+
+                    <h2 id="supported">2. Supported models</h2>
+
+                    <p>Models are grouped by the view they get.
+                        <span class="vz-key"><i class="sk"></i>scikit-learn<i class="im"></i>imodels</span></p>
+                    <div class="vz-models"><div class="vz-mcard"><h3>Decision trees<span>10</span></h3><p>Data-aware cards, class-split flows, fold and unfold</p><div class="vz-chips"><span class="vz-chip sk" title="scikit-learn">DecisionTreeClassifier</span><span class="vz-chip sk" title="scikit-learn">DecisionTreeRegressor</span><span class="vz-chip sk" title="scikit-learn">ExtraTreeClassifier</span><span class="vz-chip sk" title="scikit-learn">ExtraTreeRegressor</span><span class="vz-chip im" title="imodels">GreedyTree</span><span class="vz-chip im" title="imodels">DecisionTreeCCP</span><span class="vz-chip im" title="imodels">HSTree</span><span class="vz-chip im" title="imodels">TaoTree</span><span class="vz-chip im" title="imodels">C45Tree</span><span class="vz-chip im" title="imodels">FastSmallTree</span></div></div><div class="vz-mcard"><h3>Tree ensembles<span>6</span></h3><p>A grid of trees that average or add up</p><div class="vz-chips"><span class="vz-chip sk" title="scikit-learn">RandomForest</span><span class="vz-chip sk" title="scikit-learn">ExtraTrees</span><span class="vz-chip sk" title="scikit-learn">GradientBoosting</span><span class="vz-chip sk" title="scikit-learn">HistGradientBoosting</span><span class="vz-chip im" title="imodels">FIGS</span><span class="vz-chip im" title="imodels">IRF</span></div></div><div class="vz-mcard"><h3>Rule lists<span>4</span></h3><p>Rules in order, each outcome beside its rule</p><div class="vz-chips"><span class="vz-chip im" title="imodels">GreedyRuleList</span><span class="vz-chip im" title="imodels">OneR</span><span class="vz-chip im" title="imodels">FastFrugalTree</span><span class="vz-chip im" title="imodels">BayesianRuleList</span></div></div><div class="vz-mcard"><h3>Rule sets<span>7</span></h3><p>Ranked rules with effect, coverage and classes</p><div class="vz-chips"><span class="vz-chip im" title="imodels">RuleFit</span><span class="vz-chip im" title="imodels">FPLasso</span><span class="vz-chip im" title="imodels">SkopeRules</span><span class="vz-chip im" title="imodels">FPSkope</span><span class="vz-chip im" title="imodels">BoostedRules</span><span class="vz-chip im" title="imodels">Slipper</span><span class="vz-chip im" title="imodels">BayesianRuleSet</span></div></div><div class="vz-mcard"><h3>Scoring systems<span>2</span></h3><p>Points table beside the risk for every score</p><div class="vz-chips"><span class="vz-chip im" title="imodels">FastRiskScore</span><span class="vz-chip im" title="imodels">SLIM</span></div></div><div class="vz-mcard"><h3>Additive and linear models<span>12</span></h3><p>Shape functions or coefficient rows</p><div class="vz-chips"><span class="vz-chip sk" title="scikit-learn">LinearRegression</span><span class="vz-chip sk" title="scikit-learn">Ridge / Lasso / ElasticNet</span><span class="vz-chip sk" title="scikit-learn">LogisticRegression</span><span class="vz-chip sk" title="scikit-learn">SGD</span><span class="vz-chip sk" title="scikit-learn">LinearSVC / LinearSVR</span><span class="vz-chip sk" title="scikit-learn">Huber / RANSAC</span><span class="vz-chip sk" title="scikit-learn">Poisson / Gamma / Tweedie</span><span class="vz-chip sk" title="scikit-learn">RidgeClassifier / Perceptron</span><span class="vz-chip sk" title="scikit-learn">IsotonicRegression</span><span class="vz-chip im" title="imodels">TreeGAM</span><span class="vz-chip im" title="imodels">GPGam</span><span class="vz-chip im" title="imodels">MarginalShrinkageLinear</span></div></div></div>
+                    <p class="caption" style="text-align:left">Pipelines whose earlier steps only scale features (Standard, MinMax, MaxAbs, Robust) are drawn in raw units. AutoInterpretable draws the model it selected. Not supported: kNN, kernel SVMs, MLPs and other models without readable structure; multiclass linear models, boosting and FIGS.</p>
+
+                    <h2 id="interactive">3. Interactive mode</h2>
+
+                    <p><code>viz.interactive</code> writes one self-contained HTML file with no server and no network
+                        requests. Across all models the page offers the same tools:</p>
+                    <ul>
+                      <li><b>Try a sample.</b> Type feature values or load a random training row. The path it takes
+                        lights up, and a waterfall shows how the prediction is built (leaf values, rule weights,
+                        points or shape-function terms).</li>
+                      <li><b>What would change it.</b> The smallest single-feature and two-feature changes that flip a
+                        class, or move a regression prediction the most, with round values just past each threshold.</li>
+                      <li><b>Features panel.</b> Each feature's importance and marginal distribution; click one to
+                        highlight every split or rule that uses it.</li>
+                      <li><b>Fold and simplify.</b> Click a split to fold its subtree; the Simple toggle swaps the charts
+                        for boxes filled by class proportions. Export the current view as SVG.</li>
+                    </ul>
+
+                    <span class="fig-anchor" id="fig1"></span>
+                    <div class="vz-demo"><iframe src="viz_gallery/interactive/iris.html" title="Interactive iris decision tree" loading="lazy"></iframe></div>
+                    <p class="caption"><b>Fig 1.</b> A depth-3 tree on iris, live. Open the Predict panel and change
+                        petal length to watch the path move. <a href="viz_gallery/interactive/iris.html">Open full page</a>.</p>
+
+                    <span class="fig-anchor" id="fig2"></span>
+                    <div class="vz-demo"><iframe src="viz_gallery/interactive/im_riskscore_loans.html" title="Interactive FastRiskScore" loading="lazy"></iframe></div>
+                    <p class="caption"><b>Fig 2.</b> A FastRiskScore scorecard with a categorical column and missing
+                        values, live. Each row's points add to a total, and the curve maps the total to a risk.
+                        <a href="viz_gallery/interactive/im_riskscore_loans.html">Open full page</a>.</p>
+
+                    <h2 id="gallery">4. Gallery</h2>
+
+                    <p>Click a figure for the full-size SVG, or <i>Interactive</i> for its page. Code is under each card.</p>
+
+                    <h3 id="g-trees">4.1 Decision trees</h3>
+                    <p class="vz-group-blurb">scikit-learn trees: classification and regression, with and without data, both themes and orientations.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="iris">
+                        <a class="vz-thumb" href="viz_gallery/static/iris.svg"><img src="viz_gallery/static/iris.svg" alt="Classification with training data" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Classification with training data</h3><span class="vz-num">01</span></div>
+                          <p>Pass X and y and every split shows a class-stacked histogram of its feature, with the threshold marked on the axis. Each ribbon is split by class, with widths proportional to the samples of each class flowing down that branch.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/iris.html">Interactive &#8599;</a><a href="viz_gallery/static/iris.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_iris(as_frame=True)
+X, y = d.data, d.target
+clf = DecisionTreeClassifier(max_depth=3, random_state=0).fit(X, y)
+fig = viz.draw(clf, X, y, class_names=d.target_names, title=&quot;Iris species&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="iris_simple">
+                        <a class="vz-thumb" href="viz_gallery/static/iris_simple.svg"><img src="viz_gallery/static/iris_simple.svg" alt="Simple mode" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Simple mode</h3><span class="vz-num">02</span></div>
+                          <p>simple=True replaces each card with a box filled by the class proportions entering it. Ribbons split by class, so the flow shows which classes take each branch.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/iris_simple.html">Interactive &#8599;</a><a href="viz_gallery/static/iris_simple.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_iris(as_frame=True)
+X, y = d.data, d.target
+clf = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X, y)
+fig = viz.draw(clf, X, y, class_names=d.target_names, simple=True, title=&quot;Iris species&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="california_big">
+                        <a class="vz-thumb" href="viz_gallery/static/california_big.svg"><img src="viz_gallery/static/california_big.svg" alt="A bigger tree" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>A bigger tree</h3><span class="vz-num">03</span></div>
+                          <p>A depth-8 tree with about 300 nodes on all 20,640 California districts. The static view shows the top three levels. The interactive page holds the full tree and opens collapsed in simple mode (the Simple button switches to charts); its feature panel shows where each feature is used.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/california_big.html">Interactive &#8599;</a><a href="viz_gallery/static/california_big.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.fetch_california_housing(as_frame=True)
+X = d.data
+y = pd.qcut(d.target, 3, labels=False)   # value tier: low / mid / high
+clf = DecisionTreeClassifier(max_depth=8, min_samples_leaf=50, random_state=0).fit(X, y)
+fig = viz.draw(clf, X, y, class_names=[&quot;low&quot;, &quot;mid&quot;, &quot;high&quot;], max_depth=3,
+               title=&quot;California house value tier&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="loan">
+                        <a class="vz-thumb" href="viz_gallery/static/loan.svg"><img src="viz_gallery/static/loan.svg" alt="Binary and integer features" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Binary and integer features</h3><span class="vz-num">04</span></div>
+                          <p>Thresholds on 0/1 features read as “= 0 / = 1” and thresholds on integer features as “≤ k / ≥ k+1”, inferred from the data. Synthetic credit data.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/loan.html">Interactive &#8599;</a><a href="viz_gallery/static/loan.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = loan_data()   # synthetic credit data, see docs/pages/viz_gallery.py
+clf = DecisionTreeClassifier(max_depth=3, min_samples_leaf=20, random_state=0).fit(X, y)
+fig = viz.draw(clf, X, y, class_names={0: &quot;denied&quot;, 1: &quot;approved&quot;}, title=&quot;Loan approval&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="diabetes_path">
+                        <a class="vz-thumb" href="viz_gallery/static/diabetes_path.svg"><img src="viz_gallery/static/diabetes_path.svg" alt="Regression and one sample&#x27;s decision path" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Regression and one sample&#x27;s decision path</h3><span class="vz-num">05</span></div>
+                          <p>Regression splits show a feature/target scatter with the mean of each side drawn as a line. Passing x highlights one sample&#x27;s path and marks its value in each chart.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/diabetes_path.html">Interactive &#8599;</a><a href="viz_gallery/static/diabetes_path.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_diabetes(as_frame=True)
+X, y = d.data, d.target
+reg = DecisionTreeRegressor(max_depth=3, random_state=0).fit(X, y)
+fig = viz.draw(reg, X, y, x=X.iloc[7], target_name=&quot;progression&quot;, title=&quot;Diabetes progression&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="iris_dark">
+                        <a class="vz-thumb dark" href="viz_gallery/static/iris_dark.svg"><img src="viz_gallery/static/iris_dark.svg" alt="Dark theme" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Dark theme</h3><span class="vz-num">06</span></div>
+                          <p>Both themes use their own validated color steps rather than an inverted palette.</p>
+                          <div class="vz-links"><a href="viz_gallery/static/iris_dark.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_iris(as_frame=True)
+clf = DecisionTreeClassifier(max_depth=2, random_state=0).fit(d.data, d.target)
+fig = viz.draw(clf, d.data, d.target, class_names=d.target_names, theme=&quot;dark&quot;,
+               x=d.data.iloc[120], title=&quot;Iris species&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="california_lr">
+                        <a class="vz-thumb" href="viz_gallery/static/california_lr.svg"><img src="viz_gallery/static/california_lr.svg" alt="Left-to-right layout" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Left-to-right layout</h3><span class="vz-num">07</span></div>
+                          <p>orientation=&quot;LR&quot; suits deep, narrow trees and wide screens. Leaves show the distribution of the target in that leaf against the full target range.</p>
+                          <div class="vz-links"><a href="viz_gallery/static/california_lr.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.fetch_california_housing(as_frame=True)
+X, y = d.data.iloc[:4000], d.target.iloc[:4000]
+reg = DecisionTreeRegressor(max_depth=3, min_samples_leaf=50, random_state=0).fit(X, y)
+fig = viz.draw(reg, X, y, orientation=&quot;LR&quot;, target_name=&quot;value ($100k)&quot;, title=&quot;California house values&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="wine_nodata">
+                        <a class="vz-thumb" href="viz_gallery/static/wine_nodata.svg"><img src="viz_gallery/static/wine_nodata.svg" alt="Model only, no data" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Model only, no data</h3><span class="vz-num">08</span></div>
+                          <p>Without data the cards show the class mix from the fitted tree itself. Useful when the training set is not at hand.</p>
+                          <div class="vz-links"><a href="viz_gallery/static/wine_nodata.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_wine()
+clf = DecisionTreeClassifier(max_depth=3, random_state=0).fit(d.data, d.target)
+fig = viz.draw(clf, feature_names=d.feature_names, class_names=[&quot;barolo&quot;, &quot;grignolino&quot;, &quot;barbera&quot;],
+               title=&quot;Wine cultivar&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="cancer_truncated">
+                        <a class="vz-thumb" href="viz_gallery/static/cancer_truncated.svg"><img src="viz_gallery/static/cancer_truncated.svg" alt="Deep tree, truncated view" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Deep tree, truncated view</h3><span class="vz-num">09</span></div>
+                          <p>max_depth limits what is drawn. Subtrees below the cut become stacked cards that count their hidden nodes. The interactive page holds the whole tree.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/cancer_truncated.html">Interactive &#8599;</a><a href="viz_gallery/static/cancer_truncated.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_breast_cancer(as_frame=True)
+X, y = d.data, d.target
+clf = DecisionTreeClassifier(random_state=0).fit(X, y)   # unrestricted depth
+fig = viz.draw(clf, X, y, class_names=d.target_names, max_depth=2, title=&quot;Breast cancer diagnosis&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="digits_compact">
+                        <a class="vz-thumb" href="viz_gallery/static/digits_compact.svg"><img src="viz_gallery/static/digits_compact.svg" alt="Many classes, compact style" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Many classes, compact style</h3><span class="vz-num">10</span></div>
+                          <p>Trees with more than 24 leaves switch to compact cards automatically. Ten classes use the eight validated hues plus four extras, so the legend carries identity.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/digits_compact.html">Interactive &#8599;</a><a href="viz_gallery/static/digits_compact.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_digits()
+clf = DecisionTreeClassifier(max_depth=5, random_state=0).fit(d.data, d.target)
+fig = viz.draw(clf, feature_names=[f&quot;px{i}&quot; for i in range(64)], title=&quot;Handwritten digits&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="forest_member">
+                        <a class="vz-thumb" href="viz_gallery/static/forest_member.svg"><img src="viz_gallery/static/forest_member.svg" alt="One tree from a random forest" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>One tree from a random forest</h3><span class="vz-num">11</span></div>
+                          <p>Any single tree of an ensemble works: forest.estimators_[i] or gbm.estimators_[i, 0].</p>
+                          <div class="vz-links"><a href="viz_gallery/static/forest_member.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_breast_cancer(as_frame=True)
+X, y = d.data, d.target
+rf = RandomForestClassifier(n_estimators=50, max_depth=4, random_state=0).fit(X, y)
+fig = viz.draw(rf.estimators_[0], X, y, feature_names=list(X.columns),
+               class_names=d.target_names, max_depth=3, title=&quot;Random forest, tree 0&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="gbm_stage">
+                        <a class="vz-thumb" href="viz_gallery/static/gbm_stage.svg"><img src="viz_gallery/static/gbm_stage.svg" alt="A gradient boosting stage" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>A gradient boosting stage</h3><span class="vz-num">12</span></div>
+                          <p>Boosting trees fit residuals, so pass the residual target to see what the stage learned.</p>
+                          <div class="vz-links"><a href="viz_gallery/static/gbm_stage.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">d = datasets.load_diabetes(as_frame=True)
+X, y = d.data, d.target
+gbm = GradientBoostingRegressor(n_estimators=20, max_depth=2, random_state=0).fit(X, y)
+resid = y - y.mean()   # what the first stage is fit to
+fig = viz.draw(gbm.estimators_[0, 0], X, resid, feature_names=list(X.columns),
+               target_name=&quot;residual&quot;, title=&quot;Gradient boosting, stage 1&quot;)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+                    <h3 id="g-skmore">4.2 More scikit-learn models</h3>
+                    <p class="vz-group-blurb">Forests, boosting, linear models and isotonic regression.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="sk_forest">
+                        <a class="vz-thumb" href="viz_gallery/static/sk_forest.svg"><img src="viz_gallery/static/sk_forest.svg" alt="Random forest" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Random forest</h3><span class="vz-num">13</span></div>
+                          <p>Forests draw their first few trees in a grid; predictions average every tree. In interactive mode Predict lists each tree&#x27;s vote.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/sk_forest.html">Interactive &#8599;</a><a href="viz_gallery/static/sk_forest.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">from sklearn.ensemble import RandomForestClassifier
+X, y = cancer.data, cancer.target
+model = RandomForestClassifier(n_estimators=50, max_depth=3, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;Random forest, breast cancer&quot;, max_trees=3)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="sk_gbm">
+                        <a class="vz-thumb" href="viz_gallery/static/sk_gbm.svg"><img src="viz_gallery/static/sk_gbm.svg" alt="Gradient boosting" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Gradient boosting</h3><span class="vz-num">14</span></div>
+                          <p>Boosted trees add up: each leaf shows its contribution and the waterfall in Predict sums them.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/sk_gbm.html">Interactive &#8599;</a><a href="viz_gallery/static/sk_gbm.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = diabetes.data, diabetes.target
+model = GradientBoostingRegressor(n_estimators=60, max_depth=2, random_state=0).fit(X, y)
+kw = dict(title=&quot;Gradient boosting, diabetes progression&quot;, max_trees=3)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="sk_hgb">
+                        <a class="vz-thumb" href="viz_gallery/static/sk_hgb.svg"><img src="viz_gallery/static/sk_hgb.svg" alt="Histogram gradient boosting" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Histogram gradient boosting</h3><span class="vz-num">15</span></div>
+                          <p>HistGradientBoosting trees, including where each split sends missing values.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/sk_hgb.html">Interactive &#8599;</a><a href="viz_gallery/static/sk_hgb.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">from sklearn.ensemble import HistGradientBoostingClassifier
+X, y = cancer.data, cancer.target
+model = HistGradientBoostingClassifier(max_iter=40, max_leaf_nodes=5, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;HistGradientBoosting, breast cancer&quot;, max_trees=3)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="sk_logreg">
+                        <a class="vz-thumb" href="viz_gallery/static/sk_logreg.svg"><img src="viz_gallery/static/sk_logreg.svg" alt="Logistic regression in a pipeline" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Logistic regression in a pipeline</h3><span class="vz-num">16</span></div>
+                          <p>The pipeline&#x27;s scaler is folded in, so coefficients read per raw unit. Bars show each feature&#x27;s typical effect on the log-odds.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/sk_logreg.html">Interactive &#8599;</a><a href="viz_gallery/static/sk_logreg.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+X, y = cancer.data, cancer.target
+model = make_pipeline(StandardScaler(), LogisticRegression(C=0.05, max_iter=2000)).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;Logistic regression, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="sk_isotonic">
+                        <a class="vz-thumb" href="viz_gallery/static/sk_isotonic.svg"><img src="viz_gallery/static/sk_isotonic.svg" alt="Isotonic regression" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Isotonic regression</h3><span class="vz-num">17</span></div>
+                          <p>A monotone fit of one feature, drawn as a shape function over the data&#x27;s distribution.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/sk_isotonic.html">Interactive &#8599;</a><a href="viz_gallery/static/sk_isotonic.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">from sklearn.isotonic import IsotonicRegression
+X, y = diabetes.data[[&quot;bmi&quot;]], diabetes.target
+model = IsotonicRegression(out_of_bounds=&quot;clip&quot;).fit(X[&quot;bmi&quot;], y)
+kw = dict(title=&quot;Isotonic regression, diabetes progression by bmi&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+                    <h3 id="g-trees">4.3 Trees and sums of trees</h3>
+                    <p class="vz-group-blurb">imodels trees reuse the decision-tree views; FIGS adds trees side by side.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="im_hstree">
+                        <a class="vz-thumb" href="viz_gallery/static/im_hstree.svg"><img src="viz_gallery/static/im_hstree.svg" alt="Hierarchical shrinkage (HSTree)" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Hierarchical shrinkage (HSTree)</h3><span class="vz-num">18</span></div>
+                          <p>HSTree shrinks each node&#x27;s prediction toward its ancestors. The cards show the shrunk values the model predicts with; histograms still come from the training data.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_hstree.html">Interactive &#8599;</a><a href="viz_gallery/static/im_hstree.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.HSTreeClassifier(max_leaf_nodes=8, reg_param=10).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;HSTree, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_figs">
+                        <a class="vz-thumb" href="viz_gallery/static/im_figs.svg"><img src="viz_gallery/static/im_figs.svg" alt="FIGS: a sum of trees" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>FIGS: a sum of trees</h3><span class="vz-num">19</span></div>
+                          <p>FIGS grows several small trees whose leaf values add up. Trees sit side by side with a + between them; Predict shows each tree&#x27;s contribution.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_figs.html">Interactive &#8599;</a><a href="viz_gallery/static/im_figs.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = diabetes.data, diabetes.target
+model = imodels.FIGSRegressor(max_rules=10).fit(X, y)
+kw = dict(title=&quot;FIGS, diabetes progression&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_c45">
+                        <a class="vz-thumb" href="viz_gallery/static/im_c45.svg"><img src="viz_gallery/static/im_c45.svg" alt="C4.5 tree" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>C4.5 tree</h3><span class="vz-num">20</span></div>
+                          <p>C4.5 splits are strict (x &lt; t). Leaves store only a label, so their class mix is counted from the data.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_c45.html">Interactive &#8599;</a><a href="viz_gallery/static/im_c45.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.C45TreeClassifier(max_rules=6).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;C4.5, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_irf">
+                        <a class="vz-thumb" href="viz_gallery/static/im_irf.svg"><img src="viz_gallery/static/im_irf.svg" alt="Iterative random forest (IRF)" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Iterative random forest (IRF)</h3><span class="vz-num">21</span></div>
+                          <p>IRF reweights features over several forests; its final forest averages its trees like any forest.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_irf.html">Interactive &#8599;</a><a href="viz_gallery/static/im_irf.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.IRFClassifier(n_estimators=20, max_depth=3, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;IRF, breast cancer&quot;, max_trees=3)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+                    <h3 id="g-lists">4.4 Rule lists</h3>
+                    <p class="vz-group-blurb">An ordered list where the first rule that holds decides.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="im_greedyrl">
+                        <a class="vz-thumb" href="viz_gallery/static/im_greedyrl.svg"><img src="viz_gallery/static/im_greedyrl.svg" alt="Greedy rule list" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Greedy rule list</h3><span class="vz-num">22</span></div>
+                          <p>Rule lists read top to bottom: the first rule that holds decides. Each rule&#x27;s outcome sits to its right and the flow narrows as rules capture samples.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_greedyrl.html">Interactive &#8599;</a><a href="viz_gallery/static/im_greedyrl.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.GreedyRuleListClassifier(max_depth=4).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;Greedy rule list, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_brl">
+                        <a class="vz-thumb" href="viz_gallery/static/im_brl.svg"><img src="viz_gallery/static/im_brl.svg" alt="Bayesian rule list" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Bayesian rule list</h3><span class="vz-num">23</span></div>
+                          <p>Rules with several conditions list them inside the card and branch yes / no. BRL needs 0/1 features, so this example uses median splits of eight measurements.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_brl.html">Interactive &#8599;</a><a href="viz_gallery/static/im_brl.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X = (cancer.data.iloc[:, :8] &gt; cancer.data.iloc[:, :8].median()).astype(int)
+X.columns = [c.replace(&quot; &quot;, &quot;_&quot;) + &quot;_high&quot; for c in X.columns]
+y = cancer.target
+model = imodels.BayesianRuleListClassifier(max_iter=2000, n_chains=2, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;Bayesian rule list&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+                    <h3 id="g-sets">4.5 Rule sets</h3>
+                    <p class="vz-group-blurb">Weighted rules (and linear terms) that add up to a score.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="im_rulefit">
+                        <a class="vz-thumb" href="viz_gallery/static/im_rulefit.svg"><img src="viz_gallery/static/im_rulefit.svg" alt="RuleFit" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>RuleFit</h3><span class="vz-num">24</span></div>
+                          <p>Rule sets add up: each row is a rule (or linear term) with its effect, the share of samples it covers and their classes. Rows are ranked by how much they move predictions.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_rulefit.html">Interactive &#8599;</a><a href="viz_gallery/static/im_rulefit.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.RuleFitClassifier(max_rules=12, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;RuleFit, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_skope">
+                        <a class="vz-thumb" href="viz_gallery/static/im_skope.svg"><img src="viz_gallery/static/im_skope.svg" alt="Skope rules" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Skope rules</h3><span class="vz-num">25</span></div>
+                          <p>Skope scores a sample by the precision-weighted share of its rules that hold.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_skope.html">Interactive &#8599;</a><a href="viz_gallery/static/im_skope.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.SkopeRulesClassifier(n_estimators=5, max_depth=2, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;Skope rules, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_boosted">
+                        <a class="vz-thumb" href="viz_gallery/static/im_boosted.svg"><img src="viz_gallery/static/im_boosted.svg" alt="Boosted rules" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Boosted rules</h3><span class="vz-num">26</span></div>
+                          <p>Boosted stumps become one rule each plus a share of the baseline, so the table adds up to the model&#x27;s decision function exactly.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_boosted.html">Interactive &#8599;</a><a href="viz_gallery/static/im_boosted.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.BoostedRulesClassifier(n_estimators=8, random_state=0).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;Boosted rules, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+                    <h3 id="g-scores">4.6 Scoring systems</h3>
+                    <p class="vz-group-blurb">Integer points and the risk each total maps to.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="im_riskscore">
+                        <a class="vz-thumb" href="viz_gallery/static/im_riskscore.svg"><img src="viz_gallery/static/im_riskscore.svg" alt="FastRiskScore" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>FastRiskScore</h3><span class="vz-num">27</span></div>
+                          <p>A points table next to the risk each total score maps to, with the training samples at each score underneath. In interactive mode, click an item to switch it on or off and watch the score move along the curve.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_riskscore.html">Interactive &#8599;</a><a href="viz_gallery/static/im_riskscore.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.FastRiskScoreClassifier(k=5, time_limit=20).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;FastRiskScore, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_riskscore_loans">
+                        <a class="vz-thumb" href="viz_gallery/static/im_riskscore_loans.svg"><img src="viz_gallery/static/im_riskscore_loans.svg" alt="FastRiskScore with categories and missing values" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>FastRiskScore with categories and missing values</h3><span class="vz-num">28</span></div>
+                          <p>FastRiskScore turns string columns into level indicators and gives missing values their own item. Predict offers a dropdown per categorical feature and a missing switch.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_riskscore_loans.html">Interactive &#8599;</a><a href="viz_gallery/static/im_riskscore_loans.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = loans_with_categories()   # credit data with a &#x27;housing&#x27; column and missing incomes
+model = imodels.FastRiskScoreClassifier(k=6, time_limit=30).fit(X, y)
+kw = dict(class_names=[&quot;denied&quot;, &quot;approved&quot;], title=&quot;FastRiskScore, loan approval&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_slim">
+                        <a class="vz-thumb" href="viz_gallery/static/im_slim.svg"><img src="viz_gallery/static/im_slim.svg" alt="SLIM" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>SLIM</h3><span class="vz-num">29</span></div>
+                          <p>Sparse integer points on 0/1 features, drawn as a scorecard. The intercept moves into the risk formula so the score is a plain sum of points.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_slim.html">Interactive &#8599;</a><a href="viz_gallery/static/im_slim.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X = (cancer.data.iloc[:, :10] &gt; cancer.data.iloc[:, :10].median()).astype(int)
+X.columns = [c.replace(&quot; &quot;, &quot;_&quot;) + &quot;_high&quot; for c in X.columns]
+y = cancer.target
+model = imodels.SLIMClassifier(alpha=0.5).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;SLIM, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+                    <h3 id="g-additive">4.7 Additive and linear models</h3>
+                    <p class="vz-group-blurb">One shape function or coefficient per feature.</p>
+                    <div class="vz-grid">
+                      <figure class="vz-card" id="im_treegam">
+                        <a class="vz-thumb" href="viz_gallery/static/im_treegam.svg"><img src="viz_gallery/static/im_treegam.svg" alt="TreeGAM" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>TreeGAM</h3><span class="vz-num">30</span></div>
+                          <p>One shape function per feature on a shared scale, with the data&#x27;s distribution underneath. Panels are ordered by how much each feature moves predictions.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_treegam.html">Interactive &#8599;</a><a href="viz_gallery/static/im_treegam.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = diabetes.data, diabetes.target
+model = imodels.TreeGAMRegressor(n_boosting_rounds=20).fit(X, y)
+kw = dict(title=&quot;TreeGAM, diabetes progression&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_treegam_clf">
+                        <a class="vz-thumb" href="viz_gallery/static/im_treegam_clf.svg"><img src="viz_gallery/static/im_treegam_clf.svg" alt="TreeGAM classifier" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>TreeGAM classifier</h3><span class="vz-num">31</span></div>
+                          <p>For classifiers the shape functions add up to a probability that is clipped to [0, 1].</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_treegam_clf.html">Interactive &#8599;</a><a href="viz_gallery/static/im_treegam_clf.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = cancer.data, cancer.target
+model = imodels.TreeGAMClassifier(n_boosting_rounds=20).fit(X, y)
+kw = dict(class_names=[&quot;malignant&quot;, &quot;benign&quot;], title=&quot;TreeGAM, breast cancer&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                      <figure class="vz-card" id="im_linear">
+                        <a class="vz-thumb" href="viz_gallery/static/im_linear.svg"><img src="viz_gallery/static/im_linear.svg" alt="Linear model with marginal shrinkage" loading="lazy"></a>
+                        <div class="vz-body">
+                          <div class="vz-top"><h3>Linear model with marginal shrinkage</h3><span class="vz-num">32</span></div>
+                          <p>Linear terms are drawn by their typical effect (coefficient times the feature&#x27;s spread); labels give the raw coefficient per unit.</p>
+                          <div class="vz-links"><a href="viz_gallery/interactive/im_linear.html">Interactive &#8599;</a><a href="viz_gallery/static/im_linear.svg">SVG</a></div>
+                          <details><summary>Code</summary><pre><code class="language-python">X, y = diabetes.data, diabetes.target
+model = imodels.MarginalShrinkageLinearModelRegressor().fit(X, y)
+kw = dict(title=&quot;Marginal shrinkage linear model, diabetes&quot;)
+fig = viz.draw(model, X, y, **kw)
+page = viz.interactive(model, X, y, **kw)</code></pre></details>
+                        </div>
+                      </figure>
+                    </div>
+
+
+                    <h2 id="export">5. Every tree is a scikit-learn tree</h2>
+
+                    <p><code>imodels.viz</code> has no drawing code for any particular imodels tree. Every
+                        tree-based model is first exported to the scikit-learn estimator that makes the same
+                        predictions, with <code>imodels.to_sklearn</code>, and then drawn like any scikit-learn
+                        model: single trees (CART variants, HSTree, TAO, C4.5, FastSmallTree) become a
+                        <code>DecisionTreeClassifier</code> or <code>DecisionTreeRegressor</code>, IRF becomes a
+                        <code>RandomForestClassifier</code>, and FIGS becomes a list of regression trees whose
+                        predictions add up, the same view as gradient boosting. The tests check every export
+                        against the model's own <code>predict</code> / <code>predict_proba</code>.</p>
+
+                    <pre><code class="language-python">import imodels
+tree = imodels.to_sklearn(model, X)    # X (optional) recounts each node's samples
+
+# anything that reads scikit-learn trees now reads imodels trees, e.g. dtreeviz
+import dtreeviz
+dtreeviz.model(tree, X, y, feature_names=list(X.columns)).view()
+sklearn.tree.plot_tree(tree)</code></pre>
+
+                    <p>So the export also makes every tree-based imodels model work with
+                        <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>, including ones dtreeviz could
+                        not read before, such as C4.5, FastSmallTree and IRF.</p>
+
+                    <h2 id="compare">6. Compared with plot_tree</h2>
+
+                    <span class="fig-anchor" id="fig3"></span>
+                    <div class="vz-compare">
+                      <div class="vz-card"><a class="vz-thumb" href="viz_gallery/static/sklearn_plot_tree.svg"><img src="viz_gallery/static/sklearn_plot_tree.svg" alt="sklearn plot_tree of an iris tree" loading="lazy"></a>
+                        <div class="vz-body"><h3>sklearn.tree.plot_tree</h3></div></div>
+                      <div class="vz-card"><a class="vz-thumb" href="viz_gallery/static/iris.svg"><img src="viz_gallery/static/iris.svg" alt="imodels.viz drawing of the same iris tree" loading="lazy"></a>
+                        <div class="vz-body"><h3>imodels.viz.draw</h3></div></div>
+                    </div>
+                    <p class="caption"><b>Fig 3.</b> The same depth-3 iris tree. <code>plot_tree</code> prints each
+                        node's impurity and counts; <code>viz.draw</code> shows each split's feature distribution with
+                        its threshold, edges sized by the samples (split by class) that take them, and leaves summarised
+                        by class and purity.</p>
+
+                    <p style="margin-top:2rem;color:var(--muted);font-size:0.85rem">Generated by
+                        <code>docs/pages/viz_gallery.py</code> on 2026-10-06.</p>
+
+                </div>
+            </section>
+            <section>
+            </section>
+        </article>
+<nav id="sidebar">
+<div class="toc">
+<ul>
+<li><a href="index.html#installation">Installation</a></li>
+<li><a href="index.html#supported-models">Supported models</a></li>
+<li><a href="index.html#demo-notebooks">Demo notebooks</a></li>
+<li><a href="index.html#model-categories">Model categories</a></li>
+<li><a href="index.html#extras">Extras</a></li>
+<li><a href="index.html#references">References</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/models.html" title="All classes, by category">Prediction classes &rarr;</a></h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-algebraic"></span>algebraic</li>
+<li><span class="cat-dot cat-rule_list"></span>rule lists</li>
+<li><span class="cat-dot cat-rule_set"></span>rule sets</li>
+<li><span class="cat-dot cat-tree"></span>trees</li>
+<li><span class="cat-dot cat-util"></span>util</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.AutoInterpretableClassifier" href="util/automl.html#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.AutoInterpretableRegressor" href="util/automl.html#imodels.util.automl.AutoInterpretableRegressor">AutoInterpretableRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.BayesianRuleListClassifier" href="rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BayesianRuleSetClassifier" href="rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BoostedRulesRegressor" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.DecisionTreeCCPRegressor" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.DistilledRegressor" href="util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSClassifierCV" href="tree/figs.html#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSRegressor" href="tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSRegressorCV" href="tree/figs.html#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoClassifier" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoRegressor" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPSkopeClassifier" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.FastFrugalTreeClassifier" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.FastRiskScoreClassifier" href="algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.GPGamRegressor" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.GreedyRuleListClassifier" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeRegressor" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSDecisionTreeCCPClassifierCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSDecisionTreeCCPRegressorCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifierCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressor" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressorCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.IRFClassifier" href="tree/iterative_random_forest/index.html#imodels.tree.iterative_random_forest.IRFClassifier">IRFClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.IRFRegressor" href="tree/iterative_random_forest/index.html#imodels.tree.iterative_random_forest.IRFRegressor">IRFRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.OneRClassifier" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SkopeRulesClassifier" href="rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SlipperClassifier" href="rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.TaoTreeRegressor" href="tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.TreeGAMClassifier" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.TreeGAMRegressor" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></li>
+</ul>
+</li>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/models.html#misc" title="All classes, by category">Misc classes &rarr;</a></h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-clustering"></span>clustering</li>
+<li><span class="cat-dot cat-discretization"></span>discretization</li>
+<li><span class="cat-dot cat-experimental"></span>experimental</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-experimental" title="experimental"></span><a title="imodels.BART" href="experimental/bartpy/index.html#imodels.experimental.bartpy.BART">BART</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BRLDiscretizer" href="discretization/index.html#imodels.discretization.BRLDiscretizer">BRLDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BasicDiscretizer" href="discretization/discretizer.html#imodels.discretization.discretizer.BasicDiscretizer">BasicDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.MDLPDiscretizer" href="discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer">MDLPDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.RFDiscretizer" href="discretization/discretizer.html#imodels.discretization.discretizer.RFDiscretizer">RFDiscretizer</a></li>
+<li><span class="cat-dot cat-clustering" title="clustering"></span><a title="imodels.StableClustering" href="clustering/stableclustering.html#imodels.clustering.stableclustering.StableClustering">StableClustering</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+    </main>
+
+    <footer id="footer">
+    </footer>
+    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+#stage{overflow:hidden;cursor:grab;touch-action:none}
+#stage.drag{cursor:grabbing}
+#canvas{width:100%;height:100%;display:block;font-family:var(--dti-font)}
+.node{cursor:pointer}
+.node .stack,.node .badge{display:none}
+.node.collapsed .stack,.node.collapsed .badge{display:inline}
+.node:hover .dti-frame{stroke:var(--dti-axis)!important}
+.node.feat .dti-frame{stroke:var(--dti-ink)!important;stroke-width:2px!important}
+.rib{fill-opacity:.32;transition:fill-opacity .2s}
+.rib.hl{fill-opacity:.62}
+.predicting .node:not(.onpath){opacity:.42}
+.predicting .rib{fill-opacity:.08}
+.predicting .rib.onpath{fill-opacity:.6}
+.predicting .pill:not(.onpath){opacity:.45}
+.ring{display:none}
+.node.onpath .ring{display:inline}
+.feat-mode .node:not(.feat){opacity:.28}
+.feat-mode .rib{fill-opacity:.1}
+.feat-mode .pill{opacity:.35}

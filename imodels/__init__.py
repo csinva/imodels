@@ -51,6 +51,7 @@ from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.get_rules import get_rules
 from .util.tree_viz import shadow_tree
+from .util.sklearn_export import to_sklearn
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 from .clustering.stableclustering import StableClustering
@@ -129,6 +130,7 @@ __all__ = [
     "TaoTreeRegressor", "TreeGAMClassifier", "TreeGAMRegressor",
     "explain_classification_errors", "get_clean_dataset", "get_rules",
     "shadow_tree",
+    "to_sklearn",
 ]
 
 
