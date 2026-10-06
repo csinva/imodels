@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted
-from imodels.util.arguments import (check_fit_arguments, check_predict_X, decode_labels,
+from imodels.util.arguments import (check_fit_arguments, check_two_classes, check_predict_X, decode_labels,
                                     explicit_get_params, explicit_set_params)
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
@@ -107,6 +107,8 @@ class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
         self.complexity_ = 0
         # X, y = check_X_y(X, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # the tree is grown by an external routine that needs a split to start from
+        check_two_classes(self, self.classes_)
         self.resultType = type(y[0])
         if feature_names is None:
             self.feature_names = [f'X_{x}' for x in range(X.shape[1])]

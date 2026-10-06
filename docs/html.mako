@@ -277,7 +277,7 @@
       </ul>
     </li>
     % endif
-    <li><h3>Our favorite methods</h3>
+    <li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
         <ul class="post-list">
         <%doc>Newest post first. Each entry carries its post date, and the methods an
         autoresearch loop discovered carry a badge; keep both in step with docs/pages/.</%doc>

@@ -1,0 +1,158 @@
+<section id="section-intro">
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <h1 style="padding-bottom: 0px;">Our favorite methods</h1>
+                    <p class="blog-lede">After developing and playing with <code>imodels</code>, we developed a few new
+                      models to overcome limitations of existing interpretable models. Each has a post with its method,
+                      benchmarks and code. The ones marked <span class="blog-tag">autoresearch</span> were found by an
+                      autoresearch loop of coding agents.</p>
+
+                    <style>
+                      .blog-lede { color: var(--ink-soft); max-width: 46rem; }
+                      .blog-tag { display: inline-block; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
+                        color: var(--research); background: var(--research-bg); border: 1px solid var(--research-line);
+                        border-radius: 999px; padding: 0.05em 0.6em; vertical-align: 0.12em; }
+                      .blog-venue { display: inline-block; font-size: 0.72rem; color: var(--muted); border: 1px solid var(--line);
+                        border-radius: 999px; padding: 0.05em 0.6em; vertical-align: 0.1em; }
+                      .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); gap: 1.4rem;
+                        margin: 1.8rem 0 2.5rem; }
+                      .blog-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line);
+                        border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(27,31,35,.04), 0 6px 18px rgba(27,31,35,.05);
+                        transition: transform .15s ease, box-shadow .15s ease; }
+                      .blog-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(27,31,35,.06), 0 12px 28px rgba(27,31,35,.09); }
+                      .blog-thumb { display: block; height: 10.5rem; background: var(--surface-alt); border-bottom: 1px solid var(--line-soft);
+                        display: flex; align-items: center; justify-content: center; overflow: hidden; }
+                      .blog-thumb img { max-width: 92%; max-height: 92%; }
+                      .blog-thumb svg { width: 88%; height: 88%; }
+                      .blog-body { padding: 1rem 1.15rem 1.1rem; display: flex; flex-direction: column; gap: 0.45rem; flex: 1; }
+                      .blog-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--muted); }
+                      .blog-card h2 { font-size: 1.12rem; margin: 0; line-height: 1.3; border: none; padding: 0; }
+                      .blog-card h2 a { color: var(--ink); text-decoration: none; }
+                      .blog-card h2 a:hover { color: var(--accent); }
+                      .blog-card p { margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); }
+                      .blog-links { margin-top: auto; padding-top: 0.4rem; display: flex; gap: 1rem; font-size: 0.85rem; }
+                      .blog-links a { text-decoration: none; }
+                    </style>
+
+                    <div class="blog-grid">
+
+                      <article class="blog-card">
+                        <a class="blog-thumb" href="fastriskscore.html" aria-label="FastRiskScore post">
+                          <svg viewBox="0 0 240 120" role="img" aria-label="A risk score: conditions with points and a risk curve">
+                            <g font-family="system-ui, sans-serif" font-size="10" fill="#3b4045">
+                              <text x="10" y="26">worst area &#8804; 907</text><rect x="116" y="15" width="24" height="15" rx="7.5" fill="#0b6ea8"/><text x="122" y="26" fill="#fff" font-weight="700">+3</text>
+                              <text x="10" y="54">concave pts &#8804; 0.15</text><rect x="116" y="43" width="24" height="15" rx="7.5" fill="#0b6ea8"/><text x="122" y="54" fill="#fff" font-weight="700">+3</text>
+                              <text x="10" y="82">texture &#8804; 21</text><rect x="116" y="71" width="24" height="15" rx="7.5" fill="#0b6ea8"/><text x="122" y="82" fill="#fff" font-weight="700">+2</text>
+                            </g>
+                            <g fill="#0b6ea8">
+                              <rect x="146" y="98" width="13" height="2" opacity=".3"/><rect x="161" y="98" width="13" height="2" opacity=".3"/>
+                              <rect x="176" y="97" width="13" height="3" opacity=".35"/><rect x="191" y="72" width="13" height="28" opacity=".55"/>
+                              <rect x="206" y="35" width="13" height="65" opacity=".8"/><rect x="221" y="15" width="13" height="85"/>
+                            </g>
+                            <line x1="144" y1="100.5" x2="236" y2="100.5" stroke="#e3e6e8"/>
+                          </svg>
+                        </a>
+                        <div class="blog-body">
+                          <div class="blog-meta"><span>Oct 2026</span><span class="blog-tag">autoresearch</span></div>
+                          <h2><a href="fastriskscore.html">FastRiskScore: sparse integer risk scores</a></h2>
+                          <p>A few conditions, each worth a small integer number of points, with a calibrated risk for every
+                            total. Fits about 225&times; faster than FasterRisk with a lower training loss.</p>
+                          <div class="blog-links"><a href="fastriskscore.html">Post &rarr;</a><a href="algebraic/risk_score/fast_risk_score.html">API</a></div>
+                        </div>
+                      </article>
+
+                      <article class="blog-card">
+                        <a class="blog-thumb" href="fastsmalltree.html" aria-label="FastSmallTree post">
+                          <svg viewBox="0 0 240 120" role="img" aria-label="A small decision tree">
+                            <g stroke="#9aa5ad" stroke-width="1.5" fill="none">
+                              <path d="M120 24 L70 58"/><path d="M120 24 L170 58"/><path d="M70 58 L42 94"/><path d="M70 58 L98 94"/><path d="M170 58 L198 94"/><path d="M170 58 L142 94"/>
+                            </g>
+                            <g font-family="system-ui, sans-serif" font-size="9" text-anchor="middle">
+                              <rect x="88" y="13" width="64" height="20" rx="5" fill="#fff" stroke="#2f7d5b"/><text x="120" y="26" fill="#2f7d5b">age &#8804; 50</text>
+                              <rect x="40" y="48" width="60" height="20" rx="5" fill="#fff" stroke="#2f7d5b"/><text x="70" y="61" fill="#2f7d5b">bmi &#8804; 30</text>
+                              <rect x="140" y="48" width="60" height="20" rx="5" fill="#fff" stroke="#2f7d5b"/><text x="170" y="61" fill="#2f7d5b">bp &#8804; 90</text>
+                              <circle cx="42" cy="98" r="8" fill="#2f7d5b" opacity=".35"/><circle cx="98" cy="98" r="8" fill="#2f7d5b"/>
+                              <circle cx="142" cy="98" r="8" fill="#2f7d5b" opacity=".35"/><circle cx="198" cy="98" r="8" fill="#2f7d5b"/>
+                            </g>
+                            <g transform="translate(214 14)"><circle r="9" fill="#2f7d5b"/><path d="M-4 0 L-1 3 L4 -3" stroke="#fff" stroke-width="2" fill="none"/></g>
+                          </svg>
+                        </a>
+                        <div class="blog-body">
+                          <div class="blog-meta"><span>Sep 2026</span><span class="blog-tag">autoresearch</span></div>
+                          <h2><a href="fastsmalltree.html">FastSmallTree: provably optimal small decision trees</a></h2>
+                          <p>The tree that minimizes error plus a penalty per leaf, with a certificate that no other tree on the
+                            binarized features scores better. Faster than existing optimal-tree packages.</p>
+                          <div class="blog-links"><a href="fastsmalltree.html">Post &rarr;</a><a href="tree/optimal_tree/fast_small_tree.html">API</a></div>
+                        </div>
+                      </article>
+
+                      <article class="blog-card">
+                        <a class="blog-thumb" href="gpgam.html" aria-label="GPGam post">
+                          <svg viewBox="0 0 240 120" role="img" aria-label="Additive shape functions with uncertainty bands">
+                            <g>
+                              <path d="M12 92 C40 88 52 40 80 36 C96 34 100 52 108 58 L108 74 C100 70 96 52 80 54 C52 58 40 104 12 106 Z" fill="#2b6cb0" opacity=".15"/>
+                              <path d="M12 99 C40 96 52 49 80 45 C96 43 102 61 108 66" stroke="#2b6cb0" stroke-width="2.2" fill="none"/>
+                              <path d="M132 40 C150 44 166 70 186 72 C204 74 214 58 228 50 L228 66 C214 74 204 90 186 88 C166 86 150 58 132 54 Z" fill="#6b46c1" opacity=".15"/>
+                              <path d="M132 47 C150 51 166 78 186 80 C204 82 214 66 228 58" stroke="#6b46c1" stroke-width="2.2" fill="none"/>
+                            </g>
+                            <g font-family="system-ui, sans-serif" font-size="10" fill="#6a737d"><text x="12" y="18">f&#8321;(income)</text><text x="132" y="18">f&#8322;(age)</text><text x="114" y="64" font-size="16" fill="#9aa5ad">+</text></g>
+                          </svg>
+                        </a>
+                        <div class="blog-body">
+                          <div class="blog-meta"><span>Sep 2026</span><span class="blog-tag">autoresearch</span></div>
+                          <h2><a href="gpgam.html">GPGam: additive Gaussian processes over binned features</a></h2>
+                          <p>A GAM with pairwise interactions whose every shape function is a Gaussian process, with a posterior
+                            band and nothing to tune. The strongest interpretable model on our benchmarks.</p>
+                          <div class="blog-links"><a href="gpgam.html">Post &rarr;</a><a href="algebraic/gp_gam.html">API</a></div>
+                        </div>
+                      </article>
+
+                      <article class="blog-card">
+                        <a class="blog-thumb" href="mdi_plus.html" aria-label="MDI+ post">
+                          <svg viewBox="0 0 240 120" role="img" aria-label="Feature importances">
+                            <g font-family="system-ui, sans-serif" font-size="10" fill="#3b4045">
+                              <text x="14" y="25">glucose</text><rect x="74" y="15" width="150" height="13" rx="3" fill="#b83280"/>
+                              <text x="14" y="49">bmi</text><rect x="74" y="39" width="104" height="13" rx="3" fill="#b83280" opacity=".8"/>
+                              <text x="14" y="73">age</text><rect x="74" y="63" width="66" height="13" rx="3" fill="#b83280" opacity=".6"/>
+                              <text x="14" y="97">insulin</text><rect x="74" y="87" width="30" height="13" rx="3" fill="#b83280" opacity=".4"/>
+                            </g>
+                          </svg>
+                        </a>
+                        <div class="blog-body">
+                          <div class="blog-meta"><span>Jul 2023</span><span class="blog-venue">paper</span></div>
+                          <h2><a href="mdi_plus.html">MDI+: flexible tree-based feature importance</a></h2>
+                          <p>Generalizes the mean decrease in impurity of random forests through the link between trees and
+                            linear regression, so the importance can be tailored to the data and the task.</p>
+                          <div class="blog-links"><a href="mdi_plus.html">Post &rarr;</a><a href="https://arxiv.org/abs/2307.01932">Paper</a></div>
+                        </div>
+                      </article>
+
+                      <article class="blog-card">
+                        <a class="blog-thumb" href="shrinkage.html" aria-label="Hierarchical shrinkage post">
+                          <img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" alt="Hierarchical shrinkage shrinks each node of a tree towards its parent" loading="lazy">
+                        </a>
+                        <div class="blog-body">
+                          <div class="blog-meta"><span>Feb 2022</span><span class="blog-venue">ICML 2022</span></div>
+                          <h2><a href="shrinkage.html">Hierarchical shrinkage: post-hoc regularization for trees</a></h2>
+                          <p>Shrinks the prediction at each node of any tree, or tree ensemble, towards its ancestors, without
+                            changing the tree. Fast, and often more accurate than the tree it starts from.</p>
+                          <div class="blog-links"><a href="shrinkage.html">Post &rarr;</a><a href="https://arxiv.org/abs/2202.00858">Paper</a></div>
+                        </div>
+                      </article>
+
+                      <article class="blog-card">
+                        <a class="blog-thumb" href="figs.html" aria-label="FIGS post">
+                          <img src="https://demos.csinva.io/figs/diabetes_figs.svg?sanitize=True" alt="A FIGS model: a sum of small trees" loading="lazy">
+                        </a>
+                        <div class="blog-body">
+                          <div class="blog-meta"><span>Jan 2022</span><span class="blog-venue">paper</span></div>
+                          <h2><a href="figs.html">FIGS: fast interpretable greedy-tree sums</a></h2>
+                          <p>Grows a flexible number of trees in a sum, with a limit on the total number of splits, so the model
+                            stays small while capturing additive structure that a single tree cannot.</p>
+                          <div class="blog-links"><a href="figs.html">Post &rarr;</a><a href="https://arxiv.org/abs/2201.11931">Paper</a></div>
+                        </div>
+                      </article>
+
+                    </div>
+                </div>
+            </section>

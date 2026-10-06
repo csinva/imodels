@@ -22,8 +22,12 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
         tree). That estimator still raises if it cannot.
     """
     if isinstance(model, ClassifierMixin) and is_classmixin:
-        model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        # check the raw labels: the integer codes made below always look like classes,
+        # so checking them would accept a continuous target as an n-class problem
         check_classification_targets(y)
+        # np.asarray first: np.unique on an array-like that is not an ndarray goes
+        # through __array_function__, which sklearn's estimator checks forbid
+        model.classes_, y = np.unique(np.asarray(y), return_inverse=True)  # deals with str inputs
 
     if feature_names is None:
         if isinstance(X, pd.DataFrame):
@@ -31,7 +35,8 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
         elif isinstance(X, list):
             model.feature_names_ = ['X' + str(i) for i in range(len(X[0]))]
         else:
-            model.feature_names_ = ['X' + str(i) for i in range(X.shape[1])]
+            n_cols = X.shape[1] if hasattr(X, 'shape') else np.asarray(X).shape[1]
+            model.feature_names_ = ['X' + str(i) for i in range(n_cols)]
     else:
         model.feature_names_ = feature_names
 
@@ -54,13 +59,32 @@ def check_binary_target(model, y):
     predict_proba returns two columns rather than one per class
     (see https://github.com/csinva/imodels/issues/93).
     """
-    n_classes = len(np.unique(y))
+    check_classification_targets(y)  # a continuous y is not "many classes"
+    n_classes = len(np.unique(np.asarray(y)))
     if n_classes > 2:
         raise ValueError(
             f"{type(model).__name__} only supports binary classification, but y "
             f"has {n_classes} classes. Models in imodels that do support "
             "multiclass include FIGSClassifier, GreedyTreeClassifier, "
             "HSTreeClassifier, TaoTreeClassifier and BoostedRulesClassifier."
+        )
+
+
+def check_two_classes(model, y):
+    """Raise if y has fewer than two classes, for models that only handle binary.
+
+    Such models are built around a probability of the second class, so a single-class
+    y otherwise gives a predict_proba with two columns while ``classes_`` has one,
+    or crashes later with an unrelated error. The message follows sklearn's.
+    """
+    classes = np.unique(np.asarray(y))
+    if len(classes) < 2:
+        raise ValueError(
+            f"{type(model).__name__} needs samples of at least 2 classes in the data, "
+            f"but the data contains only one class: {classes[0]!r}"
+            if len(classes) else
+            f"{type(model).__name__} needs samples of at least 2 classes in the data, "
+            "but y is empty"
         )
 
 
@@ -161,13 +185,17 @@ def explicit_set_params(model, names, **params):
 def set_feature_names_in(model, X):
     """Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
 
-    sklearn deletes this attribute when a model is subsequently fit on a plain array,
-    so wrappers that forward a numpy array to a parent estimator should call this
+    Deletes a ``feature_names_in_`` left over from an earlier fit when X carries no
+    string column names, as sklearn does. sklearn deletes this attribute when a model
+    is subsequently fit on a plain array, so wrappers that forward a numpy array to a parent estimator should call this
     again afterwards.
     """
     if hasattr(X, 'columns') and all(isinstance(c, str) for c in X.columns):
         model.feature_names_in_ = np.asarray(X.columns, dtype=object)
         return True
+    # as in sklearn, a refit on data without column names forgets the old ones
+    if hasattr(model, 'feature_names_in_'):
+        del model.feature_names_in_
     return False
 
 

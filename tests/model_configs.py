@@ -93,9 +93,6 @@ DEFAULT_ACCURACY_FLOOR = 0.8
 EXCLUDED_MODELS = {
     # needs enough binary features to mine rules from; covered by brs_test.py
     "BayesianRuleSetClassifier": "requires a larger binary dataset",
-    # TAO regression is deliberately gated off in the library
-    # (pinned by TestUnsupportedCombinations::test_tao_regression_is_gated)
-    "TaoTreeRegressor": "TAO regression is not supported yet",
 }
 
 # FastSmallTreeClassifier needs numba, an optional dependency, to fit; without it the model

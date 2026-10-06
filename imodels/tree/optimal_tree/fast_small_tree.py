@@ -9,15 +9,17 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import scipy.sparse
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree._tree import Tree
+from sklearn.utils.validation import check_array
 
 from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, ST_LB, ST_UB, BinaryEncoder,
                                               BitDataset, CompiledOptimizer, TargetEncoder,
                                               TreeClassifier, cluster_rows)
-from imodels.util.arguments import (check_fit_arguments, check_predict_X,
-                                    decode_labels)
+from imodels.util.arguments import (_finite_check_kwarg, check_fit_arguments,
+                                    check_predict_X)
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.numba_compile import notify_first_compile
 from imodels.tree.optimal_tree import solver as _solver_module
@@ -48,8 +50,15 @@ def _class_weights(costs: np.ndarray):
     return w
 
 
-def _leaf_value(dist: np.ndarray, costs: np.ndarray, weights) -> np.ndarray:
-    """A node's sklearn ``value``: normalised, with ``argmax`` the solver's choice."""
+def _leaf_value(dist: np.ndarray, costs: np.ndarray, weights, prediction=None) -> np.ndarray:
+    """A node's sklearn ``value``: normalised, with ``argmax`` the solver's choice.
+
+    ``prediction`` is the class the solver certified for a leaf. Two classes can
+    tie exactly (class counts (1, 2, 11) under ``balance`` give 2/6 and 11/33),
+    and the solver's ``argmin(costs @ dist)`` and the ``argmax`` here then round
+    differently, so a near tie is broken toward ``prediction``. A gap larger than
+    rounding can explain is a real disagreement and raises.
+    """
     if weights is not None:
         v = weights * dist
     else:
@@ -57,8 +66,19 @@ def _leaf_value(dist: np.ndarray, costs: np.ndarray, weights) -> np.ndarray:
         v = cost.max() - cost
     if v.sum() <= 0:              # an empty node, or one where every label costs the same
         v = np.zeros_like(dist)
-        v[int(np.argmin(np.asarray(costs, dtype=np.float64) @ dist))] = 1.0
-    return v / v.sum()
+        if prediction is None:
+            prediction = int(np.argmin(np.asarray(costs, dtype=np.float64) @ dist))
+        v[int(prediction)] = 1.0
+    v = v / v.sum()
+    if prediction is not None and int(np.argmax(v)) != prediction:
+        top = v.max()
+        if v[prediction] < top * (1.0 - 1e-9):
+            raise AssertionError("sklearn leaf value does not pick the certified class")
+        # a relative margin far above one ulp, so normalising again (as sklearn's
+        # predict_proba does) cannot merge the two values back into a tie
+        v[prediction] = top * (1.0 + 1e-12)
+        v = v / v.sum()
+    return v
 
 
 class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
@@ -90,11 +110,11 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         misclassification rate. Larger values give smaller trees. Values below
         ``1 / n_samples`` are not useful, since a leaf fixing a single training
         point already pays for itself.
-    time_limit : float, default=60.0
+    time_limit : float or None, default=60.0
         Seconds after which the search returns the best tree found so far rather
         than continuing. ``optimal_`` is then False and a warning is raised.
-        ``0`` means no limit, which can run for a very long time on wide or
-        continuous data.
+        ``0`` or None means no limit, which can run for a very long time on wide
+        or continuous data.
     balance : bool, default=False
         Weigh the classes equally, optimising balanced accuracy rather than
         accuracy.
@@ -102,9 +122,12 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         ``costs[i, j]`` is the cost of predicting class ``i`` when the truth is
         class ``j``. Overrides ``balance``.
     memory_limit : int, default=0
-        Resident memory in bytes above which the search stops, as the time limit
-        does. ``0`` means no limit. Memory grows with the number of subproblems
-        kept, which is what makes hard instances expensive.
+        Bytes held by the search's node store (the memo of solved subproblems)
+        above which the search stops, as the time limit does. This is not the
+        resident memory of the process, which also holds the data, the
+        workspace and Python itself. ``0`` means no limit. The store grows with
+        the number of subproblems kept, which is what makes hard instances
+        expensive.
     verbose : bool, default=False
         Print search statistics after fitting.
 
@@ -115,7 +138,9 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         so the tree is the best one found rather than a proven optimum.
     objective_ : float
         Objective value of the returned tree: its misclassification rate plus
-        ``regularization`` times its number of leaves.
+        ``regularization`` times its number of leaves. Under ``balance`` the
+        rate is the class-weighted (balanced) error, and under ``costs`` it is
+        the average cost per training row.
     lowerbound_, upperbound_ : float
         Interval the search closed on the optimal objective; equal when
         ``optimal_`` is True.
@@ -128,15 +153,18 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         column becomes one feature per distinct value, which is what makes
         continuous data expensive to solve exactly.
     estimator_ : sklearn.tree.DecisionTreeClassifier
-        The fitted tree as an sklearn decision tree, which `predict` delegates
-        to, so sklearn's tree tooling (``plot_tree``, ``export_text``,
-        ``feature_importances_``, dtreeviz) works on it directly. Each split is
-        placed midway between the training values on either side of the rule, as
-        sklearn places its own, so it routes every training row exactly as the
-        certified tree does. A new value strictly between two consecutive
-        training values of a column is routed by that midpoint, sklearn's
-        convention; the objective is defined on the training rows, so this
-        changes nothing the certificate covers.
+        The fitted tree as an sklearn decision tree, so sklearn's tree tooling
+        (``plot_tree``, ``export_text``, ``feature_importances_``, dtreeviz)
+        works on it directly. Each split is placed midway between the training
+        values on either side of the rule, as sklearn places its own. A new
+        value strictly between two consecutive training values of a column is
+        routed by that midpoint, sklearn's convention; the objective is defined
+        on the training rows, so this changes nothing the certificate covers.
+        `predict` and `predict_proba` walk these splits in float64 rather than
+        calling ``estimator_.predict``: sklearn compares X as float32, so on a
+        column whose training values are closer together than float32 resolves
+        (unix timestamps, say) ``estimator_.predict`` can route training rows
+        differently from the certified tree, while `predict` cannot.
     tree_ : dict
         The same tree as nested dicts of named rules, which printing the model
         shows.
@@ -192,7 +220,9 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
             raise ImportError(NUMBA_HINT)
         notify_first_compile(_solver_module.__file__, "FastSmallTreeClassifier", "about 20 seconds",
                              _solver_module.NUMBA_CACHE, "OPTTREE_NUMBA_CACHE")
+        time_limit, memory_limit = self._check_limits()
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        X = self._as_float(X)
         # the certificate rests on bounds of the form "a tree with a leaves costs at least
         # a * regularization" and "a tree's loss cannot fall below zero", which need a
         # nonnegative penalty and nonnegative, finite costs
@@ -220,7 +250,7 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         # n_jobs=1: the search has a parallel phase, but a library model should not
         # take every core of the caller's machine without being asked
         opt = CompiledOptimizer(data, self.regularization, groups=self.encoder_.groups,
-                                time_limit=self.time_limit, memory_limit=self.memory_limit,
+                                time_limit=time_limit, memory_limit=memory_limit,
                                 verbose=self.verbose, n_jobs=1)
         root = opt.run()          # a row index into the compiled engine's node store
         self.optimal_ = opt.optimal
@@ -242,11 +272,55 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         self.n_leaves_ = certified.leaves()
         self.complexity_ = max(self.n_leaves_ - 1, 0)
         self.estimator_, self._node_proba_ = self._to_sklearn(self.tree_, frame, data.costs)
+        self._node_pred_ = self._node_predictions(self.tree_)
         self._check_sklearn_tree(certified, frame)
         if self.verbose:
             print(f"objective {self.objective_:.6g} in {self.time_:.3g}s "
                   f"({self.iterations_} subproblems, optimal={self.optimal_})")
         return self
+
+    def _check_limits(self):
+        """``time_limit`` and ``memory_limit`` as the search takes them (0 = none)."""
+        time_limit = self.time_limit
+        if time_limit is None:
+            time_limit = 0.0
+        try:
+            time_limit = float(time_limit)
+        except (TypeError, ValueError):
+            raise ValueError(f"time_limit must be a number >= 0 or None, got {self.time_limit!r}")
+        if not np.isfinite(time_limit) or time_limit < 0.0:
+            raise ValueError(f"time_limit must be a finite number >= 0 (0 or None for no "
+                             f"limit), got {self.time_limit!r}")
+        memory_limit = self.memory_limit
+        if memory_limit is None:
+            memory_limit = 0
+        try:
+            memory_limit = float(memory_limit)
+        except (TypeError, ValueError):
+            raise ValueError(f"memory_limit must be a number of bytes >= 0, got {self.memory_limit!r}")
+        if not np.isfinite(memory_limit) or memory_limit < 0:
+            raise ValueError(f"memory_limit must be a finite number of bytes >= 0 (0 for no "
+                             f"limit), got {self.memory_limit!r}")
+        return time_limit, int(memory_limit)
+
+    @staticmethod
+    def _as_float(X):
+        """X as a float64 array, or a clear error before the search starts.
+
+        ``check_fit_arguments`` leaves the object array that a DataFrame with a
+        pandas ``Categorical`` column becomes; numeric categories are kept as
+        their values, and anything else cannot be thresholded.
+        """
+        if scipy.sparse.issparse(X):
+            X = X.toarray()
+        try:
+            return np.asarray(X, dtype=np.float64)
+        except (TypeError, ValueError):
+            raise ValueError(
+                "FastSmallTreeClassifier needs numeric features, but X has a column "
+                "that cannot be converted to float (for example a pandas Categorical "
+                "of strings). Encode such columns as numbers first, e.g. with "
+                "pd.get_dummies or OrdinalEncoder.") from None
 
     def _decode(self, node: dict, data: BitDataset) -> dict:
         """Turn the solver's tree of capture sets into one of named rules.
@@ -307,7 +381,11 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
             vals, ref = values_of[j], node["reference"]
             # on the training values, ">= ref" and "== ref" (a two-valued column,
             # ref its larger value) both hold exactly for the values >= ref
-            return 0.5 * (vals[vals < ref].max() + vals[vals >= ref].min())
+            lo, hi = vals[vals < ref].max(), vals[vals >= ref].min()
+            mid = 0.5 * (lo + hi)
+            # two adjacent floats have no float between them, and the midpoint then
+            # rounds onto one of them; ``x <= lo`` still splits them as the rule does
+            return mid if lo <= mid < hi else lo
 
         rows = []
 
@@ -341,10 +419,8 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
             nodes[i]["n_node_samples"] = nodes[i]["weighted_n_node_samples"] = n
             if "missing_go_to_left" in nodes.dtype.names:
                 nodes[i]["missing_go_to_left"] = 1   # a missing value fails a rule: its false side
-            values[i, 0] = _leaf_value(dist, costs, weights)
+            values[i, 0] = _leaf_value(dist, costs, weights, prediction)
             node_proba[i] = freq
-            if prediction is not None and int(np.argmax(values[i, 0])) != prediction:
-                raise AssertionError("sklearn leaf value does not pick the certified class")
         est.__setstate__({"max_depth": max_depth, "node_count": len(rows),
                           "nodes": nodes, "values": values})
 
@@ -359,21 +435,70 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
             clf.feature_names_in_ = self.feature_names_in_
         return clf, node_proba
 
-    def _check_sklearn_tree(self, certified, frame: pd.DataFrame):
-        """Warn if the sklearn tree routes any training row differently.
+    def _node_predictions(self, tree: dict) -> np.ndarray:
+        """Each node's certified class code, in `estimator_`'s node order (-1 inside)."""
+        out = []
 
-        sklearn compares X as float32, so two training values of one column closer
-        than float32 resolves can land on the same side of a split the certified
-        tree drew between them. On ordinary data this never happens.
+        def add(node):
+            if "prediction" in node:
+                out.append(int(node["prediction"]))
+                return
+            out.append(-1)
+            add(node["false"])
+            add(node["true"])
+
+        add(tree)
+        return np.asarray(out, dtype=np.intp)
+
+    def _check_sklearn_tree(self, certified, frame: pd.DataFrame):
+        """Check `predict` against the certified tree on the training rows.
+
+        `predict` walks `estimator_`'s splits in float64, which route every
+        training row as the certified rules do, so a difference is a bug. sklearn's
+        own ``estimator_.predict`` compares X as float32, so two training values of
+        one column closer than float32 resolves can land on the same side of a
+        split; that only affects ``estimator_`` used directly, and is warned about.
         """
-        ours = decode_labels(self, certified.predict_fast(frame).astype(int))
-        theirs = self.estimator_.predict(self._sklearn_X(frame.to_numpy()))
-        n_diff = int(np.sum(np.asarray(ours) != np.asarray(theirs)))
+        X = frame.to_numpy(dtype=np.float64)
+        ours = certified.predict_fast(frame).astype(int)
+        if not np.array_equal(self._node_pred_[self._apply(X)], ours):
+            raise AssertionError("predict routes training rows differently from the certified tree")
+        theirs = self.estimator_.predict(self._sklearn_X(X))
+        n_diff = int(np.sum(np.asarray(self.classes_[ours]) != np.asarray(theirs)))
         if n_diff:
             warnings.warn(
-                f"the sklearn tree predicts {n_diff} training rows differently from the "
-                "certified tree: some column has training values closer together than "
-                "float32 can separate", RuntimeWarning)
+                f"estimator_.predict (sklearn, float32) routes {n_diff} training rows "
+                "differently from the certified tree: some column has training values "
+                "closer together than float32 can separate. predict and predict_proba "
+                "are not affected; use estimator_ only for plotting and export here.",
+                RuntimeWarning)
+
+    def _apply(self, X: np.ndarray) -> np.ndarray:
+        """Leaf index of each row of float64 X in `estimator_`, compared in float64.
+
+        A row goes left (a rule's false side) when ``x <= threshold``; a missing
+        value goes left too, as in `estimator_`.
+        """
+        tree = self.estimator_.tree_
+        left, right = tree.children_left, tree.children_right
+        feature, threshold = tree.feature, tree.threshold
+        node = np.zeros(X.shape[0], dtype=np.intp)
+        rows = np.arange(X.shape[0])
+        for _ in range(tree.max_depth):
+            inner = left[node] >= 0
+            if not inner.any():
+                break
+            x = X[rows, np.where(inner, feature[node], 0)]
+            go_right = x > threshold[node]      # NaN compares False: left
+            node = np.where(inner, np.where(go_right, right[node], left[node]), node)
+        return node
+
+    def _predict_X(self, X) -> np.ndarray:
+        """X at predict time as float64, sparse input densified as fit does."""
+        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+        if scipy.sparse.issparse(X):
+            X = X.toarray()
+        return check_array(X, dtype=np.float64, **_finite_check_kwarg(True))
 
     def _sklearn_X(self, X):
         """X as `estimator_` expects it: named when the model was fitted on names."""
@@ -383,9 +508,9 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         return X
 
     def predict(self, X):
-        """Predict the class of each row of X, with sklearn's tree."""
-        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
-        return self.estimator_.predict(self._sklearn_X(X))
+        """Predict the class of each row of X with the certified tree, in float64."""
+        X = self._predict_X(X)
+        return self.classes_[self._node_pred_[self._apply(X)]]
 
     def predict_proba(self, X):
         """Class probabilities, read off the training rows in each leaf.
@@ -394,8 +519,8 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         class frequencies of the training rows that reached the leaf rather than
         a calibrated probability.
         """
-        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
-        return self._node_proba_[self.estimator_.apply(self._sklearn_X(X))]
+        X = self._predict_X(X)
+        return self._node_proba_[self._apply(X)]
 
     def _display_tree(self, node: dict) -> dict:
         """A copy of the tree whose leaves carry the caller's class labels.

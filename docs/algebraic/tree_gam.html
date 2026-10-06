@@ -66,7 +66,7 @@ from sklearn.model_selection import train_test_split
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
-from imodels.util.arguments import (check_binary_target, check_predict_X, decode_labels,
+from imodels.util.arguments import (check_binary_target, check_predict_X, check_two_classes, decode_labels,
                                     set_feature_names_in)
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.progress import progress_iter
@@ -162,6 +162,7 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             check_binary_target(self, y)
+            check_two_classes(self, y)
             self.classes_, y = np.unique(y, return_inverse=True)
 
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
@@ -575,6 +576,7 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             check_binary_target(self, y)
+            check_two_classes(self, y)
             self.classes_, y = np.unique(y, return_inverse=True)
 
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
@@ -860,6 +862,7 @@ If nonzero, show a progress bar over the boosting rounds while fitting.</p></div
     if isinstance(self, ClassifierMixin):
         check_classification_targets(y)
         check_binary_target(self, y)
+        check_two_classes(self, y)
         self.classes_, y = np.unique(y, return_inverse=True)
 
     sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
@@ -1664,7 +1667,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.algebraic" href="index.html">imodels.algebraic</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

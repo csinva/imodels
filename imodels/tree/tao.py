@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from queue import deque
 
@@ -21,7 +22,7 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                  n_iters: int = 20,
                  model_args: dict = None,
                  randomize_tree=False,
-                 update_scoring='accuracy',
+                 update_scoring=None,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model='stump',
@@ -63,6 +64,10 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
 
         randomize_tree
             Whether to randomize the tree before each iteration
+
+        update_scoring: str or None
+            sklearn scorer name used to accept or reject each node update.
+            None (default) means 'accuracy' for classification and 'r2' for regression
 
         min_node_samples_tao: int
             Minimum number of samples in a node to apply tao
@@ -115,7 +120,8 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
         """
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if isinstance(self, RegressorMixin):
-            raise Warning('TAO Regression is not yet tested')
+            warnings.warn('TAO regression is experimental: it has been tested much less '
+                          'than TAO classification.', UserWarning, stacklevel=2)
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
@@ -133,12 +139,14 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
             # plt.show()
 
         if self.randomize_tree:
-            # shuffle CART features
-            np.random.shuffle(self.model.tree_.feature)
-            # np.random.shuffle(self.model.tree_.threshold)
-            for i in range(self.model.tree_.node_count):  # split on feature medians
-                self.model.tree_.threshold[i] = np.median(
-                    X[:, self.model.tree_.feature[i]])
+            # shuffle CART features among the split nodes (leaves keep feature -2,
+            # which would otherwise be read as a column index)
+            tree = self.model.tree_
+            feature, threshold = tree.feature, tree.threshold  # views onto the tree
+            internal = np.flatnonzero(tree.children_left != tree.children_right)
+            feature[internal] = np.random.permutation(feature[internal])
+            for i in internal:  # split on feature medians
+                threshold[i] = np.median(X[:, feature[i]])
         if self.verbose:
             print('starting score', self.model.score(X, y))
         for i in progress_iter(range(self.n_iters), verbose=self.verbose,
@@ -161,6 +169,11 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
         model: DecisionTreeClassifier.tree_ or DecisionTreeRegressor.tree_
             The model to be post-hoc improved
         """
+
+        # route points as the sklearn tree does, which compares float32 features with
+        # the float64 thresholds; routing float64 X can send a point near a threshold
+        # (e.g. a median from randomize_tree) the other way
+        X = np.asarray(X, dtype=np.float32)
 
         # Tree properties
         children_left = tree.children_left
@@ -245,7 +258,7 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                     """Returns predictions for x starting at node node_id"""
                     if children_left[node_id] == children_right[node_id]:
                         if isinstance(self, RegressorMixin):
-                            return value[node_id]
+                            return value[node_id].ravel()[0]  # value has shape (1, 1)
                         if isinstance(self, ClassifierMixin):
                             # note value stores counts for each class
                             return np.argmax(value[node_id])
@@ -337,7 +350,7 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
             if y_score is None:
                 y_score = y
 
-            scorer = get_scorer(self.update_scoring)
+            scorer = get_scorer(self._update_scoring())
 
             old_score = scorer(self.model, X_score, y_score)
 
@@ -373,6 +386,16 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                 """
 
         return num_updates
+
+    def _update_scoring(self):
+        """The scorer that decides whether a TAO update is kept.
+
+        None picks accuracy for classification and R^2 for regression (accuracy is
+        undefined for continuous predictions).
+        """
+        if self.update_scoring is not None:
+            return self.update_scoring
+        return 'r2' if isinstance(self, RegressorMixin) else 'accuracy'
 
     @property
     def feature_importances_(self):

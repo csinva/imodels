@@ -252,10 +252,12 @@ class TestRegistryCoverage:
 class TestUnsupportedCombinations:
     """Pin the cases the library deliberately refuses, so they stay explicit."""
 
-    def test_tao_regression_is_gated(self):
+    def test_tao_regression_warns_and_fits(self):
+        """TAO regression is experimental: it warns, but fits and predicts"""
         X, y, _ = _make_data(imodels.TaoTreeRegressor, classification=False)
-        with pytest.raises(Warning, match="not yet tested"):
-            imodels.TaoTreeRegressor().fit(X, y)
+        with pytest.warns(UserWarning, match="experimental"):
+            m = imodels.TaoTreeRegressor().fit(X, y)
+        assert m.predict(X).shape == (len(y),)
 
     @pytest.mark.parametrize(
         "model_type", [imodels.BayesianRuleListClassifier], ids=["BayesianRuleListClassifier"]

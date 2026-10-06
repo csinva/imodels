@@ -132,3 +132,150 @@ class TestGPGamRegressor:
 
     def test_exposed_in_the_package_namespace(self):
         assert GPGamRegressor is _GPGam
+
+
+# ----------------------------------------------------------------------
+# regressions from the 2026-10 bug sweep (one test per finding)
+# ----------------------------------------------------------------------
+NOPAIR = dict(schedule=False, n_bins=12, n_pairs=0, n_steps=25)
+
+
+class TestGPGamRegressions:
+    def test_uneven_levels_predict_their_own_value(self):
+        """Finding 1: a few unevenly spaced levels must not borrow a neighbour's value."""
+        rng = np.random.RandomState(0)
+        lv = rng.randint(0, 3, 600)
+        X = np.c_[np.array([0.1, 0.2, 5.0])[lv], rng.randn(600)]
+        y = np.array([0.0, 10.0, 5.0])[lv] + rng.randn(600)
+        pred = _GPGam(**NOPAIR).fit(X, y).predict(X)
+        for k, target in enumerate([0.0, 10.0, 5.0]):
+            assert abs(pred[lv == k].mean() - target) < 0.5
+
+    def test_tied_minimum_gets_its_own_bin(self):
+        """Finding 2: a zero-inflated feature has no empty bin and no leak from the tie."""
+        rng = np.random.RandomState(0)
+        x0 = np.where(rng.rand(800) < 0.7, 0.0, rng.exponential(size=800))
+        X = np.c_[x0, rng.randn(800)]
+        y = 3 * (x0 == 0) + X[:, 1] + rng.randn(800) * 0.2
+        model = _GPGam(schedule=False, n_bins=32, n_pairs=0, n_steps=25).fit(X, y)
+        counts = np.bincount(np.searchsorted(model.edges_[0], x0, side="right"),
+                             minlength=len(model.edges_[0]) + 1)
+        assert counts.min() > 0
+        pred = model.predict(X)
+        assert abs(pred[x0 > 0].mean() - y[x0 > 0].mean()) < 0.15
+        assert r2_score(y, pred) > 0.97
+
+    def test_bins_are_never_empty(self):
+        rng = np.random.RandomState(1)
+        x = np.r_[np.zeros(300), np.full(200, 7.0), rng.rand(100) * 7]
+        edges = _GPGam()._bin_edges(x, 16)
+        counts = np.bincount(np.searchsorted(edges, x, side="right"), minlength=len(edges) + 1)
+        assert counts.min() > 0
+
+    def test_several_scales_with_learned_scales_raise(self):
+        """Finding 3: a clear error instead of a broadcasting crash."""
+        X, y = _additive_data(n=100)
+        with pytest.raises(ValueError, match="learn_scales"):
+            _GPGam(**dict(FAST, scales=(0.05, 0.2))).fit(X, y)
+        with pytest.raises(ValueError, match="learn_scales"):
+            _GPGam(**dict(FAST, rbf_scales=(0.1, 0.5))).fit(X, y)
+        model = _GPGam(**dict(FAST, scales=(0.05, 0.2), learn_scales=False)).fit(X, y)
+        assert len(model.kernel_weights(0)) == 3
+
+    def test_numpy_refit_drops_stale_feature_names(self):
+        """Finding 4."""
+        pd = pytest.importorskip("pandas")
+        X, y = _additive_data(n=100)
+        model = _GPGam(**FAST).fit(pd.DataFrame(X, columns=list("abc")), y)
+        model.fit(X, y)
+        assert not hasattr(model, "feature_names_in_")
+        model.predict(pd.DataFrame(X, columns=list("xyz")))
+
+    def test_feature_names_argument(self):
+        """Finding 5: validated, stored as feature_names_, never overrides the columns."""
+        pd = pytest.importorskip("pandas")
+        X, y = _additive_data(n=100)
+        with pytest.raises(ValueError, match="feature_names"):
+            _GPGam(**FAST).fit(X, y, feature_names=["a"])
+        model = _GPGam(**FAST).fit(X, y, feature_names=["a", "b", "c"])
+        assert model.feature_names_ == ["a", "b", "c"]
+        assert not hasattr(model, "feature_names_in_")
+        df = pd.DataFrame(X, columns=list("abc"))
+        model = _GPGam(**FAST).fit(df, y, feature_names=list("pqr"))
+        assert list(model.feature_names_in_) == list("abc")
+        model.predict(df)
+
+    def test_refit_clears_learned_scales(self):
+        """Finding 6: kernel names describe the kernels of the latest fit."""
+        X, y = _additive_data(n=200)
+        model = _GPGam(**FAST).fit(X, y)
+        assert hasattr(model, "scales_learned_")
+        model.set_params(learn_scales=False).fit(X, y)
+        assert not hasattr(model, "scales_learned_")
+        assert list(model.kernel_weights(0)) == ["matern-0.05", "rbf-0.25"]
+
+    def test_schedule_honours_explicit_values_and_arrays(self):
+        """Finding 7: array-valued parameters work; an explicit default-valued one wins."""
+        from sklearn.base import clone
+        X, y = _additive_data(n=200)
+        model = _GPGam(pair_res=np.array([6, 4]), n_pairs=1, n_steps=10).fit(X, y)
+        assert len(model.interaction_terms()) == 1
+        model = _GPGam(n_bins=64, n_pairs=0, n_steps=5)
+        assert clone(model).get_params()["n_bins"] == 64
+        model.fit(X, y)
+        assert model._p("n_bins") == 64            # not the schedule's 96
+        model = _GPGam(n_pairs=0, n_steps=5).fit(X, y)
+        assert model._p("n_bins") == 96            # left at None: the schedule decides
+        model = _GPGam(schedule=False, n_pairs=0, n_steps=5).fit(X, y)
+        assert model._p("n_bins") == 64            # documented fallback
+
+    @pytest.mark.parametrize("bad", [
+        dict(n_bins=1), dict(scales=()), dict(scales=(), rbf_scales=(), learn_scales=False),
+        dict(log_target="yes"), dict(lr=-1.0), dict(sweeps=-1), dict(n_pairs=-1),
+        dict(pair_bins=1), dict(pair_res=()), dict(pair_scales=()), dict(n_steps=0),
+        dict(scales=(-0.1,)), dict(tau=-1.0), dict(noise_init=0.0),
+    ])
+    def test_invalid_parameters_raise(self, bad):
+        """Finding 8: a ValueError naming the parameter."""
+        X, y = _additive_data(n=60)
+        with pytest.raises(ValueError, match=list(bad)[0]):
+            _GPGam(**dict(FAST, **bad)).fit(X, y)
+
+    def test_numpy_bool_log_target(self):
+        """Finding 8: np.True_ means True, not 'auto'."""
+        rng = np.random.RandomState(0)
+        X = rng.randn(100, 2)
+        y = 5.0 + X[:, 0] + 0.1 * rng.randn(100)          # positive and unskewed
+        assert _GPGam(**dict(FAST, log_target=np.True_)).fit(X, y).log_target_ is True
+        assert _GPGam(**dict(FAST, log_target=np.False_)).fit(X, y).log_target_ is False
+
+    def test_single_sample_raises(self):
+        """Finding 9."""
+        with pytest.raises(ValueError, match="at least 2 samples"):
+            _GPGam(**FAST).fit(np.ones((1, 3)), np.ones(1))
+
+    def test_feature_lookup(self):
+        """Finding 10: range check and lookup by column name."""
+        pd = pytest.importorskip("pandas")
+        X, y = _additive_data(n=150)
+        df = pd.DataFrame(X, columns=list("abc"))
+        model = _GPGam(**FAST).fit(df, y)
+        np.testing.assert_allclose(model.shape_function("b")[1], model.shape_function(1)[1])
+        assert model.kernel_weights("a") == model.kernel_weights(0)
+        for bad in (10, -1):
+            with pytest.raises(ValueError, match="out of range"):
+                model.shape_function(bad)
+            with pytest.raises(ValueError, match="out of range"):
+                model.kernel_weights(bad)
+        with pytest.raises(ValueError, match="unknown feature name"):
+            model.shape_function("zz")
+
+    def test_constant_target_has_no_warnings(self):
+        """Finding 11: the log-target heuristic is skipped for a constant y."""
+        import warnings
+        X, _ = _additive_data(n=100)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            model = _GPGam(**FAST).fit(X, np.full(100, 3.0))
+        assert model.log_target_ is False
+        np.testing.assert_allclose(model.predict(X), 3.0)

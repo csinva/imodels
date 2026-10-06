@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
@@ -13,8 +14,8 @@ from imodels.util.progress import progress_iter
 
 
 class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
-                 **kwargs):
+    def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure='max_rules',
+                 *args, **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
@@ -34,6 +35,8 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
         for attr in ("classes_", "n_features_in_", "feature_names_in_"):
             if hasattr(self.estimator_, attr):
                 setattr(self, attr, getattr(self.estimator_, attr))
+            elif hasattr(self, attr):  # left over from an earlier fit, e.g. on a DataFrame
+                delattr(self, attr)
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(
@@ -68,7 +71,8 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # fit a copy, so the estimator passed to __init__ is left untouched and
         # two models sharing one estimator cannot interfere with each other
-        self.estimator_ = deepcopy(self.estimator_)
+        self.estimator_ = (DecisionTreeClassifier() if self.estimator_ is None
+                           else deepcopy(self.estimator_))
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting['ccp_alpha'] = self.alpha
@@ -102,8 +106,8 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
 
 class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
-                 **kwargs):
+    def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure='max_rules',
+                 *args, **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.alpha = 0.0
@@ -124,6 +128,8 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
         for attr in ("n_features_in_", "feature_names_in_"):
             if hasattr(self.estimator_, attr):
                 setattr(self, attr, getattr(self.estimator_, attr))
+            elif hasattr(self, attr):  # left over from an earlier fit, e.g. on a DataFrame
+                delattr(self, attr)
 
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(
@@ -160,7 +166,8 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
     def fit(self, X, y, sample_weight=None):
         # fit a copy (see DecisionTreeCCPClassifier.fit)
-        self.estimator_ = deepcopy(self.estimator_)
+        self.estimator_ = (DecisionTreeRegressor() if self.estimator_ is None
+                           else deepcopy(self.estimator_))
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight)
         params_for_fitting['ccp_alpha'] = self.alpha
@@ -187,7 +194,7 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
 
 class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+    def __init__(self, estimator_: BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
                  *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -211,7 +218,7 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
 
 
 class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+    def __init__(self, estimator_: BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
                  *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)

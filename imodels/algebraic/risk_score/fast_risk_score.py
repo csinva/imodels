@@ -16,12 +16,14 @@ https://csinva.io/imodels/fastriskscore.html for the method and the benchmarks.
 from __future__ import annotations
 
 import math
+import numbers
 import time
 import warnings
 
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
+from scipy import sparse
 from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.algebraic.risk_score import solver
@@ -78,58 +80,140 @@ def calibrate(scores, y):
     return a, b, cur
 
 
+_MISSING = object()  # stands for a missing value among the levels of a categorical column; equal to no string
+
+
+def _threshold(t, nxt):
+    """(value, text) for the rule ``x <= t`` when the next value of x in the training data is ``nxt``: a short
+    decimal d with t <= d < nxt, so that ``x <= d`` marks the same training rows as ``x <= t``, and the rule
+    is applied with d, exactly as printed. It is the 6-significant-digit form of t when that lies in the
+    gap, else the form with the fewest more digits that does, else ``repr(t)``. Thresholds of one column thus
+    get distinct names however large or close their values are."""
+    t, nxt = float(t), float(nxt)
+    for text in [f"{t:g}"] + [f"{t:.{p}g}" for p in range(7, 18)]:
+        d = float(text)
+        if t <= d < nxt:
+            return d, text
+    return t, repr(t)
+
+
+def _value_text(v):
+    """The 6-significant-digit form of v when it reads back as v, else ``repr``."""
+    v = float(v)
+    text = f"{v:g}"
+    return text if float(text) == v else repr(v)
+
+
+def _unique_names(names):
+    """Make names unique by appending " (2)", " (3)", ... to repeats (columns whose names collide with a rule
+    of another column, e.g. a column called "a <= 1")."""
+    seen, out = set(), []
+    for name in names:
+        new, i = name, 1
+        while new in seen:
+            i += 1
+            new = f"{name} ({i})"
+        seen.add(new)
+        out.append(new)
+    return out
+
+
 class _Binarizer:
     """Indicator features: ``x <= t`` at up to ``n_thresholds`` quantiles of each numeric column,
     ``x = v`` for a two-valued column, one level per indicator for a categorical column (levels
     covering at least 1% of rows, at most 20), and ``x missing`` where the training data had
-    missing values."""
+    missing values (for a categorical column, a missing value is never the same as a level called
+    "missing"). Columns are used by position. A missing value at predict time in a numeric column
+    without missing values in the training data is scored as above every threshold."""
 
     def __init__(self, n_thresholds=9):
         self.n_thresholds = n_thresholds
 
-    def fit(self, frame):
-        self.rules_ = []  # (column, kind, value, name)
+    def fit(self, frame, names=None):
+        """``names``: the column names used in the rule names (default: those of ``frame``)."""
+        names = [str(c) for c in frame.columns] if names is None else list(names)
+        rules = []  # (column position, kind, value, name)
+        self.categorical_ = []  # per column: its rules compare string levels
         qs = np.arange(1, self.n_thresholds + 1) / (self.n_thresholds + 1)
-        for c in frame.columns:
-            col = frame[c]
-            if not pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col):
-                col = col.astype(object).where(col.notna(), "missing").astype(str)
-                freq = col.value_counts()
+        for i, c in enumerate(names):
+            col = frame.iloc[:, i]
+            self.categorical_.append(not pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col))
+            if self.categorical_[-1]:
+                levels = _levels(col)
+                levels[col.isna().to_numpy()] = _MISSING
+                freq = pd.Series(levels, dtype=object).value_counts()
                 for level in list(freq[freq >= 0.01 * len(col)].index[:20]):
                     if 0 < freq[level] < len(col):
-                        self.rules_.append((c, "eq_str", level, f"{c} = {level}"))
+                        if level is _MISSING:
+                            rules.append((i, "missing", None, f"{c} missing"))
+                        else:
+                            rules.append((i, "eq_str", level, f"{c} = {level}"))
                 continue
             x = pd.to_numeric(col, errors="coerce").to_numpy(float)
             miss = np.isnan(x)
             if miss.any() and not miss.all():
-                self.rules_.append((c, "missing", None, f"{c} missing"))
+                rules.append((i, "missing", None, f"{c} missing"))
             vals = np.unique(x[~miss])
             if len(vals) <= 1:
                 continue
             if len(vals) == 2:
-                self.rules_.append((c, "eq", vals[1], f"{c} = {vals[1]:g}"))
+                rules.append((i, "eq", vals[1], f"{c} = {_value_text(vals[1])}"))
                 continue
-            for t in np.unique(np.quantile(x[~miss], qs, method="lower")):
-                if t < vals[-1]:
-                    self.rules_.append((c, "le", t, f"{c} <= {t:g}"))
-        self.names_ = [r[3] for r in self.rules_]
+            ts = np.unique(np.quantile(x[~miss], qs, method="lower"))
+            ts = ts[ts < vals[-1]]
+            nxt = vals[np.searchsorted(vals, ts, side="right")]
+            for t, n in zip(ts, nxt):
+                d, text = _threshold(t, n)
+                rules.append((i, "le", d, f"{c} <= {text}"))
+        names = _unique_names([r[3] for r in rules])
+        self.rules_ = [r[:3] + (name,) for r, name in zip(rules, names)]
+        self.names_ = names
+        assert len(set(self.names_)) == len(self.names_)
         return self
 
-    def transform(self, frame):
-        out = np.zeros((len(frame), len(self.rules_)))
-        for j, (c, kind, v, _) in enumerate(self.rules_):
-            col = frame[c]
-            if kind == "eq_str":
-                out[:, j] = (col.astype(object).where(col.notna(), "missing").astype(str) == v).to_numpy()
+    def transform(self, frame, rules=None):
+        """Boolean matrix of the rules (all, or the indices ``rules``) for the rows of ``frame``. Each column
+        is converted once and all its thresholds are compared at once."""
+        rules = np.arange(len(self.rules_)) if rules is None else np.asarray(rules, dtype=int)
+        out = np.zeros((len(frame), len(rules)), dtype=bool)
+        by_col = {}
+        for pos, j in enumerate(rules):
+            c, kind, v, _ = self.rules_[j]
+            by_col.setdefault(c, {}).setdefault(kind, []).append((pos, v))
+        for c, kinds in by_col.items():
+            col = frame.iloc[:, c]
+            if self.categorical_[c]:
+                miss = col.isna().to_numpy()
+                if "missing" in kinds:
+                    out[:, kinds["missing"][0][0]] = miss
+                if "eq_str" in kinds:
+                    pos, levels = map(list, zip(*kinds["eq_str"]))
+                    codes = pd.Categorical(_levels(col), categories=levels).codes.copy()
+                    codes[miss] = -1  # a missing value is no level, even one whose string form is a level
+                    out[:, _block(pos)] = codes[:, None] == np.arange(len(levels))[None, :]
                 continue
             x = pd.to_numeric(col, errors="coerce").to_numpy(float)
-            if kind == "missing":
-                out[:, j] = np.isnan(x)
-            elif kind == "eq":
-                out[:, j] = x == v
-            else:
-                out[:, j] = x <= v  # NaN compares False
+            for kind, items in kinds.items():
+                pos, vals = map(list, zip(*items))
+                if kind == "missing":
+                    out[:, pos[0]] = np.isnan(x)
+                elif kind == "eq":
+                    out[:, pos[0]] = x == vals[0]
+                else:
+                    out[:, _block(pos)] = x[:, None] <= np.asarray(vals, float)[None, :]  # NaN compares False
         return out
+
+
+def _block(pos):
+    """Output columns ``pos`` as a slice when they are consecutive (writing a slice is much faster than a list)."""
+    if pos[-1] - pos[0] == len(pos) - 1 and all(b - a == 1 for a, b in zip(pos, pos[1:])):
+        return slice(pos[0], pos[-1] + 1)
+    return pos
+
+
+def _levels(col):
+    """The values of a categorical column as strings (missing rows are masked by the callers)."""
+    return col.astype(object).astype(str).to_numpy(object)
 
 
 class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
@@ -160,12 +244,16 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         integers), and the points apply to them directly; the solver then uses the "decile" profile.
     time_limit: float
         Seconds for the search. It stops early and returns its best points if the limit is
-        reached (``stopped_early_`` is then True); on most data it finishes far sooner.
+        reached (``stopped_early_`` is then True); on most data it finishes far sooner. Turning
+        X into binary features before the search (and the one-time numba compilation) is not
+        counted; ``fit_seconds_`` is the whole fit.
 
     Attributes
     ----------
     points_: dict
-        Feature name -> points, for the features the score uses.
+        Feature name -> points, for the features the score uses. Every binary feature has its
+        own name: a threshold is printed with as many digits as it takes to tell it from the
+        next value in the training data, and is applied as printed.
     coef_: ndarray
         Points for every binary feature (``features_``), zero for those not used.
     scale_, intercept_: float
@@ -189,40 +277,48 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         self.time_limit = time_limit
 
     # ------------------------------------------------------------------ fitting
-    def _frame(self, X):
-        if isinstance(X, pd.DataFrame):
-            frame = X.copy()
-            frame.columns = [str(c) for c in frame.columns]
-            return frame
-        X = check_array(X, dtype=None, **_finite_check_kwarg(True))
-        return pd.DataFrame(X, columns=list(self.feature_names_))
+    def _check_params(self):
+        for name in ("k", "max_points", "n_thresholds"):
+            v = getattr(self, name)
+            if isinstance(v, bool) or not isinstance(v, numbers.Integral) or v < 1:
+                raise ValueError(f"{name} must be an integer of at least 1, got {v!r}")
+        v = self.time_limit
+        if isinstance(v, bool) or not isinstance(v, numbers.Real) or not (math.isfinite(v) and v > 0):
+            raise ValueError(f"time_limit must be a positive finite number of seconds, got {v!r}")
+
+    def _array(self, X):
+        """X (not a DataFrame) as a 2-D array, by sklearn's check_array; sparse X is refused."""
+        if sparse.issparse(X):
+            raise TypeError(f"{type(self).__name__} does not support sparse X; pass a dense array "
+                            "(X.toarray()) or a DataFrame")
+        return check_array(X, dtype=None, accept_sparse=False, **_finite_check_kwarg(True))
 
     def fit(self, X, y, feature_names=None):
         if not solver.HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
-        if int(self.k) < 1 or int(self.max_points) < 1:
-            raise ValueError("k and max_points must be at least 1")
+        self._check_params()
         t0 = time.perf_counter()
-        set_feature_names_in(self, X)
+        set_feature_names_in(self, X)  # also deletes a feature_names_in_ of an earlier fit on a DataFrame
         if isinstance(X, pd.DataFrame):
+            frame = X
             self.feature_names_ = [str(c) for c in X.columns]
         else:
-            n_cols = np.shape(X)[1] if len(np.shape(X)) == 2 else None
-            if n_cols is None:
-                X = check_array(X)  # raises the usual sklearn error for 1-D input
-            self.feature_names_ = list(feature_names) if feature_names is not None else \
-                [f"X{i}" for i in range(n_cols)]
+            X = self._array(X)
+            frame = pd.DataFrame(X)
+            if feature_names is not None and len(feature_names) != X.shape[1]:
+                raise ValueError(f"feature_names has {len(feature_names)} names but X has {X.shape[1]} columns")
+            self.feature_names_ = [str(c) for c in feature_names] if feature_names is not None else \
+                [f"X{i}" for i in range(X.shape[1])]
         y = np.asarray(y)
-        if y.ndim != 1 or len(y) != len(X):
+        if y.ndim != 1 or len(y) != len(frame):
             raise ValueError("y must be 1-D with one entry per row of X")
         check_binary_target(self, y)
         self.classes_, y01 = np.unique(y, return_inverse=True)
         if len(self.classes_) < 2:
             raise ValueError("FastRiskScoreClassifier needs two classes in y")
-        frame = self._frame(X)
         self.n_features_in_ = frame.shape[1]
         if self.binarize:
-            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame, self.feature_names_)
             B = self.binarizer_.transform(frame)
             self.features_ = list(self.binarizer_.names_)
         else:
@@ -230,7 +326,7 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
             if np.isnan(B).any():
                 raise ValueError("binarize=False needs X without missing values")
             self.features_ = list(self.feature_names_)
-        fine = self.binarize and int(self.n_thresholds) > DECILE_PROFILE_MAX
+        fine = self.binarize and self.n_thresholds > DECILE_PROFILE_MAX
         self.profile_ = "fine" if fine else "decile"
         if B.shape[1] == 0:
             points, stopped = np.zeros(0), False
@@ -247,28 +343,37 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         self.coef_ = points
         self.scale_, self.intercept_, self.train_loss_ = float(a), float(b), float(loss)
         self.points_ = {self.features_[j]: int(points[j]) for j in np.flatnonzero(points)}
+        assert len(self.points_) == np.count_nonzero(points)
         self.stopped_early_ = bool(stopped)
         self.fit_seconds_ = time.perf_counter() - t0
         return self
 
     # --------------------------------------------------------------- prediction
-    def _binary(self, X):
+    def _frame(self, X):
+        """X checked against the fit and as a DataFrame whose columns are used by position (as sklearn does)."""
         check_predict_X(self, X)
-        if not isinstance(X, pd.DataFrame):
-            X = check_array(X, dtype=None, **_finite_check_kwarg(True))
-            X = pd.DataFrame(X, columns=list(self.feature_names_))
-        else:
-            X = X.copy()
-            X.columns = [str(c) for c in X.columns]
-        if self.binarize:
-            return self.binarizer_.transform(X)
-        return X.to_numpy(float)
+        if isinstance(X, pd.DataFrame):
+            if getattr(self, "feature_names_in_", None) is None and X.shape[1] and \
+                    all(isinstance(c, str) for c in X.columns):
+                warnings.warn(f"X has feature names, but {type(self).__name__} was fitted without feature "
+                              "names", UserWarning)
+            return X
+        X = self._array(X)
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(f"X has {X.shape[1]} features, but {type(self).__name__} is expecting "
+                             f"{self.n_features_in_} features as input.")
+        return pd.DataFrame(X)
 
     def total_score(self, X):
         """The total points of each row."""
         check_is_fitted(self)
-        B = self._binary(X)
-        return B @ self.coef_ if B.shape[1] else np.zeros(B.shape[0])
+        frame = self._frame(X)
+        used = np.flatnonzero(self.coef_)  # only the features the score uses are computed
+        if self.binarize:
+            B = self.binarizer_.transform(frame, used)
+        else:
+            B = frame.iloc[:, used].to_numpy(float)
+        return (B @ self.coef_[used]).astype(float) if len(used) else np.zeros(len(frame))
 
     def decision_function(self, X):
         s = self.total_score(X)

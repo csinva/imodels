@@ -335,7 +335,7 @@ Fit an interpretable model to explain a previous model's errors (ex. in <a href=
 The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 </details>
 
-## Our favorite methods
+## [Our favorite methods](https://csinva.io/imodels/blog.html)
 
 After developing and playing with `imodels`, we developed a few new models to overcome limitations of existing interpretable models.
 
@@ -345,27 +345,11 @@ After developing and playing with `imodels`, we developed a few new models to ov
 
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models. Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation. The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable. Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 
-<p align="center">
-	<img src="https://demos.csinva.io/figs/diabetes_figs.svg?sanitize=True" width="50%">
-</p>  
-<p align="center">	
-	<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
-</p>
-
 ### FastRiskScore: sparse integer risk scores
 
 [🔗 Post](https://csinva.io/imodels/fastriskscore.html), [🗂️ API](https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html)
 
 FastRiskScore fits a risk score: at most `k` features, each worth a small integer number of points, with the risk for each total read off a table. It chooses the points to minimize the log loss of the best-fitting map from total score to risk, the problem RiskSLIM and FasterRisk solve. FastRiskScore came out of an autoresearch loop that started from FasterRisk; it keeps FasterRisk's beam search, rebuilt with numba on compressed data, and adds a local search over the integer points scored by that same loss.
-
-```python
-from imodels import FastRiskScoreClassifier
-model = FastRiskScoreClassifier(k=5).fit(X_train, y_train)
-
-print(model)                # the points of each line, and the risk for every total score
-model.points_               # {"worst area <= 906.6": 5, ...}
-model.predict_proba(X_test)
-```
 
 Numeric columns are split at their deciles (`n_thresholds=9`; `n_thresholds=99` splits at the percentiles and switches the solver to settings tuned for that) and categorical ones one-hot encoded, so each line is a condition on an original column. `max_points` (default 5) bounds the points of each line. The search needs numba (`pip install numba`); it compiles once per machine, in about two minutes, and is cached after that.
 
@@ -381,15 +365,6 @@ Binning is what makes this practical. Once the features are binned, the exact GP
 
 That one likelihood settles every choice a GAM usually leaves to the user. How smooth each shape function should be follows from a mixture of two kernels whose lengthscales are learned and shared across features. Features that explain nothing get amplitudes near zero and drop out, and a hierarchical prior shrinks each kernel's amplitudes toward their centre across features, so that choice is stable across splits. Interactions are screened on the residual; up to 48 are fit jointly, and above a thousand rows the rest, up to five per feature, are backfit on the joint model's residual with each surface's grid resolution picked by comparing likelihoods. Nothing is set by cross-validation and nothing is random, so two fits on the same data give the same model.
 
-```python
-from imodels import GPGamRegressor
-model = GPGamRegressor().fit(X_train, y_train)
-
-grid, values, std = model.shape_function(0, return_std=True)   # feature 0's curve, with its band
-model.kernel_weights(0)                                        # the smooth/rough split the likelihood chose
-model.interaction_terms()                                      # the pairs it chose to include
-```
-
 Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a model fit to California housing, curve by curve and interaction by interaction.
 
 On the development suite (65 datasets, at most 1,000 rows each) GPGam is the strongest interpretable model and second overall to TabPFN. On two held-out suites with every dataset shared with the development suite removed, TabArena and OpenML-CTR23, it is again the strongest interpretable model: first of eleven by mean rank on TabArena and second to TabPFN on CTR23, with a geometric-mean RMSE ratio of 0.97 against explainable boosting machines and wins on 22 of the 35 datasets. Every model in those comparisons was refit on identical preprocessing and the same split.
@@ -399,15 +374,6 @@ On the development suite (65 datasets, at most 1,000 rows each) GPGam is the str
 [🔗 Post](https://csinva.io/imodels/fastsmalltree.html), [🗂️ API](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html)
 
 FastSmallTree fits the decision tree that minimizes misclassification rate plus a penalty per leaf, over every tree on the binarized features, and certifies that no other tree scores better. This is the objective optimal-tree packages such as GOSDT and STreeD solve. FastSmallTree came out of an autoresearch loop, and most of its speed comes from compiling the whole branch-and-bound search with numba, along with a few tighter bounds, each proved admissible in the post.
-
-```python
-from imodels import FastSmallTreeClassifier
-model = FastSmallTreeClassifier(regularization=0.05).fit(X_train, y_train)
-
-model.optimal_      # True when the search finished: no other tree on these features scores better
-model.objective_    # the proven minimum of error + 0.05 * leaves
-model.estimator_    # the tree as an ordinary sklearn DecisionTreeClassifier (plot_tree, dtreeviz, ...)
-```
 
 `regularization` is the only hyperparameter: larger values give smaller trees. If the time limit is reached first, `optimal_` is False and the model warns. The search needs numba (`pip install numba`); it compiles once per machine, in about 20 seconds, and is cached after that.
 
@@ -419,19 +385,11 @@ On held-out benchmarks built from TabArena, FastSmallTree matches the trees of e
 
 Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 
-<p align="center">
-	<img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
-</p>  
-<p align="center">	
-	<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
-</p>
-
 ### MDI+: Flexible Tree-Based Feature Importance
 
 [📄 Paper](https://arxiv.org/pdf/2307.01932.pdf), [🔗 Post](https://csinva.io/imodels/mdi_plus.html), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C23&q=MDI%2B%3A+A+Flexible+Random+Forest-Based+Feature+Importance+Framework&btnG=#d=gs_cit&t=1690399844081&u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
 
 MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently discovered connection between linear regression and decision trees. In doing so, MDI+ enables practitioners to (1) tailor the feature importance computation to the data/problem structure and (2) incorporate additional features or knowledge to mitigate known biases of decision trees. In both real data case studies and extensive real-data-inspired simulations, MDI+ outperforms commonly used feature importance measures (e.g., MDI, permutation-based scores, and TreeSHAP) by substantional margins.
-
 
 ## References
 

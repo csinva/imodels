@@ -4,7 +4,6 @@ Tries to find rules which maximize the probability of class 1.
 Currently only supports binary classification.
 '''
 
-import math
 from copy import deepcopy
 
 import numpy as np
@@ -13,7 +12,7 @@ from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.arguments import (check_binary_target, check_fit_arguments,
-                                    check_predict_X, decode_labels)
+                                    check_predict_X, check_two_classes, decode_labels)
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -24,6 +23,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         ------
         max_depth
             Maximum depth the list can achieve
+        class_weight: dict, 'balanced' or None
+            Weights of the classes when choosing each split, keyed by the original
+            labels; passed on to the sklearn stump that finds the split
         criterion: str
             Criterion used to split
             'gini', 'entropy', or 'log_loss'
@@ -46,11 +48,24 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the depth of the current layer (used to recurse)
         """
         check_binary_target(self, y)
+        check_two_classes(self, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        self._class_weight = self._encode_class_weight()
         self.depth = 0  # reset so that refitting doesn't accumulate depth
         self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
         self.complexity_ = len(self.rules_)
         return self
+
+    def _encode_class_weight(self):
+        """Key a class_weight dict by the integer codes the stumps are fit on."""
+        if not isinstance(self.class_weight, dict):
+            return self.class_weight  # None, 'balanced', or invalid (sklearn raises)
+        missing = [c for c in self.class_weight if c not in list(self.classes_)]
+        if missing:
+            raise ValueError(f"class_weight has labels {missing} that are not in y "
+                             f"(classes: {list(self.classes_)})")
+        return {float(code): self.class_weight[c] for code, c in enumerate(self.classes_)
+                if c in self.class_weight}
 
     def fit_node_recursive(self, X, y, depth: int, verbose):
 
@@ -70,11 +85,12 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         else:
 
             # find a split with the best value for the criterion
-            m = DecisionTreeClassifier(max_depth=1, criterion=self.criterion)
+            m = DecisionTreeClassifier(max_depth=1, criterion=self.criterion,
+                                       class_weight=getattr(self, '_class_weight',
+                                                            self.class_weight))
             m.fit(X, y)
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
-            # col, cutoff, criterion_val = self._find_best_split(X, y)
             # base case 4: no split found, so emit a leaf holding this group's mean.
             # (returning [] here would leave a split rule as the list's final entry,
             # which predict_proba treats as the default rule and applies to everything)
@@ -167,158 +183,3 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 s += f"> else | {(100 * rule['val']).round(precision)}% pred prob ({rule['num_pts']} obs)\n"
         s += '> ------------------------------\n'
         return s
-
-    ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
-    ######################################################################################
-    def _find_best_split(self, x, y):
-        """
-        Find the best split from all features
-        returns: the column to split on, the cutoff value, and the actual criterion_value
-        """
-        col = None
-        min_criterion_val = 1e10
-        cutoff = None
-
-        # iterating through each feature
-        for i, c in enumerate(x.T):
-
-            # find the best split of that feature
-            criterion_val, cur_cutoff = self._split_on_feature(c, y)
-
-            # found perfect cutoff
-            if criterion_val == 0:
-                return i, cur_cutoff, criterion_val
-
-            # check if it's best so far
-            elif criterion_val <= min_criterion_val:
-                min_criterion_val = criterion_val
-                col = i
-                cutoff = cur_cutoff
-        return col, cutoff, min_criterion_val
-
-    def _split_on_feature(self, col, y):
-        """
-        col: the column we split on
-        y: target var
-        """
-        min_criterion_val = 1e10
-        cutoff = 0.5
-
-        # iterate through each value in the column
-        for value in np.unique(col):
-            # separate y into 2 groups
-            y_predict = col < value
-
-            # get criterion val of this split
-            criterion_val = self._weighted_criterion(y_predict, y)
-
-            # check if it's the smallest one so far
-            if criterion_val <= min_criterion_val:
-                min_criterion_val = criterion_val
-                cutoff = value
-        return min_criterion_val, cutoff
-
-    def _weighted_criterion(self, split_decision, y_real):
-        """Returns criterion calculated over a split
-        split decision, True/False, and y_true can be multi class
-        """
-        if split_decision.shape[0] != y_real.shape[0]:
-            print('They have to be the same length')
-            return None
-
-        # choose the splitting criterion
-        if self.criterion == 'entropy':
-            criterion_func = self._entropy_criterion
-        elif self.criterion == 'gini':
-            criterion_func = self._gini_criterion
-        elif self.criterion == 'neg_corr':
-            return self._neg_corr_criterion(split_decision, y_real)
-
-        # left-hand side criterion
-        s_left = criterion_func(y_real[split_decision])
-
-        # right-hand side criterion
-        s_right = criterion_func(y_real[~split_decision])
-
-        # overall criterion, again weighted average
-        n = y_real.shape[0]
-        if self.class_weight is not None:
-            sample_weights = np.ones(n)
-            for c in self.class_weight.keys():
-                idxs_c = y_real == c
-                sample_weights[idxs_c] = self.class_weight[c]
-            total_weight = np.sum(sample_weights)
-            weight_left = np.sum(sample_weights[split_decision]) / total_weight
-            # weight_right = np.sum(sample_weights[~split_decision]) / total_weight
-        else:
-            tot_left_samples = np.sum(split_decision == 1)
-            weight_left = tot_left_samples / n
-
-        s = weight_left * s_left + (1 - weight_left) * s_right
-        return s
-
-    def _gini_criterion(self, y):
-        '''Returns gini index for one node
-        = sum(pc * (1 – pc))
-        '''
-        s = 0
-        n = y.shape[0]
-        classes = np.unique(y)
-
-        # for each class, get entropy
-        for c in classes:
-            # weights for each class
-            n_c = np.sum(y == c)
-            p_c = n_c / n
-
-            # weighted avg
-            s += p_c * (1 - p_c)
-
-        return s
-
-    def _entropy_criterion(self, y):
-        """Returns entropy of a divided group of data
-        Data may have multiple classes
-        """
-        s = 0
-        n = len(y)
-        classes = set(y)
-
-        # for each class, get entropy
-        for c in classes:
-            # weights for each class
-            weight = sum(y == c) / n
-
-            def _entropy_from_counts(c1, c2):
-                """Returns entropy of a group of data
-                c1: count of one class
-                c2: count of another class
-                """
-                if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
-                    return 0
-
-                def _entropy_func(p): return -p * math.log(p, 2)
-
-                p1 = c1 * 1.0 / (c1 + c2)
-                p2 = c2 * 1.0 / (c1 + c2)
-                return _entropy_func(p1) + _entropy_func(p2)
-
-            # weighted avg
-            s += weight * _entropy_from_counts(sum(y == c), sum(y != c))
-        return s
-
-    def _neg_corr_criterion(self, split_decision, y):
-        '''Returns negative correlation between y
-        and the binary splitting variable split_decision
-        y must be binary
-        '''
-        if np.unique(y).size < 2:
-            return 0
-        elif np.unique(y).size != 2:
-            print('y must be binary output for corr criterion')
-
-        # y should be 1 more often on the "right side" of the split
-        if y.sum() < y.size / 2:
-            y = 1 - y
-
-        return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]

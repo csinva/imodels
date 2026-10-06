@@ -8,6 +8,7 @@ and only when no compiled code is cached yet.
 
 import glob
 import os
+import pickle
 import sys
 
 __all__ = ['notify_first_compile']
@@ -27,10 +28,51 @@ def _cache_dirs(module_file):
     return dirs
 
 
+def _numba_version():
+    numba = sys.modules.get('numba')
+    if numba is not None:
+        return numba.__version__
+    try:
+        from importlib.metadata import version
+        return version('numba')
+    except Exception:
+        return None
+
+
+def _index_is_fresh(path, stamp, numba_version):
+    """Whether the numba index file ``path`` was written by this numba for the source file as it is now.
+
+    numba's index is a pickled numba version followed by a pickled ``((st_mtime, st_size) of the source,
+    overloads)``; numba ignores an index whose version or stamp differs, and so does this."""
+    try:
+        with open(path, 'rb') as f:
+            if pickle.load(f) != numba_version:
+                return False
+            saved_stamp = pickle.loads(f.read())[0]
+        return tuple(saved_stamp) == stamp
+    except Exception:  # unreadable or in another format: say not cached, so the notice is shown
+        return False
+
+
 def is_cached(module_file):
-    """Whether numba has compiled code on disk for the kernels of ``module_file``."""
+    """Whether numba has compiled code on disk for the kernels of ``module_file`` that this Python and numba can
+    load: an index for this Python version (``<module>.<kernel>-<line>.py<major><minor>.nbi``) written by the
+    installed numba for the current source file (same modification time and size). When unsure, False."""
     stem = os.path.splitext(os.path.basename(module_file))[0]
-    return any(glob.glob(os.path.join(d, f'{stem}.*.nbi')) for d in _cache_dirs(module_file))
+    tag = f'py{sys.version_info.major}{sys.version_info.minor}'
+    try:
+        st = os.stat(module_file)
+    except OSError:
+        return False
+    stamp = (st.st_mtime, st.st_size)
+    numba_version = _numba_version()
+    if numba_version is None:
+        return False
+    for d in _cache_dirs(module_file):
+        for path in glob.glob(os.path.join(glob.escape(d), f'{glob.escape(stem)}.*.{tag}.nbi')):
+            if _index_is_fresh(path, stamp, numba_version):
+                return True
+    return False
 
 
 def notify_first_compile(module_file, model_name, duration, cache_enabled=True, cache_env=None):
