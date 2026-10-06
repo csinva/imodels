@@ -35,6 +35,7 @@ PLOT_RESIZE = """    <script>
 # title, plus any page-specific <head> additions
 PAGES = {
     "blog": ("Our favorite methods", ""),
+    "models": ("Prediction classes", ""),
     "figs": (
         "FIGS",
         '    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>\n'

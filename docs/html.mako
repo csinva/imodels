@@ -346,7 +346,7 @@
     <%
       _group_cats = sorted({k for _, k in _members if k}, key=lambda k: CATEGORY_LABELS[k])
     %>
-    <li><h3>${_title}</h3>
+    <li><h3><a class="post-list-head" href="https://csinva.io/imodels/models.html${'' if _title == 'Prediction classes' else '#misc'}" title="All classes, by category">${_title} &rarr;</a></h3>
       % if _group_cats:
       <ul class="cat-legend">
         % for k in _group_cats:

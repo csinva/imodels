@@ -349,35 +349,25 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 
 [🔗 Post](https://csinva.io/imodels/fastriskscore.html), [🗂️ API](https://csinva.io/imodels/algebraic/risk_score/fast_risk_score.html)
 
-FastRiskScore fits a risk score: at most `k` features, each worth a small integer number of points, with the risk for each total read off a table. It chooses the points to minimize the log loss of the best-fitting map from total score to risk, the problem RiskSLIM and FasterRisk solve. FastRiskScore came out of an autoresearch loop that started from FasterRisk; it keeps FasterRisk's beam search, rebuilt with numba on compressed data, and adds a local search over the integer points scored by that same loss.
+FastRiskScore fits a risk score: at most `k` conditions, each worth a few integer points, with a calibrated risk for every total. It came out of an autoresearch loop that started from FasterRisk, and adds a local search over the integer points to FasterRisk's beam search. Numeric columns are split at quantiles (`n_thresholds`, default 9), and the search needs numba (compiled once per machine, in about two minutes).
 
-Numeric columns are split at their deciles (`n_thresholds=9`; `n_thresholds=99` splits at the percentiles and switches the solver to settings tuned for that) and categorical ones one-hot encoded, so each line is a condition on an original column. `max_points` (default 5) bounds the points of each line. The search needs numba (`pip install numba`); it compiles once per machine, in about two minutes, and is cached after that.
-
-On 27 held-out TabArena datasets, FastRiskScore fits scores about 225× faster than FasterRisk (median over problems) with a lower training loss on 94 of 135 problems and a higher one on 8, and a slightly higher test AUC. On small problems where every score can be enumerated, it finds the best score in 49 of 50 cases, against 28 of 50 for FasterRisk. The [post](https://csinva.io/imodels/fastriskscore.html) has the comparison with RiskSLIM, SLIM and rounded logistic regression.
+On 27 held-out TabArena datasets it fits about 225× faster than FasterRisk with a lower training loss, and on small problems it finds the best possible score in 49 of 50 cases (FasterRisk: 28).
 
 ### GPGam: additive Gaussian processes over binned features
 
 [🔗 Post](https://csinva.io/imodels/gpgam.html), [🗂️ API](https://csinva.io/imodels/algebraic/gp_gam.html)
 
-GPGam fits a generalized additive model with pairwise interactions. Every shape function in it is a Gaussian process over the quantile bins of its feature.
+GPGam fits a generalized additive model with pairwise interactions, in which every shape function is a Gaussian process over the quantile bins of its feature. Binning reduces the exact likelihood to a few sums over the data, so the likelihood alone picks the smoothness, drops irrelevant features and chooses the interactions: there is nothing to tune, fits are deterministic, and every curve comes with a posterior band.
 
-Binning is what makes this practical. Once the features are binned, the exact GP marginal likelihood depends on the data only through the bin co-occurrence counts `Z'Z`, the bin sums `Z'y`, and `y'y`. One pass over the data computes those, and every optimizer step after that costs the same whether the data had a thousand rows or a hundred thousand.
-
-That one likelihood settles every choice a GAM usually leaves to the user. How smooth each shape function should be follows from a mixture of two kernels whose lengthscales are learned and shared across features. Features that explain nothing get amplitudes near zero and drop out, and a hierarchical prior shrinks each kernel's amplitudes toward their centre across features, so that choice is stable across splits. Interactions are screened on the residual; up to 48 are fit jointly, and above a thousand rows the rest, up to five per feature, are backfit on the joint model's residual with each surface's grid resolution picked by comparing likelihoods. Nothing is set by cross-validation and nothing is random, so two fits on the same data give the same model.
-
-Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a model fit to California housing, curve by curve and interaction by interaction.
-
-On the development suite (65 datasets, at most 1,000 rows each) GPGam is the strongest interpretable model and second overall to TabPFN. On two held-out suites with every dataset shared with the development suite removed, TabArena and OpenML-CTR23, it is again the strongest interpretable model: first of eleven by mean rank on TabArena and second to TabPFN on CTR23, with a geometric-mean RMSE ratio of 0.97 against explainable boosting machines and wins on 22 of the 35 datasets. Every model in those comparisons was refit on identical preprocessing and the same split.
+It is the strongest interpretable model on our development suite (65 datasets) and on held-out TabArena and OpenML-CTR23 datasets.
 
 ### FastSmallTree: provably optimal small decision trees
 
 [🔗 Post](https://csinva.io/imodels/fastsmalltree.html), [🗂️ API](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html)
 
-FastSmallTree fits the decision tree that minimizes misclassification rate plus a penalty per leaf, over every tree on the binarized features, and certifies that no other tree scores better. This is the objective optimal-tree packages such as GOSDT and STreeD solve. FastSmallTree came out of an autoresearch loop, and most of its speed comes from compiling the whole branch-and-bound search with numba, along with a few tighter bounds, each proved admissible in the post.
+FastSmallTree fits the decision tree that minimizes error plus a penalty per leaf over all trees on the binarized features, and certifies that no other tree scores better (the objective of GOSDT and STreeD). It came out of an autoresearch loop and compiles its branch-and-bound search with numba (about 20 seconds once per machine). `regularization` is the only hyperparameter.
 
-`regularization` is the only hyperparameter: larger values give smaller trees. If the time limit is reached first, `optimal_` is False and the model warns. The search needs numba (`pip install numba`); it compiles once per machine, in about 20 seconds, and is cached after that.
-
-On held-out benchmarks built from TabArena, FastSmallTree matches the trees of existing optimal-tree packages while running faster, sometimes by more than 20×, and on the full-size datasets GOSDT and STreeD return no tree for several of them, mostly because they run out of memory. The [post](https://csinva.io/imodels/fastsmalltree.html) has the comparison and the proofs.
+On held-out TabArena benchmarks it matches the trees of existing optimal-tree packages while running faster, sometimes by more than 20×.
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 

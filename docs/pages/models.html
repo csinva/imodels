@@ -1,0 +1,139 @@
+<section id="section-intro">
+<div class="article" style="padding-right: 2%; padding-left: 2%;">
+<h1 style="padding-bottom: 0px;">Prediction classes</h1>
+<p class="mi-lede">All 50 classes in <code>imodels</code>, grouped by the kind of model they fit. Every model follows the
+scikit-learn API (<code>fit</code>, <code>predict</code>, <code>predict_proba</code>); the variant links open its API page.</p>
+<nav class="mi-nav"><a class="mi-chip" href="#cat-tree"><span class="cat-dot cat-tree"></span>Trees</a><a class="mi-chip" href="#cat-rule_set"><span class="cat-dot cat-rule_set"></span>Rule sets</a><a class="mi-chip" href="#cat-rule_list"><span class="cat-dot cat-rule_list"></span>Rule lists</a><a class="mi-chip" href="#cat-algebraic"><span class="cat-dot cat-algebraic"></span>Algebraic models</a><a class="mi-chip" href="#cat-util"><span class="cat-dot cat-util"></span>Utilities</a><a class="mi-chip" href="#cat-discretization"><span class="cat-dot cat-discretization"></span>Discretization</a><a class="mi-chip" href="#cat-clustering"><span class="cat-dot cat-clustering"></span>Clustering</a><a class="mi-chip" href="#cat-experimental"><span class="cat-dot cat-experimental"></span>Experimental</a></nav>
+<style>
+  .mi-lede { color: var(--ink-soft); max-width: 46rem; }
+  .mi-nav { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.2rem 0 1.6rem; }
+  .mi-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .3rem .8rem; border: 1px solid var(--line);
+    border-radius: 999px; font-size: .85rem; color: var(--ink); text-decoration: none; background: var(--surface); }
+  .mi-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .mi-part { margin-top: 2.4rem; font-size: 1.15rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .mi-cat { margin: 1.6rem 0 2rem; scroll-margin-top: 4.5rem; }
+  .mi-cat h3 { display: flex; align-items: center; gap: .55rem; margin: 0 0 .2rem; font-size: 1.2rem; }
+  .mi-cat h3 .cat-dot { width: .75rem; height: .75rem; }
+  .mi-catdesc { margin: 0 0 .7rem; color: var(--muted); font-size: .9rem; }
+  .mi-table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; font-size: .9rem; }
+  #content .mi-table td, #content .mi-table tr { padding: .55rem .8rem; border: none; border-top: 1px solid var(--line-soft); vertical-align: top; }
+  #content .mi-table tr:first-child td { border-top: none; }
+  .mi-name { font-weight: 600; width: 13rem; }
+  .mi-desc { color: var(--ink-soft); }
+  .mi-links { text-align: right; width: 12.5rem; }
+  .mi-cls { display: inline-block; margin: 0 0 .2rem .3rem; padding: .05rem .55rem; border: 1px solid var(--line);
+    border-radius: 6px; font-size: .78rem; text-decoration: none; background: var(--surface-alt); }
+  .mi-cls:hover { border-color: var(--accent); }
+  .mi-dep { text-decoration: line-through; color: var(--muted); }
+  .mi-post { white-space: nowrap; font-size: .82rem; margin-left: .3rem; }
+  .mi-badge { display: inline-block; margin-left: .4rem; font-size: .62rem; font-weight: 500; letter-spacing: .05em;
+    text-transform: uppercase; border-radius: 999px; padding: .02em .5em; vertical-align: .15em; border: 1px solid var(--line); color: var(--muted); }
+  .mi-autoresearch { color: var(--research); background: var(--research-bg); border-color: var(--research-line); }
+  @media (max-width: 640px) {
+    #content .mi-table tr { display: block; padding: .5rem .2rem; border-top: 1px solid var(--line-soft); }
+    #content .mi-table td { display: block; border: none; padding: .15rem .6rem; width: auto; text-align: left; }
+    .mi-links { white-space: normal; }
+    .mi-cls { margin: .15rem .3rem 0 0; }
+  }
+</style>
+<section class="mi-cat" id="cat-tree">
+<h3><span class="cat-dot cat-tree"></span>Trees</h3>
+<p class="mi-catdesc">Single trees and sums of trees, grown greedily, searched for optimality, or regularized after fitting.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">FIGS</td><td class="mi-desc">Fast interpretable greedy-tree sums: a sum of small trees with few splits in total. <a class="mi-post" href="figs.html">post&nbsp;&rarr;</a></td><td class="mi-links"><a class="mi-cls" href="tree/figs.html#imodels.tree.figs.FIGSClassifier" title="FIGSClassifier">Classifier</a> <a class="mi-cls" href="tree/figs.html#imodels.tree.figs.FIGSClassifierCV" title="FIGSClassifierCV">Classifier CV</a> <a class="mi-cls" href="tree/figs.html#imodels.tree.figs.FIGSRegressor" title="FIGSRegressor">Regressor</a> <a class="mi-cls" href="tree/figs.html#imodels.tree.figs.FIGSRegressorCV" title="FIGSRegressorCV">Regressor CV</a></td></tr>
+<tr><td class="mi-name">FastSmallTree<span class="mi-badge mi-autoresearch">autoresearch</span><span class="mi-badge mi-numba">numba</span></td><td class="mi-desc">The certifiably optimal small tree for error plus a penalty per leaf. <a class="mi-post" href="fastsmalltree.html">post&nbsp;&rarr;</a></td><td class="mi-links"><a class="mi-cls" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" title="FastSmallTreeClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">Hierarchical shrinkage</td><td class="mi-desc">Post-hoc regularization of any tree or tree ensemble, shrinking each node towards its parent. <a class="mi-post" href="shrinkage.html">post&nbsp;&rarr;</a></td><td class="mi-links"><a class="mi-cls" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier" title="HSTreeClassifier">Classifier</a> <a class="mi-cls" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" title="HSTreeClassifierCV">Classifier CV</a> <a class="mi-cls" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor" title="HSTreeRegressor">Regressor</a> <a class="mi-cls" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" title="HSTreeRegressorCV">Regressor CV</a></td></tr>
+<tr><td class="mi-name">Hierarchical shrinkage + CCP</td><td class="mi-desc">Hierarchical shrinkage of a cost-complexity-pruned tree, both tuned by cross-validation.</td><td class="mi-links"><a class="mi-cls" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV" title="HSDecisionTreeCCPClassifierCV">Classifier CV</a> <a class="mi-cls" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV" title="HSDecisionTreeCCPRegressorCV">Regressor CV</a></td></tr>
+<tr><td class="mi-name">CCP-pruned tree</td><td class="mi-desc">A CART tree pruned to a target complexity by cost-complexity pruning.</td><td class="mi-links"><a class="mi-cls" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier" title="DecisionTreeCCPClassifier">Classifier</a> <a class="mi-cls" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor" title="DecisionTreeCCPRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">Greedy tree (CART)</td><td class="mi-desc">scikit-learn&#x27;s CART tree with imodels&#x27; rule extraction and printing.</td><td class="mi-links"><a class="mi-cls" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier" title="GreedyTreeClassifier">Classifier</a> <a class="mi-cls" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor" title="GreedyTreeRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">C4.5 tree</td><td class="mi-desc">A C4.5 decision tree, split by information-gain ratio.</td><td class="mi-links"><a class="mi-cls" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier" title="C45TreeClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">TAO tree</td><td class="mi-desc">Tree alternating optimization: refines the splits of a grown tree, one node at a time.</td><td class="mi-links"><a class="mi-cls" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier" title="TaoTreeClassifier">Classifier</a> <a class="mi-cls" href="tree/tao.html#imodels.tree.tao.TaoTreeRegressor" title="TaoTreeRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">Iterative random forest</td><td class="mi-desc">Random forests refit with feature weights, to find stable feature interactions.</td><td class="mi-links"><a class="mi-cls" href="tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier" title="IRFClassifier">Classifier</a> <a class="mi-cls" href="tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFRegressor" title="IRFRegressor">Regressor</a></td></tr>
+</tbody>
+</table>
+</section>
+<section class="mi-cat" id="cat-rule_set">
+<h3><span class="cat-dot cat-rule_set"></span>Rule sets</h3>
+<p class="mi-catdesc">Unordered sets of if-then rules, combined by a vote or a sparse linear model.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">RuleFit</td><td class="mi-desc">A sparse linear model on rules extracted from a tree ensemble.</td><td class="mi-links"><a class="mi-cls" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier" title="RuleFitClassifier">Classifier</a> <a class="mi-cls" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor" title="RuleFitRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">Skope-rules</td><td class="mi-desc">Rules from bagged trees, kept by precision and recall and deduplicated.</td><td class="mi-links"><a class="mi-cls" href="rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier" title="SkopeRulesClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">Boosted rules</td><td class="mi-desc">A boosted sum of short rules.</td><td class="mi-links"><a class="mi-cls" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier" title="BoostedRulesClassifier">Classifier</a> <a class="mi-cls" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesRegressor" title="BoostedRulesRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">SLIPPER</td><td class="mi-desc">Boosted rules fit with the confidence-rated SLIPPER algorithm.</td><td class="mi-links"><a class="mi-cls" href="rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier" title="SlipperClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">Bayesian rule set</td><td class="mi-desc">A Bayesian or-of-ands rule set.</td><td class="mi-links"><a class="mi-cls" href="rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier" title="BayesianRuleSetClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">FP-Lasso</td><td class="mi-desc">A lasso over rules mined by frequent-pattern growth.</td><td class="mi-links"><a class="mi-cls" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier" title="FPLassoClassifier">Classifier</a> <a class="mi-cls" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor" title="FPLassoRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">FP-Skope</td><td class="mi-desc">Skope-rules over rules mined by frequent-pattern growth.</td><td class="mi-links"><a class="mi-cls" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier" title="FPSkopeClassifier">Classifier</a></td></tr>
+</tbody>
+</table>
+</section>
+<section class="mi-cat" id="cat-rule_list">
+<h3><span class="cat-dot cat-rule_list"></span>Rule lists</h3>
+<p class="mi-catdesc">Ordered if-then-else lists, read from the top until a rule applies.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">Bayesian rule list</td><td class="mi-desc">An if-then-else list chosen by a posterior over lists.</td><td class="mi-links"><a class="mi-cls" href="rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier" title="BayesianRuleListClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">Greedy rule list</td><td class="mi-desc">A rule list grown greedily, one split at a time.</td><td class="mi-links"><a class="mi-cls" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" title="GreedyRuleListClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">OneR</td><td class="mi-desc">A rule list on the single most predictive feature.</td><td class="mi-links"><a class="mi-cls" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier" title="OneRClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">Fast-and-frugal tree</td><td class="mi-desc">One cue per level, each with an exit.</td><td class="mi-links"><a class="mi-cls" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier" title="FastFrugalTreeClassifier">Classifier</a></td></tr>
+</tbody>
+</table>
+</section>
+<section class="mi-cat" id="cat-algebraic">
+<h3><span class="cat-dot cat-algebraic"></span>Algebraic models</h3>
+<p class="mi-catdesc">Linear, additive and integer-point models.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">FastRiskScore<span class="mi-badge mi-autoresearch">autoresearch</span><span class="mi-badge mi-numba">numba</span></td><td class="mi-desc">A sparse integer risk score with a calibrated risk for every total. <a class="mi-post" href="fastriskscore.html">post&nbsp;&rarr;</a></td><td class="mi-links"><a class="mi-cls" href="algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" title="FastRiskScoreClassifier">Classifier</a></td></tr>
+<tr><td class="mi-name">GPGam<span class="mi-badge mi-autoresearch">autoresearch</span></td><td class="mi-desc">An additive Gaussian-process model with pairwise interactions and posterior bands. <a class="mi-post" href="gpgam.html">post&nbsp;&rarr;</a></td><td class="mi-links"><a class="mi-cls" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor" title="GPGamRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">Tree GAM</td><td class="mi-desc">A GAM whose shape functions are boosted small trees.</td><td class="mi-links"><a class="mi-cls" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMClassifier" title="TreeGAMClassifier">Classifier</a> <a class="mi-cls" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMRegressor" title="TreeGAMRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">Marginal shrinkage linear model</td><td class="mi-desc">A linear model shrunk towards each feature&#x27;s marginal effect.</td><td class="mi-links"><a class="mi-cls" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor" title="MarginalShrinkageLinearRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">SLIM</td><td class="mi-desc">A sparse linear model with integer coefficients. The classifier is deprecated in favour of FastRiskScore.</td><td class="mi-links"><a class="mi-cls mi-dep" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier" title="SLIMClassifier">Classifier</a> <a class="mi-cls" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor" title="SLIMRegressor">Regressor</a></td></tr>
+</tbody>
+</table>
+</section>
+<section class="mi-cat" id="cat-util">
+<h3><span class="cat-dot cat-util"></span>Utilities</h3>
+<p class="mi-catdesc">Wrappers that select or distill interpretable models.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">AutoInterpretable</td><td class="mi-desc">Fits and selects among interpretable models automatically.</td><td class="mi-links"><a class="mi-cls" href="util/automl.html#imodels.util.automl.AutoInterpretableClassifier" title="AutoInterpretableClassifier">Classifier</a> <a class="mi-cls" href="util/automl.html#imodels.util.automl.AutoInterpretableRegressor" title="AutoInterpretableRegressor">Regressor</a></td></tr>
+<tr><td class="mi-name">Distillation</td><td class="mi-desc">Distills a black-box model into an interpretable one.</td><td class="mi-links"><a class="mi-cls" href="util/distillation.html#imodels.util.distillation.DistilledRegressor" title="DistilledRegressor">Regressor</a></td></tr>
+</tbody>
+</table>
+</section>
+<h2 class="mi-part" id="misc">Misc classes</h2>
+<section class="mi-cat" id="cat-discretization">
+<h3><span class="cat-dot cat-discretization"></span>Discretization</h3>
+<p class="mi-catdesc">Turn numeric features into bins, as input for the rule-based models.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">Basic discretizer</td><td class="mi-desc">Equal-width or quantile bins (scikit-learn&#x27;s KBinsDiscretizer).</td><td class="mi-links"><a class="mi-cls" href="discretization/discretizer.html#imodels.discretization.discretizer.BasicDiscretizer" title="BasicDiscretizer">BasicDiscretizer</a></td></tr>
+<tr><td class="mi-name">MDLP discretizer</td><td class="mi-desc">Supervised bins by Fayyad and Irani&#x27;s MDLP criterion.</td><td class="mi-links"><a class="mi-cls" href="discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer" title="MDLPDiscretizer">MDLPDiscretizer</a></td></tr>
+<tr><td class="mi-name">BRL discretizer</td><td class="mi-desc">The MDLP discretization used by the Bayesian rule list.</td><td class="mi-links"><a class="mi-cls" href="discretization/mdlp.html#imodels.discretization.mdlp.BRLDiscretizer" title="BRLDiscretizer">BRLDiscretizer</a></td></tr>
+<tr><td class="mi-name">RF discretizer</td><td class="mi-desc">Bins from the split points of a random forest.</td><td class="mi-links"><a class="mi-cls" href="discretization/discretizer.html#imodels.discretization.discretizer.RFDiscretizer" title="RFDiscretizer">RFDiscretizer</a></td></tr>
+</tbody>
+</table>
+</section>
+<section class="mi-cat" id="cat-clustering">
+<h3><span class="cat-dot cat-clustering"></span>Clustering</h3>
+<p class="mi-catdesc">Clustering helpers.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">Stable clustering</td><td class="mi-desc">Picks the number of clusters by how stable the clustering is across repeated runs.</td><td class="mi-links"><a class="mi-cls" href="clustering/stableclustering.html#imodels.clustering.stableclustering.StableClustering" title="StableClustering">StableClustering</a></td></tr>
+</tbody>
+</table>
+</section>
+<section class="mi-cat" id="cat-experimental">
+<h3><span class="cat-dot cat-experimental"></span>Experimental</h3>
+<p class="mi-catdesc">Models that are less tested.</p>
+<table class="mi-table">
+<tbody>
+<tr><td class="mi-name">BART<span class="mi-badge mi-experimental">experimental</span></td><td class="mi-desc">Bayesian additive regression trees (slow).</td><td class="mi-links"><a class="mi-cls" href="experimental/bartpy/sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.BART" title="BART">BART</a></td></tr>
+</tbody>
+</table>
+</section>
+</div>
+</section>
