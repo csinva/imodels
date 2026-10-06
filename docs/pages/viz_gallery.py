@@ -444,7 +444,6 @@ POST = """<section id="section-intro">
                       <a href="#supported"><span>2</span> Supported models</a>
                       <a href="#interactive"><span>3</span> Interactive mode</a>
                       <a href="#gallery"><span>4</span> Gallery</a>
-                      <a href="#export"><span>5</span> Every tree is a scikit-learn tree</a>
                     </nav>
 
                     <style>
@@ -479,6 +478,13 @@ POST = """<section id="section-intro">
                       .vz-live:before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: #2f8f62; }
                       .vz-demo { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 1rem 0 0.4rem; background: var(--surface); }
                       .vz-demo iframe { display: block; width: 100%; height: min(78vh, 720px); border: 0; }
+                      .vz-demo iframe[hidden] { display: none; }
+                      .vz-tab { position: relative; }
+                      .vz-tab .vz-prog { position: absolute; left: 0.6rem; right: 0.6rem; bottom: 2px; height: 2px; border-radius: 1px;
+                        background: var(--accent); transform: scaleX(0); transform-origin: left; opacity: 0; }
+                      .vz-demo.rotating .vz-tab[aria-selected="true"] .vz-prog { opacity: 0.8; animation: vz-prog var(--vz-dwell) linear forwards; }
+                      .vz-demo.rotating.paused .vz-tab[aria-selected="true"] .vz-prog { animation-play-state: paused; }
+                      @keyframes vz-prog { from { transform: scaleX(0); } to { transform: scaleX(1); } }
                       .vz-tabs { display: flex; flex-wrap: wrap; gap: 0.2rem; padding: 0.45rem 0.5rem 0; border-bottom: 1px solid var(--line); background: var(--surface-alt); }
                       .vz-tab { font: inherit; font-size: 0.86rem; color: var(--muted); background: none; border: 1px solid transparent;
                         border-bottom: none; border-radius: 8px 8px 0 0; padding: 0.4rem 0.85rem; cursor: pointer; margin-bottom: -1px; }
@@ -519,6 +525,11 @@ POST = """<section id="section-intro">
                       .vz-srow a.im { color: var(--cat-rule-set); }
                       .vz-srow .sep { color: var(--muted); opacity: 0.6; margin: 0 0.25rem; }
                       @media (max-width: 640px) { .vz-srow { grid-template-columns: 1fr; } }
+                      .vz-more { margin: 1rem 0 0.5rem; border: 1px solid var(--line); border-radius: 10px; padding: 0 1rem; background: var(--surface); }
+                      .vz-more summary { cursor: pointer; padding: 0.65rem 0; font-weight: 600; color: var(--ink); }
+                      .vz-more summary:hover { color: var(--accent); }
+                      .vz-more[open] { padding-bottom: 0.4rem; }
+                      .vz-more[open] summary { border-bottom: 1px solid var(--line-soft); margin-bottom: 0.6rem; }
                       .vz-support-note { font-size: 0.82rem; color: var(--muted); margin: 0.4rem 0 0; }
                       .vz-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; margin: 1rem 0 0.6rem; }
                       .vz-mcard { border: 1px solid var(--line); border-radius: 12px; padding: 0.85rem 1rem 1rem; background: var(--surface); }
@@ -560,6 +571,30 @@ viz.interactive(model, X, y).save("figs.html")     # one offline page; also rend
                     <p class="vz-support-note"><span class="vz-key"><i class="sk"></i>scikit-learn<i class="im"></i>imodels</span>
                         &middot; __SUPPORT_NOTE__</p>
 
+                    <details class="vz-more" id="export">
+                    <summary>Every tree is a scikit-learn tree, so dtreeviz works too</summary>
+                    <p><code>imodels.viz</code> has no drawing code for any particular imodels tree. Every
+                        tree-based model is first exported to the scikit-learn estimator that makes the same
+                        predictions, with <code>imodels.to_sklearn</code>, and then drawn like any scikit-learn
+                        model: single trees (CART variants, HSTree, TAO, C4.5, FastSmallTree) become a
+                        <code>DecisionTreeClassifier</code> or <code>DecisionTreeRegressor</code>, IRF becomes a
+                        <code>RandomForestClassifier</code>, and FIGS becomes a list of regression trees whose
+                        predictions add up, the same view as gradient boosting. The tests check every export
+                        against the model's own <code>predict</code> / <code>predict_proba</code>.</p>
+
+                    <pre><code class="language-python">import imodels
+tree = imodels.to_sklearn(model, X)    # X (optional) recounts each node's samples
+
+# anything that reads scikit-learn trees now reads imodels trees, e.g. dtreeviz
+import dtreeviz
+dtreeviz.model(tree, X, y, feature_names=list(X.columns)).view()
+sklearn.tree.plot_tree(tree)</code></pre>
+
+                    <p>So the export also makes every tree-based imodels model work with
+                        <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>, including ones dtreeviz could
+                        not read before, such as C4.5, FastSmallTree and IRF.</p>
+                    </details>
+
                     <h2 id="interactive">3. Interactive mode</h2>
 
                     <p><code>viz.interactive</code> writes one self-contained HTML file with no server and no network
@@ -579,7 +614,7 @@ viz.interactive(model, X, y).save("figs.html")     # one offline page; also rend
                     <span class="fig-anchor" id="fig1"></span>
                     <div class="vz-demo">
                       <div class="vz-tabs" role="tablist">__TABS__</div>
-                      <iframe id="vz-demo-frame" src="viz_gallery/interactive/__TAB0__.html" title="Interactive model" loading="lazy"></iframe>
+                      <div class="vz-frames">__FRAMES__</div>
                     </div>
                     <p class="caption"><b>Fig 1.</b> <span id="vz-demo-cap">__CAP0__</span>
                         <a id="vz-demo-open" href="viz_gallery/interactive/__TAB0__.html">Open full page</a>.</p>
@@ -614,16 +649,51 @@ __CARDS__
 
                     <script>
                     (function () {
-                      // demo tabs
-                      var frame = document.getElementById('vz-demo-frame'), cap = document.getElementById('vz-demo-cap'),
-                          open = document.getElementById('vz-demo-open');
-                      document.querySelectorAll('.vz-tab').forEach(function (t) {
-                        t.addEventListener('click', function () {
-                          document.querySelectorAll('.vz-tab').forEach(function (u) { u.setAttribute('aria-selected', u === t); });
-                          frame.src = open.href = 'viz_gallery/interactive/' + t.dataset.slug + '.html';
-                          cap.textContent = t.dataset.cap;
+                      // demo: a slideshow that rotates every DWELL ms until a tab or the demo itself is clicked;
+                      // it pauses while hovered or off screen, and never rotates for reduced-motion viewers
+                      var DWELL = 7000;
+                      var demo = document.querySelector('.vz-demo'), tabs = [].slice.call(document.querySelectorAll('.vz-tab')),
+                          frames = [].slice.call(document.querySelectorAll('.vz-frames iframe')),
+                          cap = document.getElementById('vz-demo-cap'), open = document.getElementById('vz-demo-open');
+                      var dcur = 0, stopped = matchMedia('(prefers-reduced-motion: reduce)').matches, hover = false, seen = false, left = DWELL, t0 = 0, timer = null;
+                      demo.style.setProperty('--vz-dwell', DWELL + 'ms');
+                      function showTab(k) {
+                        dcur = k;
+                        tabs.forEach(function (u, i) { u.setAttribute('aria-selected', i === k); });
+                        frames.forEach(function (f, i) {
+                          if (i === k && !f.getAttribute('src')) f.setAttribute('src', f.dataset.src);
+                          f.hidden = i !== k;
                         });
+                        open.href = frames[k].dataset.src;
+                        cap.textContent = tabs[k].dataset.cap;
+                        if (frames[k + 1] && !frames[k + 1].getAttribute('src') && !stopped) {
+                          setTimeout(function () { if (frames[k + 1] && !frames[k + 1].getAttribute('src')) frames[k + 1].setAttribute('src', frames[k + 1].dataset.src); }, 1500);
+                        }
+                        restart();
+                      }
+                      function restart() {  // replay the progress bar for the new tab
+                        left = DWELL;
+                        tabs.forEach(function (u) { var b = u.querySelector('.vz-prog'); b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; });
+                        tick();
+                      }
+                      function tick() {
+                        clearTimeout(timer);
+                        var run = !stopped && !hover && seen;
+                        demo.classList.toggle('rotating', !stopped);
+                        demo.classList.toggle('paused', !run);
+                        if (run) { t0 = Date.now(); timer = setTimeout(function () { showTab((dcur + 1) % tabs.length); }, left); }
+                      }
+                      function pause() { if (timer && !stopped) left = Math.max(0, left - (Date.now() - t0)); clearTimeout(timer); timer = null; }
+                      function stop() { stopped = true; clearTimeout(timer); demo.classList.remove('rotating'); }
+                      tabs.forEach(function (t, k) { t.addEventListener('click', function () { stop(); showTab(k); }); });
+                      demo.addEventListener('mouseenter', function () { pause(); hover = true; tick(); });
+                      demo.addEventListener('mouseleave', function () { hover = false; tick(); });
+                      window.addEventListener('blur', function () {  // a click inside an iframe moves focus there
+                        setTimeout(function () { if (frames.indexOf(document.activeElement) >= 0) stop(); }, 0);
                       });
+                      new IntersectionObserver(function (es) { pause(); seen = es[0].isIntersecting; tick(); }, {threshold: 0.4}).observe(demo);
+                      showTab(0);
+                      if (location.hash === '#export') document.getElementById('export').open = true;
                       // filters
                       var cards = Array.prototype.slice.call(document.querySelectorAll('.vz-card[data-group]'));
                       var note = document.getElementById('vz-filter-note');
@@ -671,29 +741,6 @@ __CARDS__
                       if (start) show(start);
                     })();
                     </script>
-
-                    <h2 id="export">5. Every tree is a scikit-learn tree</h2>
-
-                    <p><code>imodels.viz</code> has no drawing code for any particular imodels tree. Every
-                        tree-based model is first exported to the scikit-learn estimator that makes the same
-                        predictions, with <code>imodels.to_sklearn</code>, and then drawn like any scikit-learn
-                        model: single trees (CART variants, HSTree, TAO, C4.5, FastSmallTree) become a
-                        <code>DecisionTreeClassifier</code> or <code>DecisionTreeRegressor</code>, IRF becomes a
-                        <code>RandomForestClassifier</code>, and FIGS becomes a list of regression trees whose
-                        predictions add up, the same view as gradient boosting. The tests check every export
-                        against the model's own <code>predict</code> / <code>predict_proba</code>.</p>
-
-                    <pre><code class="language-python">import imodels
-tree = imodels.to_sklearn(model, X)    # X (optional) recounts each node's samples
-
-# anything that reads scikit-learn trees now reads imodels trees, e.g. dtreeviz
-import dtreeviz
-dtreeviz.model(tree, X, y, feature_names=list(X.columns)).view()
-sklearn.tree.plot_tree(tree)</code></pre>
-
-                    <p>So the export also makes every tree-based imodels model work with
-                        <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>, including ones dtreeviz could
-                        not read before, such as C4.5, FastSmallTree and IRF.</p>
 
                     <p style="margin-top:2rem;color:var(--muted);font-size:0.85rem">Generated by
                         <code>docs/pages/viz_gallery.py</code> on __DATE__.</p>
@@ -831,7 +878,9 @@ def write_post():
     pills += [f'<button type="button" class="vz-pill" data-group="{k}" data-blurb="{html.escape(blurb[k])}" '
               f'aria-pressed="false">{html.escape(names[k])}<span>{counts[k]}</span></button>' for k in ORDER]
     tabs = [f'<button type="button" class="vz-tab" role="tab" data-slug="{s}" data-cap="{html.escape(c)}" '
-            f'aria-selected="{"true" if k == 0 else "false"}">{html.escape(t)}</button>' for k, (s, t, c) in enumerate(DEMOS)]
+            f'aria-selected="{"true" if k == 0 else "false"}">{html.escape(t)}<span class="vz-prog"></span></button>' for k, (s, t, c) in enumerate(DEMOS)]
+    frames = [f'<iframe data-src="viz_gallery/interactive/{s}.html" title="Interactive {html.escape(t)}"{"" if k == 0 else " hidden"}></iframe>'
+              for k, (s, t, c) in enumerate(DEMOS)]
     mcards = []
     for view, _, models in SUPPORTED:
         names = '<span class="sep">&middot;</span>'.join(
@@ -840,7 +889,7 @@ def write_post():
         mcards.append(f'<div class="vz-srow"><b>{html.escape(view)}<span>{len(models)}</span></b><div>{names}</div></div>')
     n_models = sum(len(m) for _, _, m in SUPPORTED)
     post = (POST.replace("__CARDS__", "\n".join(cards)).replace("__PILLS__", "".join(pills))
-            .replace("__TABS__", "".join(tabs)).replace("__TAB0__", DEMOS[0][0]).replace("__CAP0__", html.escape(DEMOS[0][2]))
+            .replace("__TABS__", "".join(tabs)).replace("__FRAMES__", "".join(frames)).replace("__TAB0__", DEMOS[0][0]).replace("__CAP0__", html.escape(DEMOS[0][2]))
             .replace("__SUPPORTED__", "".join(mcards)).replace("__NMODELS__", str(n_models // 10 * 10))
             .replace("__SUPPORT_NOTE__", html.escape(SUPPORT_NOTE)).replace("__NFIGS__", str(len(exs)))
             .replace("__DATE__", time.strftime("%Y-%m-%d")))
