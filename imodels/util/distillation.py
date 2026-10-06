@@ -4,8 +4,8 @@ from sklearn.base import RegressorMixin, BaseEstimator, is_regressor
 class DistilledRegressor(BaseEstimator, RegressorMixin):
     """
     Class to implement distillation. Currently only supports regression.
-    Params
-    ------
+    Parameters
+    ----------
     teacher: initial model to be trained
         must be a regressor or a binary classifier
     student: model to be distilled from teacher's predictions

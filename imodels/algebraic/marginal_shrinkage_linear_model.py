@@ -28,8 +28,8 @@ class MarginalShrinkageLinearModel(TextMixin, BaseEstimator):
         verbose=0,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         est_marginal_name : str
             Name of estimator to use for marginal effects (marginal regression)
             If "None", then assume marginal effects are zero (standard Ridge)

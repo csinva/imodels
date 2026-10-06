@@ -82,24 +82,59 @@ class TreeFigure:
 def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
          x=None, max_depth=None, orientation="TB", theme="light", style="auto", title=None,
          subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None):
-    """Render a fitted sklearn decision tree as a static, publication-quality SVG.
+    """Draw a fitted model as a static figure.
+
+    Returns a `TreeFigure`, which shows inline in Jupyter and saves to .svg, .png, .pdf or .html
+    (`TreeFigure.save`). PNG and PDF need cairosvg.
 
     Parameters
     ----------
-    model : fitted DecisionTreeClassifier / DecisionTreeRegressor / ExtraTree*, a Pipeline
-        ending in one, or a single tree from an ensemble (``forest.estimators_[0]``).
-    X, y : optional training (or held-out) data. When given, each split node shows the
-        distribution of its split feature (stacked class histogram or feature/target
-        scatter) and split thresholds on binary / integer features read naturally.
-    x : optional single sample; its decision path is highlighted.
-    max_depth : draw only the top ``max_depth`` levels; deeper subtrees are shown as stacked cards.
-    orientation : "TB" (top to bottom) or "LR" (left to right).
-    theme : "light" or "dark".
-    style : "detailed", "compact" or "auto" (compact for trees with more than 24 leaves).
-    precision : significant digits for thresholds and values.
-    simple : draw each node as a plain box filled by its class proportions (or predicted
-        value) instead of the detailed card with charts.
-    max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6).
+    model : estimator
+        A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+        system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+        isotonic model, or a Pipeline whose earlier steps only scale features.
+    X : array-like of shape (n_samples, n_features), optional
+        Training (or held-out) data. With it, split nodes show their feature's distribution,
+        rules show their coverage, and thresholds on binary or integer features read naturally.
+    y : array-like of shape (n_samples,), optional
+        Targets for ``X``, used for class mixes and target ranges.
+    feature_names : list of str, optional
+        Feature names. Default: the columns of ``X``, else the names the model was fitted with.
+    class_names : list or dict, optional
+        Class names, as a list or as a dict from class label to name. Default: the model's classes.
+    target_name : str, optional
+        Name of the target (regression). Default: the name of ``y``, else "target".
+    x : array-like of shape (n_features,), optional
+        A single sample whose path through the model is highlighted.
+    max_depth : int, optional
+        Draw only the top ``max_depth`` levels; deeper subtrees are drawn as stacked cards.
+    orientation : {"TB", "LR"}, default="TB"
+        Top to bottom, or left to right.
+    theme : {"light", "dark"}, default="light"
+        Color theme.
+    style : {"auto", "detailed", "compact"}, default="auto"
+        Card style; "auto" is compact for trees with more than 24 leaves.
+    title, subtitle : str, optional
+        Figure title, and a subtitle (default: a one-line summary of the model).
+    legend : bool, default=True
+        Whether to draw the legend.
+    background : bool, default=True
+        Whether to fill the background (False gives a transparent figure).
+    precision : int, default=3
+        Significant digits for thresholds and values.
+    simple : bool, default=False
+        Draw each node as a plain box filled by its class mix (or predicted value) instead of
+        the detailed card with a chart.
+    output : int, default=0
+        For multi-output trees, which output to draw.
+    max_trees : int, optional
+        For ensembles (forests, boosting, FIGS), how many trees to draw (default 6).
+        Predictions always use every tree.
+
+    Returns
+    -------
+    TreeFigure
+        The figure, with ``.svg`` (the SVG text) and ``.save(path)``.
     """
     info = to_view(model, X, y, feature_names, class_names, target_name, output)
     if isinstance(info, AdditiveView):

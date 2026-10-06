@@ -43,8 +43,8 @@ def _warn_if_rounding_collapsed(coef, rounded):
 
 class SLIMRegressor(TextMixin, RegressorMixin, BaseEstimator):
     '''Sparse integer linear model
-    Params
-    ------
+    Parameters
+    ----------
     alpha: float
         weight for sparsity penalty
     '''
@@ -59,8 +59,8 @@ class SLIMRegressor(TextMixin, RegressorMixin, BaseEstimator):
         '''fit a linear model with integer coefficient and L1 regularization.
         In case the optimization fails, fit lasso and round coefs.
         
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
@@ -125,8 +125,8 @@ class SLIMClassifier(TextMixin, ClassifierMixin, BaseEstimator):
     def __init__(self, alpha=1):
         '''Model is initialized during fitting
 
-        Params
-        ------
+        Parameters
+        ----------
         alpha: float
             weight for sparsity penalty
         '''
@@ -139,8 +139,8 @@ class SLIMClassifier(TextMixin, ClassifierMixin, BaseEstimator):
         '''fit a logistic model with integer coefficient and L1 regularization.
         In case the optimization fails, fit lasso and round coefs.
         
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''

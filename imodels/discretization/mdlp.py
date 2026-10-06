@@ -29,8 +29,8 @@ class MDLPDiscretizer(object):
             self._data = partition of data with only features of interest and class
             self._cuts = dictionary with cut points for each feature
 
-        Params
-        ------
+        Parameters
+        ----------
         dataset
             pandas dataframe with data to discretize. If None, the cut points
             are computed later by calling fit(X, y).

@@ -117,7 +117,8 @@ class PartialPredictionModelBase(ABC):
 
         Returns
         -------
-        List of length n_features of partial predictions for each feature.
+        list
+            Partial predictions for each feature (length n_features).
         """
         n_blocks = blocked_data.n_blocks
         partial_preds = {}
@@ -592,8 +593,8 @@ def huber_loss(y, preds, epsilon=1.35):
 
     Returns
     -------
-    Scalar value, quantifying the Huber loss. Lower loss
-    indicates better fit.
+    float
+        The Huber loss. Lower loss indicates a better fit.
 
     """
     total_loss = 0

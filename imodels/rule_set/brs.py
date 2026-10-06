@@ -39,8 +39,8 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                  alpha_l=None, beta_l=None,
                  discretization_method='randomforest', random_state=0):
         '''
-        Params
-        ------
+        Parameters
+        ----------
         n_rules
             number of rules to be used in SA_patternbased and also the output of generate_rules
         supp

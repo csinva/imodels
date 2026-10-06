@@ -21,7 +21,10 @@ def shadow_tree(model, X, y, feature_names=None, target_name='target',
         A fitted tree-based imodels model (FIGS, hierarchical shrinkage, CART,
         TAO, C4.5, FastSmallTree, IRF, boosted rules, ...). Single trees and IRF
         are drawn through their exact scikit-learn export (`imodels.to_sklearn`).
-    X, y : the data to annotate the tree with, as dtreeviz requires.
+    X : array-like of shape (n_samples, n_features)
+        Data to annotate the tree with, as dtreeviz requires.
+    y : array-like of shape (n_samples,)
+        Targets for ``X``.
     feature_names : list of str, optional
         Defaults to the names the model was fitted with, else X0, X1, ... .
     target_name : str

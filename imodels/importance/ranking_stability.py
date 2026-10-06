@@ -20,9 +20,9 @@ def tauAP_b(x, y, decreasing=True):
 
     Returns
     -------
-    Scalar value between -1 and 1, quantifying how much the
-    rankings of x and y agree with each other. A higher
-    values indicates greater similarity.
+    float
+        A value between -1 and 1, quantifying how much the rankings of x and y
+        agree with each other. Higher values indicate greater similarity.
 
     """
     if decreasing:
@@ -74,9 +74,9 @@ def rbo(s, t, p, k=None, side="top", uneven_lengths=True):
 
     Returns
     -------
-    Scalar value between 0 and 1, quantifying how much the
-    rankings of x and y agree with each other. A higher
-    values indicates greater similarity.
+    float
+        A value between 0 and 1, quantifying how much the rankings of s and t
+        agree with each other. Higher values indicate greater similarity.
 
     """
     assert side in ["top", "bottom"]

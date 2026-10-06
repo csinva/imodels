@@ -109,18 +109,59 @@ def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, 
                 title=None, subtitle=None, theme="light", orientation="TB", style="auto",
                 initial_depth=None, precision=3, max_samples=400, simple="auto", output=0, height=720,
                 max_trees=None):
-    """Build an interactive, self-contained HTML view of a fitted sklearn decision tree.
+    """Build an interactive page for a fitted model: one self-contained HTML file.
 
-    Click a split to collapse or expand it, drag to pan, scroll to zoom, hover for the full
-    decision rule, and use the Predict panel to route a custom or sampled input through the tree.
+    Click a split to fold it, drag to pan, scroll to zoom, and hover for the full rule. The Predict
+    panel routes a typed or sampled input through the model, shows how its prediction is built,
+    and lists the smallest changes that would flip it. The Features panel shows each feature's
+    importance and highlights where it is used. Shows inline in Jupyter; save with ``.save(path)``.
 
-    theme : "light" (default), "dark", or "auto" to follow the viewer's OS. The page has a toggle either way.
-    initial_depth : levels expanded on load (default: all if the tree has <= 63 nodes, else 3).
-    max_samples : rows of X embedded for the "random sample" button (0 to embed none).
-    simple : start in simple mode (plain boxes filled by class proportions). "auto" (default) does so
-        for trees with more than 32 leaves; the page has a toggle either way.
-    max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6). Predictions
-        always use every tree.
+    Parameters
+    ----------
+    model : estimator
+        A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+        system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+        isotonic model, or a Pipeline whose earlier steps only scale features.
+    X : array-like of shape (n_samples, n_features), optional
+        Training (or held-out) data. With it, split nodes show their feature's distribution,
+        rules show their coverage, and thresholds on binary or integer features read naturally.
+    y : array-like of shape (n_samples,), optional
+        Targets for ``X``, used for class mixes and target ranges.
+    feature_names : list of str, optional
+        Feature names. Default: the columns of ``X``, else the names the model was fitted with.
+    class_names : list or dict, optional
+        Class names, as a list or as a dict from class label to name. Default: the model's classes.
+    target_name : str, optional
+        Name of the target (regression). Default: the name of ``y``, else "target".
+    title, subtitle : str, optional
+        Page title, and a subtitle (default: a one-line summary of the model).
+    theme : {"light", "dark", "auto"}, default="light"
+        Color theme; "auto" follows the viewer's OS. The page has a toggle either way.
+    orientation : {"TB", "LR"}, default="TB"
+        Top to bottom, or left to right.
+    style : {"auto", "detailed", "compact"}, default="auto"
+        Card style for trees.
+    initial_depth : int, optional
+        Levels expanded on load (default: all if the tree has at most 63 nodes, else 3).
+    precision : int, default=3
+        Significant digits for thresholds and values.
+    max_samples : int, default=400
+        Rows of ``X`` embedded for the "random sample" button (0 embeds none).
+    simple : bool or "auto", default="auto"
+        Start in simple mode (plain boxes filled by class mix); "auto" does so for trees with
+        more than 32 leaves. The page has a toggle either way.
+    output : int, default=0
+        For multi-output trees, which output to show.
+    height : int, default=720
+        Height in pixels when shown inline in Jupyter.
+    max_trees : int, optional
+        For ensembles (forests, boosting, FIGS), how many trees to draw (default 6).
+        Predictions always use every tree.
+
+    Returns
+    -------
+    InteractiveTree
+        The page, with ``.html`` (the HTML text) and ``.save(path)``.
     """
     info = to_view(model, X, y, feature_names, class_names, target_name, output)
     from ._views import AdditiveView

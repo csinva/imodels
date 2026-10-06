@@ -125,8 +125,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         n_jobs: int = None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         max_rules: int
             Max total number of rules across all trees
         max_trees: int
@@ -212,8 +212,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         depth=None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         compare_nodes_with_sample_weight: Deprecated
             If this is set to true and sample_weight is passed, use sample_weight to compare nodes
             Otherwise, use sample_weight only for picking a split given a particular node
@@ -321,8 +321,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         categorical_features=None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight

@@ -68,8 +68,8 @@ class HSTree(RuleInspectionMixin, BaseEstimator):
         Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
         https://arxiv.org/abs/2202.00858
 
-        Params
-        ------
+        Parameters
+        ----------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
             Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
@@ -471,8 +471,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
     ):
         """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used
@@ -588,8 +588,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
     ):
         """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used

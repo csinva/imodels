@@ -338,8 +338,8 @@ class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
 class HSC45TreeClassifier(BaseEstimator):
     def __init__(self, estimator_: C45TreeClassifier, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
         """
-        Params
-        ------
+        Parameters
+        ----------
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be < 0)
 

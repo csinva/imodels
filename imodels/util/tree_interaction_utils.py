@@ -8,8 +8,8 @@ def make_rj(n=300, p=50):
     f_1(x) = x1, f_2(x) = (1+x2)^{-1}, f_3(x) = sin(x3), f_4(x) = e^x4, f_5(x) = x5^2
     function withing the sum are normalized
 
-    Params
-    ------
+    Parameters
+    ----------
         n (int): number of sample
         p (int): number of features
 

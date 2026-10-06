@@ -27,8 +27,8 @@ class TreeGAMMinimal(BaseEstimator):
         random_state=None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         n_boosting_rounds : int
             Number of boosting rounds for the cyclic boosting.
         max_leaf_nodes : int

@@ -19,8 +19,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def __init__(self, max_depth: int = 5, class_weight=None,
                  criterion: str = 'gini'):
         '''
-        Params
-        ------
+        Parameters
+        ----------
         max_depth
             Maximum depth the list can achieve
         class_weight: dict, 'balanced' or None
@@ -38,8 +38,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def fit(self, X, y, depth: int = 0, feature_names=None, verbose=False):
         """
-        Params
-        ------
+        Parameters
+        ----------
         X: array_like
             Feature set
         y: array_like

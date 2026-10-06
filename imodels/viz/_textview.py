@@ -381,16 +381,38 @@ def model_text(view, sig=3, max_trees=3, extra=None):
 
 
 def text(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, precision=4, max_trees=3):
-    """The model as readable text: what ``print(model)`` shows for imodels estimators.
+    """Write a fitted model out as readable text: what ``print(model)`` shows for imodels estimators.
+
+    Trees print their conditions and leaf outcomes, rule lists their IF / ELSE IF rows, rule sets
+    their rules ranked by effect, scorecards their points and the risk of each total, and additive
+    models a sparkline of each shape function.
 
     Parameters
     ----------
-    model : a fitted model that ``imodels.viz.draw`` supports.
-    X, y : optional training data. With it, rules show their coverage and features their
-        observed ranges; without it, the text uses what the model stores.
-    feature_names, class_names, target_name : display names (default: the model's own).
-    precision : significant digits for values. Thresholds get more where two would print alike.
-    max_trees : for ensembles, how many trees to write out.
+    model : estimator
+        A fitted model: an imodels estimator (tree, sum of trees, rule list, rule set, scoring
+        system or additive model) or a scikit-learn tree, forest, gradient-boosting, linear or
+        isotonic model, or a Pipeline whose earlier steps only scale features.
+    X : array-like of shape (n_samples, n_features), optional
+        Training (or held-out) data. With it, split nodes show their feature's distribution,
+        rules show their coverage, and thresholds on binary or integer features read naturally.
+    y : array-like of shape (n_samples,), optional
+        Targets for ``X``, used for class mixes and target ranges.
+    feature_names : list of str, optional
+        Feature names. Default: the columns of ``X``, else the names the model was fitted with.
+    class_names : list or dict, optional
+        Class names, as a list or as a dict from class label to name. Default: the model's classes.
+    target_name : str, optional
+        Name of the target (regression). Default: the name of ``y``, else "target".
+    precision : int, default=4
+        Significant digits for values. Thresholds get more digits where two would print alike.
+    max_trees : int, default=3
+        For ensembles, how many trees to write out.
+
+    Returns
+    -------
+    str
+        The model as text.
     """
     from ._adapt import to_view
 
