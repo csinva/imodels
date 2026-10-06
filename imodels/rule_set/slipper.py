@@ -1,6 +1,6 @@
 from imodels.rule_set.boosted_rules import BoostedRulesClassifier
 from imodels.rule_set.slipper_util import SlipperBaseEstimator
-from imodels.util.arguments import check_binary_target
+from imodels.util.arguments import check_binary_target, check_two_classes
 
 
 class SlipperClassifier(BoostedRulesClassifier):
@@ -18,4 +18,5 @@ class SlipperClassifier(BoostedRulesClassifier):
         # its base estimator learns a single binary rule, so a multiclass target
         # otherwise fails deep inside boosting with a shape mismatch
         check_binary_target(self, y)
+        check_two_classes(self, y)
         return super().fit(X, y, feature_names=feature_names, **kwargs)

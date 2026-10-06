@@ -1,6 +1,7 @@
 from typing import Iterable, Tuple, List
 
 import numpy as np
+import pandas as pd
 from mlxtend import frequent_patterns as mlx
 from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
     GradientBoostingClassifier, RandomForestClassifier
@@ -17,6 +18,10 @@ def extract_fpgrowth(X,
                      maxcardinality=2,
                      verbose=False) -> List[Tuple]:
 
+    # mlxtend deprecates non-bool one-hot frames; 0/1 data converts losslessly, anything else is left
+    # for mlxtend to reject as before
+    if isinstance(X, pd.DataFrame) and X.isin([0, 1]).all().all():
+        X = X.astype(bool)
     itemsets_df = mlx.fpgrowth(
         X, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]

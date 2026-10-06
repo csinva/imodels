@@ -56,6 +56,7 @@ from typing import List
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
@@ -65,8 +66,8 @@ from imodels.util.progress import progress_iter
 
 
 class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
-                 **kwargs):
+    def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;,
+                 *args, **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
@@ -86,6 +87,8 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
         for attr in (&#34;classes_&#34;, &#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
             if hasattr(self.estimator_, attr):
                 setattr(self, attr, getattr(self.estimator_, attr))
+            elif hasattr(self, attr):  # left over from an earlier fit, e.g. on a DataFrame
+                delattr(self, attr)
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(
@@ -120,7 +123,8 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # fit a copy, so the estimator passed to __init__ is left untouched and
         # two models sharing one estimator cannot interfere with each other
-        self.estimator_ = deepcopy(self.estimator_)
+        self.estimator_ = (DecisionTreeClassifier() if self.estimator_ is None
+                           else deepcopy(self.estimator_))
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
@@ -154,8 +158,8 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
 
 class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
-                 **kwargs):
+    def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;,
+                 *args, **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.alpha = 0.0
@@ -176,6 +180,8 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
         for attr in (&#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
             if hasattr(self.estimator_, attr):
                 setattr(self, attr, getattr(self.estimator_, attr))
+            elif hasattr(self, attr):  # left over from an earlier fit, e.g. on a DataFrame
+                delattr(self, attr)
 
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(
@@ -212,7 +218,8 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
     def fit(self, X, y, sample_weight=None):
         # fit a copy (see DecisionTreeCCPClassifier.fit)
-        self.estimator_ = deepcopy(self.estimator_)
+        self.estimator_ = (DecisionTreeRegressor() if self.estimator_ is None
+                           else deepcopy(self.estimator_))
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
@@ -239,7 +246,7 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
 
 class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+    def __init__(self, estimator_: BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
                  *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -263,7 +270,7 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
 
 
 class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+    def __init__(self, estimator_: BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
                  *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -297,7 +304,7 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
 <dl>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier"><code class="flex name class">
 <span>class <span class="ident">DecisionTreeCCPClassifier</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Both of the above, for tree-based models that support each.</p></div>
@@ -306,8 +313,8 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
-                 **kwargs):
+    def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;,
+                 *args, **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
@@ -327,6 +334,8 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
         for attr in (&#34;classes_&#34;, &#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
             if hasattr(self.estimator_, attr):
                 setattr(self, attr, getattr(self.estimator_, attr))
+            elif hasattr(self, attr):  # left over from an earlier fit, e.g. on a DataFrame
+                delattr(self, attr)
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(
@@ -361,7 +370,8 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # fit a copy, so the estimator passed to __init__ is left untouched and
         # two models sharing one estimator cannot interfere with each other
-        self.estimator_ = deepcopy(self.estimator_)
+        self.estimator_ = (DecisionTreeClassifier() if self.estimator_ is None
+                           else deepcopy(self.estimator_))
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
@@ -432,7 +442,8 @@ def feature_importances_(self):
 <pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
     # fit a copy, so the estimator passed to __init__ is left untouched and
     # two models sharing one estimator cannot interfere with each other
-    self.estimator_ = deepcopy(self.estimator_)
+    self.estimator_ = (DecisionTreeClassifier() if self.estimator_ is None
+                       else deepcopy(self.estimator_))
     params_for_fitting = self.estimator_.get_params()
     self._get_alpha(X, y, sample_weight, *args, **kwargs)
     params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
@@ -666,7 +677,7 @@ possible to update each component of a nested object.</p>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor"><code class="flex name class">
 <span>class <span class="ident">DecisionTreeCCPRegressor</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Both of the above, for tree-based models that support each.</p></div>
@@ -676,8 +687,8 @@ possible to update each component of a nested object.</p>
 </summary>
 <pre><code class="python">class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
-                 **kwargs):
+    def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;,
+                 *args, **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.alpha = 0.0
@@ -698,6 +709,8 @@ possible to update each component of a nested object.</p>
         for attr in (&#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
             if hasattr(self.estimator_, attr):
                 setattr(self, attr, getattr(self.estimator_, attr))
+            elif hasattr(self, attr):  # left over from an earlier fit, e.g. on a DataFrame
+                delattr(self, attr)
 
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(
@@ -734,7 +747,8 @@ possible to update each component of a nested object.</p>
 
     def fit(self, X, y, sample_weight=None):
         # fit a copy (see DecisionTreeCCPClassifier.fit)
-        self.estimator_ = deepcopy(self.estimator_)
+        self.estimator_ = (DecisionTreeRegressor() if self.estimator_ is None
+                           else deepcopy(self.estimator_))
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
@@ -797,7 +811,8 @@ def feature_importances_(self):
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None):
     # fit a copy (see DecisionTreeCCPClassifier.fit)
-    self.estimator_ = deepcopy(self.estimator_)
+    self.estimator_ = (DecisionTreeRegressor() if self.estimator_ is None
+                       else deepcopy(self.estimator_))
     params_for_fitting = self.estimator_.get_params()
     self._get_alpha(X, y, sample_weight)
     params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
@@ -998,7 +1013,7 @@ possible to update each component of a nested object.</p>
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV"><code class="flex name class">
 <span>class <span class="ident">HSDecisionTreeCCPClassifierCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Hierarchical shrinkage: post-hoc regularization for any decision tree
@@ -1021,7 +1036,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+    def __init__(self, estimator_: BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
                  *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -1096,7 +1111,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV"><code class="flex name class">
 <span>class <span class="ident">HSDecisionTreeCCPRegressorCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Hierarchical shrinkage: post-hoc regularization for any decision tree
@@ -1119,7 +1134,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+    def __init__(self, estimator_: BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
                  *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -1205,7 +1220,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 <li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

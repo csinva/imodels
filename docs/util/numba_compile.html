@@ -65,6 +65,7 @@ and only when no compiled code is cached yet.
 
 import glob
 import os
+import pickle
 import sys
 
 __all__ = [&#39;notify_first_compile&#39;]
@@ -84,10 +85,51 @@ def _cache_dirs(module_file):
     return dirs
 
 
+def _numba_version():
+    numba = sys.modules.get(&#39;numba&#39;)
+    if numba is not None:
+        return numba.__version__
+    try:
+        from importlib.metadata import version
+        return version(&#39;numba&#39;)
+    except Exception:
+        return None
+
+
+def _index_is_fresh(path, stamp, numba_version):
+    &#34;&#34;&#34;Whether the numba index file ``path`` was written by this numba for the source file as it is now.
+
+    numba&#39;s index is a pickled numba version followed by a pickled ``((st_mtime, st_size) of the source,
+    overloads)``; numba ignores an index whose version or stamp differs, and so does this.&#34;&#34;&#34;
+    try:
+        with open(path, &#39;rb&#39;) as f:
+            if pickle.load(f) != numba_version:
+                return False
+            saved_stamp = pickle.loads(f.read())[0]
+        return tuple(saved_stamp) == stamp
+    except Exception:  # unreadable or in another format: say not cached, so the notice is shown
+        return False
+
+
 def is_cached(module_file):
-    &#34;&#34;&#34;Whether numba has compiled code on disk for the kernels of ``module_file``.&#34;&#34;&#34;
+    &#34;&#34;&#34;Whether numba has compiled code on disk for the kernels of ``module_file`` that this Python and numba can
+    load: an index for this Python version (``&lt;module&gt;.&lt;kernel&gt;-&lt;line&gt;.py&lt;major&gt;&lt;minor&gt;.nbi``) written by the
+    installed numba for the current source file (same modification time and size). When unsure, False.&#34;&#34;&#34;
     stem = os.path.splitext(os.path.basename(module_file))[0]
-    return any(glob.glob(os.path.join(d, f&#39;{stem}.*.nbi&#39;)) for d in _cache_dirs(module_file))
+    tag = f&#39;py{sys.version_info.major}{sys.version_info.minor}&#39;
+    try:
+        st = os.stat(module_file)
+    except OSError:
+        return False
+    stamp = (st.st_mtime, st.st_size)
+    numba_version = _numba_version()
+    if numba_version is None:
+        return False
+    for d in _cache_dirs(module_file):
+        for path in glob.glob(os.path.join(glob.escape(d), f&#39;{glob.escape(stem)}.*.{tag}.nbi&#39;)):
+            if _index_is_fresh(path, stamp, numba_version):
+                return True
+    return False
 
 
 def notify_first_compile(module_file, model_name, duration, cache_enabled=True, cache_env=None):
@@ -195,7 +237,7 @@ the environment variable that turns the cache off, named in the notice</p></div>
 <li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

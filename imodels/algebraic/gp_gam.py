@@ -31,7 +31,6 @@ the grid resolution chosen by marginal likelihood; the first 48 are fit jointly.
 Reference implementation: https://github.com/csinva/imodels
 """
 
-import inspect
 from itertools import combinations
 
 import numpy as np
@@ -53,32 +52,42 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     Parameters
     ----------
     schedule : bool, default=True
-        Set model capacity from the sample size. Data with at most 1000 rows gets
-        96 bins per feature and up to 16 interactions, scaled by n. Larger data
-        gets 256 bins and up to five interactions per feature, the first 48 fit
-        jointly and the rest backfit. Pass ``False`` to set capacity yourself
-        with the parameters below.
-    n_bins : int, default=64
-        The most quantile bins to give one feature.
+        Set model capacity from the sample size, for the capacity parameters
+        left at ``None`` (``n_bins``, ``p_budget``, ``n_pairs``, ``pair_bins``,
+        ``pair_res``). A value passed explicitly always wins over the schedule.
+        Data with at most 1000 rows gets 96 bins per feature and up to 16
+        interactions, scaled by n. Larger data gets 256 bins and up to five
+        interactions per feature, the first 48 fit jointly and the rest backfit.
+        Pass ``False`` to set capacity yourself; parameters left at ``None`` then
+        take the fallback values given below.
+    n_bins : int >= 2 or None, default=None
+        The most quantile bins to give one feature. ``None`` means 96 (at most
+        1000 rows) or 256 under the schedule, and 64 without it.
     p_budget : int or None, default=None
         Budget for the total number of bins. Each feature gets the budget divided
-        by the number of features, capped at ``n_bins``. This keeps the fit
-        tractable when the data has many columns.
-    scales : tuple, default=(0.05,)
+        by the number of features, capped at ``n_bins`` and floored at 2, so with
+        very many features the total can exceed the budget. ``None`` means 2500
+        (at most 1000 rows) or 4200 under the schedule, and no budget without it.
+    scales : tuple of float, default=(0.05,)
         Lengthscales for the Matern 1/2 kernels on each feature's bin grid, as a
         fraction of the grid width. These kernels produce rough shapes that can
-        turn sharply.
-    rbf_scales : tuple, default=(0.25,)
+        turn sharply. With ``learn_scales=True`` this must hold exactly one value,
+        the starting point and prior centre of the learned lengthscale.
+    rbf_scales : tuple of float, default=(0.25,)
         Lengthscales for the squared exponential kernels, which produce smooth
         shapes. The marginal likelihood decides how much of each kernel to use,
-        one feature at a time.
-    n_pairs : int, default=6
-        The most interaction terms to include.
-    pair_bins : int, default=12
-        Bins along each axis of an interaction grid.
-    pair_res : tuple or None, default=None
+        one feature at a time. With ``learn_scales=True`` this must hold exactly
+        one value.
+    n_pairs : int >= 0 or None, default=None
+        The most interaction terms to include. ``None`` means the schedule's
+        count, or 6 without it.
+    pair_bins : int >= 2 or None, default=None
+        Bins along each axis of an interaction grid, used when ``pair_res`` is
+        ``None`` and ``schedule=False``. ``None`` means 12.
+    pair_res : tuple of int or None, default=None
         Candidate resolutions for interaction grids. Each block of interactions is
         fit at every candidate, and the marginal likelihood keeps the best one.
+        ``None`` means the schedule's candidates, or ``(pair_bins,)`` without it.
     pair_scales : tuple, default=(0.05, 0.3)
         Lengthscales for the product kernels that interaction terms use.
     screen_bins : int, default=8
@@ -100,15 +109,33 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     learn_scales : bool, default=True
         Learn one Matern and one squared-exponential lengthscale, shared by all
         features, by marginal likelihood. ``scales`` and ``rbf_scales`` then
-        give the starting values and the centre of the prior.
+        give the starting values and the centre of the prior, and must each
+        hold exactly one value.
     scale_prior : float, default=0.5
         Standard deviation, in log space, of the prior on the learned
         lengthscales around their starting values. ``0`` turns it off.
     sweeps : int, default=3
         Backfitting sweeps for interactions beyond the first 48 (above 1000
         rows), each surface refit on the residual of all the others.
+
+    Attributes
+    ----------
     n_features_in_ : int
-        Set after fitting.
+        Number of features seen during fit.
+    feature_names_in_ : ndarray of str
+        Column names, set only when ``X`` is a DataFrame with string columns.
+    feature_names_ : list of str or None
+        The ``feature_names`` passed to :meth:`fit`, else the DataFrame columns.
+
+    Notes
+    -----
+    Every optimizer step costs ``O(P^3)`` in the total number of bins ``P``,
+    independent of the number of rows. Under the default schedule above 1000
+    rows ``P`` is about 4200 once the data has 17 or more features, and a fit
+    then takes minutes to tens of minutes (each step is a dense Cholesky and
+    ``P x P`` products, and the main effects are fit three times). For wide data
+    pass a smaller ``p_budget`` (for example 1500) or fewer ``n_steps`` to trade
+    resolution for speed.
 
     Examples
     --------
@@ -123,14 +150,14 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     def __init__(
         self,
         schedule=True,
-        n_bins=64,
+        n_bins=None,
         p_budget=None,
         scales=(0.05,
         ),
         rbf_scales=(0.25,
         ),
-        n_pairs=6,
-        pair_bins=12,
+        n_pairs=None,
+        pair_bins=None,
         pair_res=None,
         pair_scales=(0.05,
         0.3),
@@ -176,9 +203,119 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     # ------------------------------------------------------------------
     # capacity
     # ------------------------------------------------------------------
+    # capacity used for a parameter left at None when schedule=False
+    _FALLBACK = dict(n_bins=64, p_budget=None, n_pairs=6, pair_bins=12, pair_res=None)
+
     def _p(self, name):
-        """The capacity value to use. The schedule wins when it is turned on."""
-        return self._sched.get(name, getattr(self, name))
+        """The capacity value to use: the explicit value if one was passed, else
+        the schedule's (when it is on), else the fallback default."""
+        v = getattr(self, name)
+        if v is not None:
+            return v
+        return self._sched.get(name, self._FALLBACK[name])
+
+    def _pair_resolutions(self):
+        """Candidate interaction grid resolutions, largest first."""
+        res = self._p("pair_res")
+        if res is None:
+            res = (self._p("pair_bins"),)
+        return sorted({int(r) for r in np.atleast_1d(res).ravel()}, reverse=True)
+
+    def _validate_params(self):
+        """Check the constructor arguments, raising a ValueError naming the bad one.
+
+        Returns the normalized ``log_target`` ('auto', True or False)."""
+        def is_int(v):
+            return isinstance(v, (int, np.integer)) and not isinstance(v, (bool, np.bool_))
+
+        def is_num(v):
+            return (isinstance(v, (int, float, np.integer, np.floating))
+                    and not isinstance(v, (bool, np.bool_)) and bool(np.isfinite(v)))
+
+        def need_int(name, lo, allow_none=False):
+            v = getattr(self, name)
+            if v is None and allow_none:
+                return
+            if not is_int(v) or v < lo:
+                raise ValueError(f"{name} must be an int >= {lo}"
+                                 f"{' or None' if allow_none else ''}, got {v!r}")
+
+        def need_num(name, lo, strict):
+            v = getattr(self, name)
+            if not is_num(v) or (v <= lo if strict else v < lo):
+                raise ValueError(f"{name} must be a number {'>' if strict else '>='} {lo}, "
+                                 f"got {v!r}")
+
+        def need_scales(name, allow_empty):
+            v = getattr(self, name)
+            try:
+                vals = [float(s) for s in np.atleast_1d(np.asarray(v, dtype=float)).ravel()]
+            except (TypeError, ValueError):
+                raise ValueError(f"{name} must be a tuple of positive numbers, got {v!r}")
+            if (not vals and not allow_empty) or not all(np.isfinite(s) and s > 0 for s in vals):
+                raise ValueError(f"{name} must be a {'' if allow_empty else 'non-empty '}"
+                                 f"tuple of positive numbers, got {v!r}")
+            return vals
+
+        need_int("n_bins", 2, allow_none=True)
+        need_int("p_budget", 1, allow_none=True)
+        need_int("n_pairs", 0, allow_none=True)
+        need_int("pair_bins", 2, allow_none=True)
+        if self.pair_res is not None:
+            res = np.atleast_1d(np.asarray(self.pair_res, dtype=object)).ravel()
+            if len(res) == 0 or not all(is_int(r) and r >= 2 for r in res):
+                raise ValueError("pair_res must be None or a non-empty tuple of ints >= 2, "
+                                 f"got {self.pair_res!r}")
+        need_int("screen_bins", 2)
+        need_int("n_steps", 1)
+        need_int("cat_max_levels", 0)
+        need_int("sweeps", 0)
+        need_num("pair_shrink", 0, strict=False)
+        need_num("lr", 0, strict=True)
+        need_num("noise_init", 0, strict=True)
+        need_num("noise_floor", 0, strict=True)
+        need_num("jitter", 0, strict=False)
+        need_num("tau", 0, strict=False)
+        need_num("scale_prior", 0, strict=False)
+        mat = need_scales("scales", allow_empty=True)
+        rbf = need_scales("rbf_scales", allow_empty=True)
+        need_scales("pair_scales", allow_empty=False)
+        if self.learn_scales:
+            if len(mat) != 1 or len(rbf) != 1:
+                raise ValueError(
+                    "learn_scales=True learns one Matern and one RBF lengthscale, so "
+                    "scales and rbf_scales must each hold exactly one value (got "
+                    f"scales={self.scales!r}, rbf_scales={self.rbf_scales!r}); pass "
+                    "learn_scales=False to use several fixed lengthscales")
+        elif not mat and not rbf:
+            raise ValueError("scales and rbf_scales are both empty; at least one "
+                             "lengthscale is needed")
+        lt = self.log_target
+        if isinstance(lt, str) and lt == "auto":
+            return "auto"
+        if isinstance(lt, (bool, np.bool_)):
+            return bool(lt)
+        raise ValueError(f"log_target must be 'auto', True or False, got {lt!r}")
+
+    def _feature_index(self, feature):
+        """Map a feature index or column name to its column number."""
+        if isinstance(feature, str):
+            names = getattr(self, "feature_names_in_", None)
+            if names is None:
+                names = getattr(self, "feature_names_", None)
+            names = None if names is None else [str(c) for c in names]
+            if names is None or feature not in names:
+                raise ValueError(f"unknown feature name {feature!r}; the model was fit "
+                                 f"with feature names {names}")
+            return names.index(feature)
+        try:
+            j = int(feature)
+        except (TypeError, ValueError):
+            raise ValueError(f"feature must be an int index or a feature name, got {feature!r}")
+        if j != feature or not 0 <= j < self.n_features_in_:
+            raise ValueError(f"feature index {feature!r} is out of range for a model fit "
+                             f"on {self.n_features_in_} features")
+        return j
 
     # ------------------------------------------------------------------
     # kernels
@@ -316,7 +453,8 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                                  else max(fixed_sig2, self.noise_floor)))
         tau = self.tau if tau is None else tau
         learn = bool(self.learn_scales) and dists is not None and any(D is not None for D in dists)
-        centre = np.array([np.log(self.scales[0]), np.log(self.rbf_scales[0])])
+        centre = (np.log([float(np.ravel(self.scales)[0]), float(np.ravel(self.rbf_scales)[0])])
+                  if learn else None)
         log_ell = centre.copy() if learn else None
         # units sharing a kernel count share a prior centre per kernel slot
         groups = {}
@@ -447,12 +585,23 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         return C, b, offsets
 
     def _bin_edges(self, x, n_bins):
+        """Bin edges for ``np.searchsorted(edges, x, side="right")``.
+
+        Every edge sits halfway between two neighbouring unique training values,
+        so no bin is empty on the training data. A quantile that lands on a
+        heavily tied value (for example the zero of a zero-inflated feature)
+        would otherwise leave an empty bin below the tie.
+        """
         uniq = np.unique(x[np.isfinite(x)])
         if len(uniq) <= 1:
             return None
         if len(uniq) <= n_bins:
             return (uniq[:-1] + uniq[1:]) / 2.0
-        return np.unique(np.quantile(x, np.linspace(0, 1, n_bins + 1)[1:-1]))
+        q = np.quantile(x, np.linspace(0, 1, n_bins + 1)[1:-1])
+        # move each quantile to the gap just below the first unique value >= it;
+        # a quantile at the minimum moves to the gap just above the minimum
+        k = np.clip(np.searchsorted(uniq, q, side="left"), 1, len(uniq) - 1)
+        return np.unique((uniq[k - 1] + uniq[k]) / 2.0)
 
     # ------------------------------------------------------------------
     def fit(self, X, y, feature_names=None):
@@ -464,45 +613,58 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         y : array-like of shape (n_samples,)
         feature_names : list of str, optional
         """
+        log_target = self._validate_params()
+        # nothing from an earlier fit may survive into this one
+        for attr in ("feature_names_in_", "feature_names_", "scales_learned_"):
+            self.__dict__.pop(attr, None)
         X_original = X
         X, y = check_X_y(X, y, accept_sparse=False, y_numeric=True)
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64).ravel()
-        self.n_features_in_ = X.shape[1]
-        if feature_names is not None:
-            self.feature_names_in_ = np.asarray(feature_names, dtype=object)
-        else:
-            set_feature_names_in(self, X_original)
         n, d = X.shape
+        if n < 2:
+            raise ValueError(f"n_samples={n}: GPGamRegressor needs at least 2 samples "
+                             "to fit")
+        self.n_features_in_ = d
+        set_feature_names_in(self, X_original)
+        if feature_names is not None:
+            feature_names = [str(c) for c in np.ravel(np.asarray(feature_names, dtype=object))]
+            if len(feature_names) != d:
+                raise ValueError(f"feature_names has {len(feature_names)} entries, but X "
+                                 f"has {d} features")
+            self.feature_names_ = feature_names
+        elif hasattr(self, "feature_names_in_"):
+            self.feature_names_ = [str(c) for c in self.feature_names_in_]
+        else:
+            self.feature_names_ = None
 
         # Capacity grows with the sample size, but only for the knobs the caller
-        # left alone: anything passed to the constructor takes precedence, so
+        # left at None: anything passed to the constructor takes precedence, so
         # asking for n_pairs=2 gets two pairs rather than the schedule's count.
         self._sched = {}
         if self.schedule:
-            if len(y) <= 1000:
+            if n <= 1000:
                 # the pair count grows linearly with n at fixed grid resolution, so a
                 # dataset never carries more than about four pair cells per row
-                sched = dict(n_bins=96, p_budget=2500, pair_bins=16,
-                             n_pairs=int(min(2 * d, 16, max(1, round(16 * len(y) / 1000)))),
-                             pair_res=(16, 12))
+                self._sched = dict(n_bins=96, p_budget=2500, pair_bins=16,
+                                   n_pairs=int(min(2 * d, 16, max(1, round(16 * n / 1000)))),
+                                   pair_res=(16, 12))
             else:
                 # up to five interactions per feature; the first 48 are fit jointly,
                 # the rest are backfit on that model's residual
-                sched = dict(n_bins=256, p_budget=4200, pair_bins=28,
-                             n_pairs=int(min(5 * d, 250, round(16 * len(y) / 1000))),
-                             pair_res=(28, 24, 16))
-            defaults = {k: v.default for k, v in
-                        inspect.signature(type(self).__init__).parameters.items()}
-            self._sched = {k: v for k, v in sched.items()
-                           if getattr(self, k) == defaults.get(k)}
+                self._sched = dict(n_bins=256, p_budget=4200, pair_bins=28,
+                                   n_pairs=int(min(5 * d, 250, round(16 * n / 1000))),
+                                   pair_res=(28, 24, 16))
 
         # 1. condition the target
         self.log_target_ = False
-        if self.log_target in ("auto", True) and np.min(y) > 0:
-            from scipy.stats import skew
-            if self.log_target is True or abs(skew(np.log(y))) < abs(skew(y)) - 1.0:
+        if log_target is not False and np.min(y) > 0:
+            if log_target is True:
                 self.log_target_ = True
+            elif np.ptp(y) > 0:                # skew is undefined for a constant y
+                from scipy.stats import skew
+                self.log_target_ = bool(abs(skew(np.log(y))) < abs(skew(y)) - 1.0)
+            if self.log_target_:
                 y = np.log(y)
         q1, med, q3 = np.percentile(y, [25, 50, 75])
         iqr = q3 - q1
@@ -521,6 +683,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         if budget:
             n_bins = int(np.clip(budget // max(d, 1), 2, n_bins))
         self.edges_, self.grids_, self.cats_ = {}, {}, np.zeros(d, dtype=bool)
+        self.tied_bins_ = {}
         bidx = np.zeros((n, d), dtype=np.int64)
         units, sizes = [], []
         for j in range(d):
@@ -530,8 +693,16 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
             self.edges_[j] = e
             nb = len(e) + 1
             bidx[:, j] = np.searchsorted(e, X[:, j], side="right")
-            self.grids_[j] = (np.concatenate([[e[0]], (e[:-1] + e[1:]) / 2.0, [e[-1]]])
-                              if len(e) > 1 else np.array([e[0] - 0.5, e[0] + 0.5]))[:nb]
+            # each bin is drawn at the mean training value it holds, and a bin
+            # holding one repeated value (a level or a tie) is marked so that
+            # predict does not interpolate into it from a neighbouring bin
+            cnt = np.bincount(bidx[:, j], minlength=nb)
+            self.grids_[j] = np.bincount(bidx[:, j], weights=X[:, j], minlength=nb) / cnt
+            lo_ = np.full(nb, np.inf)
+            hi_ = np.full(nb, -np.inf)
+            np.minimum.at(lo_, bidx[:, j], X[:, j])
+            np.maximum.at(hi_, bidx[:, j], X[:, j])
+            self.tied_bins_[j] = lo_ == hi_
             u = np.unique(X[:, j])
             if len(u) <= self.cat_max_levels and np.allclose(u, np.round(u)):
                 self.cats_[j] = True
@@ -614,7 +785,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         Each chunk is fit at every candidate grid resolution, and the marginal
         likelihood picks which resolution to keep.
         """
-        resolutions = sorted(set(self._p("pair_res") or (self._p("pair_bins"),)), reverse=True)
+        resolutions = self._pair_resolutions()
         chunk = max(1, 3600 // (max(resolutions) ** 2))
         chunks = [selected[i:i + chunk] for i in range(0, len(selected), chunk)]
         defs = {p: None for p in selected}
@@ -687,7 +858,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         pred = self.predict(X)
         pred_t = np.log(np.maximum(pred, 1e-300)) if self.log_target_ else pred
         resid = yn - (pred_t - self.y_mean_) / self.y_std_
-        menu = sorted(set(self._p("pair_res") or (self._p("pair_bins"),)), reverse=True)[:2]
+        menu = self._pair_resolutions()[:2]
         grids = []
         for (a, b_) in extra:
             cands = []
@@ -743,10 +914,20 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         offs = self.main_offsets_
         for u, j in enumerate(self.units_):
             f = self.main_values_[offs[u]:offs[u + 1]]
+            bins = np.searchsorted(self.edges_[j], X[:, j], side="right")
             if self.cats_[j] or len(f) < 3:
-                out += f[np.searchsorted(self.edges_[j], X[:, j], side="right")]
+                out += f[bins]
+                continue
+            grid = self.grids_[j]
+            tied = getattr(self, "tied_bins_", {}).get(j)
+            if tied is None or tied.all() or not tied.any():
+                out += np.interp(X[:, j], grid, f)
             else:
-                out += np.interp(X[:, j], self.grids_[j], f)
+                # inside an untied bin interpolate only between untied bins, so a
+                # heavily tied value (say the zero of a zero-inflated feature) does
+                # not leak into the values just beside it
+                out += np.where(tied[bins], np.interp(X[:, j], grid, f),
+                                np.interp(X[:, j], grid[~tied], f[~tied]))
         for t, v in zip(self.pairs_, self.pair_values_):
             ia = np.searchsorted(t["ei"], X[:, t["i"]], side="right")
             ib = np.searchsorted(t["ej"], X[:, t["j"]], side="right")
@@ -772,9 +953,9 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         and may be logged. That is the scale on which the model is additive.
         """
         check_is_fitted(self, "main_values_")
-        j = int(feature)
+        j = self._feature_index(feature)
         if j not in self.edges_:
-            raise ValueError(f"feature {j} was constant and carries no shape function")
+            raise ValueError(f"feature {feature!r} was constant and carries no shape function")
         u = self.units_.index(j)
         i0, i1 = self.main_offsets_[u], self.main_offsets_[u + 1]
         grid = self.grids_[j].copy()
@@ -794,9 +975,9 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         amplitude near zero, which is how irrelevant features drop out.
         """
         check_is_fitted(self, "main_amps_")
-        j = int(feature)
+        j = self._feature_index(feature)
         if j not in self.edges_:
-            raise ValueError(f"feature {j} was constant and carries no shape function")
+            raise ValueError(f"feature {feature!r} was constant and carries no shape function")
         u = self.units_.index(j)
         n_bins = len(self.grids_[j])
         if n_bins <= 3:

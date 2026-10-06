@@ -973,6 +973,8 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
             self.classes_ = self.figs.classes_
         if hasattr(self.figs, &#34;feature_names_in_&#34;):
             self.feature_names_in_ = self.figs.feature_names_in_
+        elif hasattr(self, &#34;feature_names_in_&#34;):  # left over from an earlier fit
+            del self.feature_names_in_
         return self
 
     def predict_proba(self, X):
@@ -2764,6 +2766,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             self.classes_ = self.figs.classes_
         if hasattr(self.figs, &#34;feature_names_in_&#34;):
             self.feature_names_in_ = self.figs.feature_names_in_
+        elif hasattr(self, &#34;feature_names_in_&#34;):  # left over from an earlier fit
+            del self.feature_names_in_
         return self
 
     def predict_proba(self, X):
@@ -2918,6 +2922,8 @@ def trees_(self):
         self.classes_ = self.figs.classes_
     if hasattr(self.figs, &#34;feature_names_in_&#34;):
         self.feature_names_in_ = self.figs.feature_names_in_
+    elif hasattr(self, &#34;feature_names_in_&#34;):  # left over from an earlier fit
+        del self.feature_names_in_
     return self</code></pre>
 </details>
 </dd>
@@ -4080,7 +4086,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

@@ -213,7 +213,7 @@ class _RandomForestPlus(BaseEstimator):
                 raise ValueError(&#34;Only squared_error and log_loss are &#34; + \
                     &#34;supported for gradient boosting&#34;)
             past_resid = None
-            resid_diff_arr = np.full(len(self.rf_model.estimators_), np.NaN)
+            resid_diff_arr = np.full(len(self.rf_model.estimators_), np.nan)
             # now we go through each tree and grow them to the residuals
             for i,tree_model in enumerate(self.rf_model.estimators_):
                 tree_model = tree_model[0] # trees are in an array in sklearn
@@ -1444,7 +1444,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.rf_plus.rf_plus" href="index.html">imodels.tree.rf_plus.rf_plus</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

@@ -62,7 +62,7 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier
 from imodels.util.progress import progress_iter
-from imodels.util.arguments import check_binary_target, check_fit_arguments
+from imodels.util.arguments import check_binary_target, check_fit_arguments, check_two_classes
 
 
 class OneRClassifier(GreedyRuleListClassifier):
@@ -78,6 +78,7 @@ class OneRClassifier(GreedyRuleListClassifier):
         &#34;&#34;&#34;Fit oneR
         &#34;&#34;&#34;
         check_binary_target(self, y)
+        check_two_classes(self, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         ms = []
@@ -157,6 +158,9 @@ array([3, 3, 3])
 <h2 id="params">Params</h2>
 <p>max_depth
 Maximum depth the list can achieve
+class_weight: dict, 'balanced' or None
+Weights of the classes when choosing each split, keyed by the original
+labels; passed on to the sklearn stump that finds the split
 criterion: str
 Criterion used to split
 'gini', 'entropy', or 'log_loss'</p></div>
@@ -177,6 +181,7 @@ Criterion used to split
         &#34;&#34;&#34;Fit oneR
         &#34;&#34;&#34;
         check_binary_target(self, y)
+        check_two_classes(self, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         ms = []
@@ -227,6 +232,7 @@ Criterion used to split
     &#34;&#34;&#34;Fit oneR
     &#34;&#34;&#34;
     check_binary_target(self, y)
+    check_two_classes(self, y)
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
     ms = []
@@ -375,7 +381,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.rule_list" href="index.html">imodels.rule_list</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

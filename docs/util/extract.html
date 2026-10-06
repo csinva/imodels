@@ -53,6 +53,7 @@ aria-label="View source on GitHub" title="GitHub">
 <pre><code class="python">from typing import Iterable, Tuple, List
 
 import numpy as np
+import pandas as pd
 from mlxtend import frequent_patterns as mlx
 from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
     GradientBoostingClassifier, RandomForestClassifier
@@ -69,6 +70,10 @@ def extract_fpgrowth(X,
                      maxcardinality=2,
                      verbose=False) -&gt; List[Tuple]:
 
+    # mlxtend deprecates non-bool one-hot frames; 0/1 data converts losslessly, anything else is left
+    # for mlxtend to reject as before
+    if isinstance(X, pd.DataFrame) and X.isin([0, 1]).all().all():
+        X = X.astype(bool)
     itemsets_df = mlx.fpgrowth(
         X, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
@@ -310,6 +315,10 @@ def extract_marginal_curves(clf, X, max_evals=100):
                      maxcardinality=2,
                      verbose=False) -&gt; List[Tuple]:
 
+    # mlxtend deprecates non-bool one-hot frames; 0/1 data converts losslessly, anything else is left
+    # for mlxtend to reject as before
+    if isinstance(X, pd.DataFrame) and X.isin([0, 1]).all().all():
+        X = X.astype(bool)
     itemsets_df = mlx.fpgrowth(
         X, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
@@ -588,7 +597,7 @@ The maximum number of evaluations to make for each feature</p>
 <li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

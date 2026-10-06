@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import threading
 import time
 
 import numpy as np
@@ -48,31 +49,37 @@ NUMBA_CACHE = os.environ.get("RISKSCORE_NUMBA_CACHE", "1") != "0"
 
 # numba and its typed containers, bound by _jit() at the first solve() (the kernels read them as globals)
 nb = Dict = List = None
-_KERNELS = []  # (name, extra njit options) of every kernel, in definition order
+_KERNELS = []  # (name, original Python function, extra njit options) of every kernel, in definition order
+# serialises _jit() and _warmup(), so that threads fitting at the same time (GridSearchCV or joblib with the threading
+# backend) neither wrap a kernel twice nor run the warm-up twice; reentrant since _warmup() calls _jit()
+_LOCK = threading.RLock()
 
 
 def _kernel(**options):
     """Register a numba kernel. It stays a plain function until _jit() wraps it with numba.njit, so importing this
     module neither imports numba nor sets up one disk cache per kernel."""
     def register(f):
-        _KERNELS.append((f.__name__, options))
+        _KERNELS.append((f.__name__, f, options))
         return f
     return register
 
 
 def _jit():
-    """Replace every registered kernel by its numba dispatcher (once). Kernels call each other through these module
-    globals, which numba resolves when it compiles a kernel, i.e. after this."""
+    """Replace every registered kernel by its numba dispatcher (once, thread-safe). Kernels call each other through
+    these module globals, which numba resolves when it compiles a kernel, i.e. after this. The dispatchers are built
+    from the original functions and bound only once all of them exist, so a retry after a failure starts afresh."""
     global nb, Dict, List
     if nb is not None:
         return
-    import numba
-    from numba.typed import Dict as typed_dict, List as typed_list
-    g = globals()
-    for name, options in _KERNELS:
-        g[name] = numba.njit(cache=NUMBA_CACHE, **options)(g[name])
-    Dict, List = typed_dict, typed_list
-    nb = numba
+    with _LOCK:
+        if nb is not None:  # another thread finished while this one waited
+            return
+        import numba
+        from numba.typed import Dict as typed_dict, List as typed_list
+        wrapped = {name: numba.njit(cache=NUMBA_CACHE, **options)(f) for name, f, options in _KERNELS}
+        globals().update(wrapped)
+        Dict, List = typed_dict, typed_list
+        nb = numba  # last: other threads read nb to skip the lock
 
 #: settings that differ between the two profiles (everything else is a module constant)
 PROFILES = {
@@ -3563,6 +3570,12 @@ def _warmup():
     profiles on small binary, small-integer and continuous data, so that no compilation happens inside a timed fit."""
     if _WARM:
         return
+    with _LOCK:
+        if not _WARM:  # another thread may have warmed up while this one waited
+            _warm_fits()
+
+
+def _warm_fits():
     _jit()
     rng = np.random.default_rng(0)
     n = 200

@@ -132,17 +132,32 @@ __all__ = [
 ]
 
 
+# deprecated names, each warning at most once per process: `from imodels import X` looks
+# the name up twice (hasattr, then getattr) and `from imodels import *` once more
+_warned_deprecated = set()
+
+
+def _warn_once(name, message):
+    if name not in _warned_deprecated:
+        _warned_deprecated.add(name)
+        warnings.warn(message, FutureWarning, stacklevel=3)
+
+
 def __getattr__(name):
     if name == "MarginalShrinkageLinearModelRegressor":  # renamed; the old name still works for now
-        warnings.warn(
-            "MarginalShrinkageLinearModelRegressor has been renamed MarginalShrinkageLinearRegressor; "
-            "the old name will be removed in a future release.", FutureWarning, stacklevel=2)
+        _warn_once(name,
+                   "MarginalShrinkageLinearModelRegressor has been renamed MarginalShrinkageLinearRegressor; "
+                   "the old name will be removed in a future release.")
         return MarginalShrinkageLinearRegressor
     if name == "SLIMClassifier":
-        warnings.warn(
-            "SLIMClassifier is deprecated and will be removed in a future release. Use "
-            "FastRiskScoreClassifier, which fits sparse integer risk scores with a calibrated risk "
-            "(https://csinva.io/imodels/fastriskscore.html).",
-            FutureWarning, stacklevel=2)
+        _warn_once(name,
+                   "SLIMClassifier is deprecated and will be removed in a future release. Use "
+                   "FastRiskScoreClassifier, which fits sparse integer risk scores with a calibrated risk "
+                   "(https://csinva.io/imodels/fastriskscore.html).")
         return _SLIMClassifier
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    # SLIMClassifier is public (it is in __all__) but only reached through __getattr__
+    return sorted(set(globals()) | {"SLIMClassifier"})

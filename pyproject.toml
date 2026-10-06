@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = ["setuptools>=77", "wheel"]  # 77: PEP 639 license / license-files
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "imodels"
-version = "3.0.2"
+version = "3.0.3"
 description = "Implementations of various interpretable models"
 readme = "readme.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["license.md"]  # lowercase, so the default LICEN[CS]E* glob misses it
 authors = [
   { name = "Chandan Singh", email = "csinva23@gmail.com" },
   { name = "Keyan Nasseri" },
@@ -22,7 +23,6 @@ authors = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [

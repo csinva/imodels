@@ -366,7 +366,7 @@ def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
     try:
         m = np.inf
     except:
-        m = np.Inf
+        m = np.inf
     while m >= len(X):
         # sample the length of the list from Poisson(lbda), truncated at len(X)
         m = poisson.rvs(lbda)

@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
-from imodels.util.arguments import (check_binary_target, check_predict_X, decode_labels,
+from imodels.util.arguments import (check_binary_target, check_predict_X, check_two_classes, decode_labels,
                                     set_feature_names_in)
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.progress import progress_iter
@@ -110,6 +110,7 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             check_binary_target(self, y)
+            check_two_classes(self, y)
             self.classes_, y = np.unique(y, return_inverse=True)
 
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)

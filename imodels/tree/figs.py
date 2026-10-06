@@ -921,6 +921,8 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
             self.classes_ = self.figs.classes_
         if hasattr(self.figs, "feature_names_in_"):
             self.feature_names_in_ = self.figs.feature_names_in_
+        elif hasattr(self, "feature_names_in_"):  # left over from an earlier fit
+            del self.feature_names_in_
         return self
 
     def predict_proba(self, X):

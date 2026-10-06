@@ -50,7 +50,8 @@ aria-label="View source on GitHub" title="GitHub">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from copy import deepcopy
+<pre><code class="python">import warnings
+from copy import deepcopy
 from queue import deque
 
 import numpy as np
@@ -73,7 +74,7 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                  n_iters: int = 20,
                  model_args: dict = None,
                  randomize_tree=False,
-                 update_scoring=&#39;accuracy&#39;,
+                 update_scoring=None,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
@@ -115,6 +116,10 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
 
         randomize_tree
             Whether to randomize the tree before each iteration
+
+        update_scoring: str or None
+            sklearn scorer name used to accept or reject each node update.
+            None (default) means &#39;accuracy&#39; for classification and &#39;r2&#39; for regression
 
         min_node_samples_tao: int
             Minimum number of samples in a node to apply tao
@@ -167,7 +172,8 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
         &#34;&#34;&#34;
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if isinstance(self, RegressorMixin):
-            raise Warning(&#39;TAO Regression is not yet tested&#39;)
+            warnings.warn(&#39;TAO regression is experimental: it has been tested much less &#39;
+                          &#39;than TAO classification.&#39;, UserWarning, stacklevel=2)
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
@@ -185,12 +191,14 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
             # plt.show()
 
         if self.randomize_tree:
-            # shuffle CART features
-            np.random.shuffle(self.model.tree_.feature)
-            # np.random.shuffle(self.model.tree_.threshold)
-            for i in range(self.model.tree_.node_count):  # split on feature medians
-                self.model.tree_.threshold[i] = np.median(
-                    X[:, self.model.tree_.feature[i]])
+            # shuffle CART features among the split nodes (leaves keep feature -2,
+            # which would otherwise be read as a column index)
+            tree = self.model.tree_
+            feature, threshold = tree.feature, tree.threshold  # views onto the tree
+            internal = np.flatnonzero(tree.children_left != tree.children_right)
+            feature[internal] = np.random.permutation(feature[internal])
+            for i in internal:  # split on feature medians
+                threshold[i] = np.median(X[:, feature[i]])
         if self.verbose:
             print(&#39;starting score&#39;, self.model.score(X, y))
         for i in progress_iter(range(self.n_iters), verbose=self.verbose,
@@ -213,6 +221,11 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
         model: DecisionTreeClassifier.tree_ or DecisionTreeRegressor.tree_
             The model to be post-hoc improved
         &#34;&#34;&#34;
+
+        # route points as the sklearn tree does, which compares float32 features with
+        # the float64 thresholds; routing float64 X can send a point near a threshold
+        # (e.g. a median from randomize_tree) the other way
+        X = np.asarray(X, dtype=np.float32)
 
         # Tree properties
         children_left = tree.children_left
@@ -297,7 +310,7 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                     &#34;&#34;&#34;Returns predictions for x starting at node node_id&#34;&#34;&#34;
                     if children_left[node_id] == children_right[node_id]:
                         if isinstance(self, RegressorMixin):
-                            return value[node_id]
+                            return value[node_id].ravel()[0]  # value has shape (1, 1)
                         if isinstance(self, ClassifierMixin):
                             # note value stores counts for each class
                             return np.argmax(value[node_id])
@@ -389,7 +402,7 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
             if y_score is None:
                 y_score = y
 
-            scorer = get_scorer(self.update_scoring)
+            scorer = get_scorer(self._update_scoring())
 
             old_score = scorer(self.model, X_score, y_score)
 
@@ -425,6 +438,16 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                 &#34;&#34;&#34;
 
         return num_updates
+
+    def _update_scoring(self):
+        &#34;&#34;&#34;The scorer that decides whether a TAO update is kept.
+
+        None picks accuracy for classification and R^2 for regression (accuracy is
+        undefined for continuous predictions).
+        &#34;&#34;&#34;
+        if self.update_scoring is not None:
+            return self.update_scoring
+        return &#39;r2&#39; if isinstance(self, RegressorMixin) else &#39;accuracy&#39;
 
     @property
     def feature_importances_(self):
@@ -468,7 +491,7 @@ class TaoTreeClassifier(TaoTree, ClassifierMixin):
 <dl>
 <dt id="imodels.tree.tao.TaoTree"><code class="flex name class">
 <span>class <span class="ident">TaoTree</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring=None, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Both of the above, for tree-based models that support each.</p>
@@ -498,6 +521,9 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <dd>Arguments to pass to the model</dd>
 <dt><strong><code>randomize_tree</code></strong></dt>
 <dd>Whether to randomize the tree before each iteration</dd>
+<dt><strong><code>update_scoring</code></strong> :&ensp;<code>str</code> or <code>None</code></dt>
+<dd>sklearn scorer name used to accept or reject each node update.
+None (default) means 'accuracy' for classification and 'r2' for regression</dd>
 <dt><strong><code>min_node_samples_tao</code></strong> :&ensp;<code>int</code></dt>
 <dd>Minimum number of samples in a node to apply tao</dd>
 <dt><strong><code>min_leaf_samples_tao</code></strong> :&ensp;<code>int</code></dt>
@@ -519,7 +545,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
                  n_iters: int = 20,
                  model_args: dict = None,
                  randomize_tree=False,
-                 update_scoring=&#39;accuracy&#39;,
+                 update_scoring=None,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
@@ -561,6 +587,10 @@ Note: this implementation learns single-feature splits rather than oblique trees
 
         randomize_tree
             Whether to randomize the tree before each iteration
+
+        update_scoring: str or None
+            sklearn scorer name used to accept or reject each node update.
+            None (default) means &#39;accuracy&#39; for classification and &#39;r2&#39; for regression
 
         min_node_samples_tao: int
             Minimum number of samples in a node to apply tao
@@ -613,7 +643,8 @@ Note: this implementation learns single-feature splits rather than oblique trees
         &#34;&#34;&#34;
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if isinstance(self, RegressorMixin):
-            raise Warning(&#39;TAO Regression is not yet tested&#39;)
+            warnings.warn(&#39;TAO regression is experimental: it has been tested much less &#39;
+                          &#39;than TAO classification.&#39;, UserWarning, stacklevel=2)
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
@@ -631,12 +662,14 @@ Note: this implementation learns single-feature splits rather than oblique trees
             # plt.show()
 
         if self.randomize_tree:
-            # shuffle CART features
-            np.random.shuffle(self.model.tree_.feature)
-            # np.random.shuffle(self.model.tree_.threshold)
-            for i in range(self.model.tree_.node_count):  # split on feature medians
-                self.model.tree_.threshold[i] = np.median(
-                    X[:, self.model.tree_.feature[i]])
+            # shuffle CART features among the split nodes (leaves keep feature -2,
+            # which would otherwise be read as a column index)
+            tree = self.model.tree_
+            feature, threshold = tree.feature, tree.threshold  # views onto the tree
+            internal = np.flatnonzero(tree.children_left != tree.children_right)
+            feature[internal] = np.random.permutation(feature[internal])
+            for i in internal:  # split on feature medians
+                threshold[i] = np.median(X[:, feature[i]])
         if self.verbose:
             print(&#39;starting score&#39;, self.model.score(X, y))
         for i in progress_iter(range(self.n_iters), verbose=self.verbose,
@@ -659,6 +692,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
         model: DecisionTreeClassifier.tree_ or DecisionTreeRegressor.tree_
             The model to be post-hoc improved
         &#34;&#34;&#34;
+
+        # route points as the sklearn tree does, which compares float32 features with
+        # the float64 thresholds; routing float64 X can send a point near a threshold
+        # (e.g. a median from randomize_tree) the other way
+        X = np.asarray(X, dtype=np.float32)
 
         # Tree properties
         children_left = tree.children_left
@@ -743,7 +781,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
                     &#34;&#34;&#34;Returns predictions for x starting at node node_id&#34;&#34;&#34;
                     if children_left[node_id] == children_right[node_id]:
                         if isinstance(self, RegressorMixin):
-                            return value[node_id]
+                            return value[node_id].ravel()[0]  # value has shape (1, 1)
                         if isinstance(self, ClassifierMixin):
                             # note value stores counts for each class
                             return np.argmax(value[node_id])
@@ -835,7 +873,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
             if y_score is None:
                 y_score = y
 
-            scorer = get_scorer(self.update_scoring)
+            scorer = get_scorer(self._update_scoring())
 
             old_score = scorer(self.model, X_score, y_score)
 
@@ -871,6 +909,16 @@ Note: this implementation learns single-feature splits rather than oblique trees
                 &#34;&#34;&#34;
 
         return num_updates
+
+    def _update_scoring(self):
+        &#34;&#34;&#34;The scorer that decides whether a TAO update is kept.
+
+        None picks accuracy for classification and R^2 for regression (accuracy is
+        undefined for continuous predictions).
+        &#34;&#34;&#34;
+        if self.update_scoring is not None:
+            return self.update_scoring
+        return &#39;r2&#39; if isinstance(self, RegressorMixin) else &#39;accuracy&#39;
 
     @property
     def feature_importances_(self):
@@ -950,7 +998,8 @@ are ignored while searching for a split in each node.</p></div>
     &#34;&#34;&#34;
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
     if isinstance(self, RegressorMixin):
-        raise Warning(&#39;TAO Regression is not yet tested&#39;)
+        warnings.warn(&#39;TAO regression is experimental: it has been tested much less &#39;
+                      &#39;than TAO classification.&#39;, UserWarning, stacklevel=2)
     X, y = check_X_y(X, y)
     y = y.astype(float)
     if feature_names is not None:
@@ -968,12 +1017,14 @@ are ignored while searching for a split in each node.</p></div>
         # plt.show()
 
     if self.randomize_tree:
-        # shuffle CART features
-        np.random.shuffle(self.model.tree_.feature)
-        # np.random.shuffle(self.model.tree_.threshold)
-        for i in range(self.model.tree_.node_count):  # split on feature medians
-            self.model.tree_.threshold[i] = np.median(
-                X[:, self.model.tree_.feature[i]])
+        # shuffle CART features among the split nodes (leaves keep feature -2,
+        # which would otherwise be read as a column index)
+        tree = self.model.tree_
+        feature, threshold = tree.feature, tree.threshold  # views onto the tree
+        internal = np.flatnonzero(tree.children_left != tree.children_right)
+        feature[internal] = np.random.permutation(feature[internal])
+        for i in internal:  # split on feature medians
+            threshold[i] = np.median(X[:, feature[i]])
     if self.verbose:
         print(&#39;starting score&#39;, self.model.score(X, y))
     for i in progress_iter(range(self.n_iters), verbose=self.verbose,
@@ -1137,7 +1188,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">TaoTreeClassifier</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring=None, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Both of the above, for tree-based models that support each.</p>
@@ -1167,6 +1218,9 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <dd>Arguments to pass to the model</dd>
 <dt><strong><code>randomize_tree</code></strong></dt>
 <dd>Whether to randomize the tree before each iteration</dd>
+<dt><strong><code>update_scoring</code></strong> :&ensp;<code>str</code> or <code>None</code></dt>
+<dd>sklearn scorer name used to accept or reject each node update.
+None (default) means 'accuracy' for classification and 'r2' for regression</dd>
 <dt><strong><code>min_node_samples_tao</code></strong> :&ensp;<code>int</code></dt>
 <dd>Minimum number of samples in a node to apply tao</dd>
 <dt><strong><code>min_leaf_samples_tao</code></strong> :&ensp;<code>int</code></dt>
@@ -1312,7 +1366,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">TaoTreeRegressor</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring=None, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Both of the above, for tree-based models that support each.</p>
@@ -1342,6 +1396,9 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <dd>Arguments to pass to the model</dd>
 <dt><strong><code>randomize_tree</code></strong></dt>
 <dd>Whether to randomize the tree before each iteration</dd>
+<dt><strong><code>update_scoring</code></strong> :&ensp;<code>str</code> or <code>None</code></dt>
+<dd>sklearn scorer name used to accept or reject each node update.
+None (default) means 'accuracy' for classification and 'r2' for regression</dd>
 <dt><strong><code>min_node_samples_tao</code></strong> :&ensp;<code>int</code></dt>
 <dd>Minimum number of samples in a node to apply tao</dd>
 <dt><strong><code>min_leaf_samples_tao</code></strong> :&ensp;<code>int</code></dt>
@@ -1498,7 +1555,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite methods</h3>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

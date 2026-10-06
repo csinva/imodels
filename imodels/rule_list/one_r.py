@@ -7,7 +7,7 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier
 from imodels.util.progress import progress_iter
-from imodels.util.arguments import check_binary_target, check_fit_arguments
+from imodels.util.arguments import check_binary_target, check_fit_arguments, check_two_classes
 
 
 class OneRClassifier(GreedyRuleListClassifier):
@@ -23,6 +23,7 @@ class OneRClassifier(GreedyRuleListClassifier):
         """Fit oneR
         """
         check_binary_target(self, y)
+        check_two_classes(self, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         ms = []

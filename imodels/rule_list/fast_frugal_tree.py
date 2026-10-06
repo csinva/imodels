@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.arguments import (check_binary_target, check_fit_arguments,
+from imodels.util.arguments import (check_binary_target, check_fit_arguments, check_two_classes,
                                     check_predict_X, decode_labels)
 
 
@@ -56,6 +56,7 @@ class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def fit(self, X, y, feature_names=None):
         check_binary_target(self, y)
+        check_two_classes(self, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         remaining = np.ones(X.shape[0], dtype=bool)

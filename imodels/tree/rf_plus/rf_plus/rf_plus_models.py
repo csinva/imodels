@@ -161,7 +161,7 @@ class _RandomForestPlus(BaseEstimator):
                 raise ValueError("Only squared_error and log_loss are " + \
                     "supported for gradient boosting")
             past_resid = None
-            resid_diff_arr = np.full(len(self.rf_model.estimators_), np.NaN)
+            resid_diff_arr = np.full(len(self.rf_model.estimators_), np.nan)
             # now we go through each tree and grow them to the residuals
             for i,tree_model in enumerate(self.rf_model.estimators_):
                 tree_model = tree_model[0] # trees are in an array in sklearn

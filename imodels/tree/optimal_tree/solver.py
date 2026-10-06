@@ -363,7 +363,7 @@ def shape_bound(l_leaf, ml2_l, c3_l, r_leaf, ml2_r, c3_r, lam, l_lb, r_lb, l_ub2
 
 @njit(cache=NUMBA_CACHE, nogil=True)
 def depth2_pairs(F, feats, rows, group_of, masks, costs, lam, dist, L, out_ml2_l, out_ml2_r, out_j_l, out_j_r,
-                 out_c3_l, out_c3_r):
+                 out_c3_l, out_c3_r, stop):
     """Best 2-leaf loss of the left (feature true) and right child of every candidate split.
 
     ``masks`` are the node's ``K`` class masks, ``L[i]`` the class counts of the left
@@ -372,6 +372,10 @@ def depth2_pairs(F, feats, rows, group_of, masks, costs, lam, dist, L, out_ml2_l
     ``i``); each unordered pair is counted once.  Thresholds of one column are nested,
     so their intersection is the smaller set and needs no popcount.  A split with an
     empty side is skipped (it is the leaf).  Returns the best depth-2 value's root.
+
+    ``stop[0] != 0`` (set by the driver's timer at the time limit) abandons the pass:
+    the outputs are then incomplete and the caller must not use them.  On a large
+    node this is the longest step of the search, quadratic in the candidates.
     """
     mf = feats.shape[0]
     W = F.shape[1]
@@ -391,6 +395,8 @@ def depth2_pairs(F, feats, rows, group_of, masks, costs, lam, dist, L, out_ml2_l
     for k in range(K):
         tot += dist[k]
     for i in range(mf):
+        if stop[0] != 0:
+            return 1
         fi = feats[i]
         fri = rows[i]
         gi = group_of[fi]
@@ -546,7 +552,7 @@ def pack_columns(Xb: np.ndarray) -> np.ndarray:
 
 @njit(cache=NUMBA_CACHE, nogil=True)
 def expand_kernel(F, features, group_of, kw, mask_matrix, weights, costs, diff, lam, bound, do_exchange,
-                  io, fo, bo, L, dist):
+                  io, fo, bo, L, dist, stop):
     """node_stats + prep_candidates + (depth2_pairs + shape_bound) in one call.
 
     Workspace rows: ``io`` = feats, order, j_l, j_r; ``fo`` = l_leaf, l_lb, r_leaf, r_lb,
@@ -554,6 +560,8 @@ def expand_kernel(F, features, group_of, kw, mask_matrix, weights, costs, diff, 
     ``bo`` = l_solved, r_solved.  Returns (nv, n_cand, best_i, min_rejected, ran_depth2,
     i_d2, best_d2, lb_ge4); the depth-2 stage runs under the same size rule as before
     (cheap nodes always, otherwise only when most candidates survive the cheap filter).
+    When ``stop[0]`` is set during the depth-2 stage the result is incomplete; the caller
+    checks ``stop`` and discards it.
     """
     K = dist.shape[0] - 1
     W = F.shape[1]
@@ -613,8 +621,9 @@ def expand_kernel(F, features, group_of, kw, mask_matrix, weights, costs, diff, 
     cheap = nv * nv * W <= 32768
     if single or not (n_cand >= 2 and nv >= 2 and (cheap or (n_cand * 2 >= nv and n_cand >= 8 and nv >= 8))):
         return nv, n_cand, best_i, min_rejected, False, 0, 0.0, 0.0, M, Fc
-    depth2_pairs(Fc, feats, rows, group_of, M[:K], costs, lam, dist[:K], L[:nv], fo[7, :nv], fo[8, :nv], io[2, :nv],
-                 io[3, :nv], fo[9, :nv], fo[10, :nv])
+    if depth2_pairs(Fc, feats, rows, group_of, M[:K], costs, lam, dist[:K], L[:nv], fo[7, :nv], fo[8, :nv],
+                    io[2, :nv], io[3, :nv], fo[9, :nv], fo[10, :nv], stop) != 0:
+        return nv, n_cand, best_i, min_rejected, False, 0, 0.0, 0.0, M, Fc
     i_d2, best_d2, lb_ge4 = shape_bound(fo[0, :nv], fo[7, :nv], fo[9, :nv], fo[2, :nv], fo[8, :nv], fo[10, :nv], lam,
                                         fo[1, :nv], fo[3, :nv], fo[11, :nv], fo[12, :nv], fo[5, :nv], fo[13, :nv])
     return nv, n_cand, best_i, min_rejected, True, i_d2, best_d2, lb_ge4, M, Fc
@@ -1007,7 +1016,7 @@ def warm_up():
     depth2_pairs(F, np.zeros(1, dtype=np.int64), np.zeros(1, dtype=np.int64), np.zeros(2, dtype=np.int64), masks,
                  np.zeros((1, 1)), 0.1,
                  np.zeros(1), np.zeros((1, 1)), np.empty(1), np.empty(1), np.empty(1, dtype=np.int64),
-                 np.empty(1, dtype=np.int64), np.empty(1), np.empty(1))
+                 np.empty(1, dtype=np.int64), np.empty(1), np.empty(1), np.zeros(1, dtype=np.int64))
     e = np.zeros(1)
     refilter_candidates(np.zeros(1, dtype=np.int64), 1, e, e, 1.0)
     depth3_triples(F, np.zeros(1, dtype=np.int64), np.zeros(1, dtype=np.int64), masks, np.zeros((1, 1)), 0.0, 0.1,
@@ -1018,7 +1027,7 @@ def warm_up():
     max_pair(e, e)
     expand_kernel(F, np.zeros(1, dtype=np.int64), np.zeros(2, dtype=np.int64), int_to_words(1, 1), masks, np.zeros(0),
                   np.zeros((1, 1)), np.zeros(1), 0.1, 1.0, False, np.empty((7, 1), dtype=np.int64), np.empty((14, 1)),
-                  np.empty((2, 1), dtype=np.bool_), np.empty((1, 1)), np.empty(2))
+                  np.empty((2, 1), dtype=np.bool_), np.empty((1, 1)), np.empty(2), np.zeros(1, dtype=np.int64))
     shape_bound(e, e, e, e, e, e, 0.1, np.zeros(1), np.zeros(1), np.empty(1), np.empty(1), np.empty(1), np.empty(1))
     prep_candidates(np.zeros(2, dtype=np.int64), np.zeros(2), np.zeros(2), np.zeros(2), np.zeros(2), 1.0, True,
                     np.empty(2), np.empty(2), np.empty(2, dtype=np.int64))
@@ -1077,7 +1086,7 @@ class BinaryEncoder:
         groups: list[list[int]] = []
 
         for j, col in enumerate(X.columns):
-            s = X[col]
+            s = X.iloc[:, j]      # by position: X[col] is a frame when two columns share a name
             name = str(col)
             if _is_numeric_series(s):
                 values = pd.to_numeric(s, errors="coerce").to_numpy(dtype=np.float64)
@@ -1351,7 +1360,9 @@ class BitDataset:
         self._w = float(mismatch[0]) if self.uniform else 0.0
 
         # ---- equivalent points: rows with identical features but different labels
-        _, inverse = np.unique(Xb, axis=0, return_inverse=True)
+        # (rows packed to bytes first: the same grouping, and sorting rows of a wide
+        # continuous encoding is several times faster on an eighth of the width)
+        _, inverse = np.unique(np.packbits(Xb, axis=1), axis=0, return_inverse=True)
         inverse = np.asarray(inverse).ravel()
         n_groups = int(inverse.max()) + 1 if n else 0
         dist = np.zeros((n_groups, K), dtype=np.float64)
@@ -1915,7 +1926,7 @@ class Optimizer:
         dist = np.empty(K + 1)
         nv, n_cand, i, min_rejected, ran, i_d2, best_d2, lb_ge4, M, Fc = expand_kernel(
             data.F_words, features, self.group_of, kw, mask_matrix, weights, data.costs, self._diff, self.lam, bound,
-            self.continuous_feature_exchange and self._has_groups, io, fo, bo, L, dist)
+            self.continuous_feature_exchange and self._has_groups, io, fo, bo, L, dist, np.zeros(1, dtype=np.int64))
         if nv == 0:
             return None
         nv = int(nv)
@@ -2677,9 +2688,10 @@ class Optimizer:
 ST_KEYS, ST_HIDX, ST_COUNT, ST_LEAF, ST_PRED, ST_LB, ST_UB, ST_SPLIT, ST_SOLVED, ST_PEND, ST_META = range(11)
 DT_F, DT_GROUP, DT_MASKS, DT_WEIGHTS, DT_COSTS, DT_COSTS_T, DT_DIFF = range(7)
 # parameters (float array): lam, uniform_w, n; flags (int array): K, W, has_groups, look_ahead,
-# similar_support, cont_exchange, d3 enabled, is_uniform
+# similar_support, cont_exchange, d3 enabled, is_uniform, stop (set by the driver's timer at the
+# time limit; the search polls it and returns, see CompiledOptimizer.run)
 PF_LAM, PF_UW, PF_N = range(3)
-PI_K, PI_W, PI_GROUPS, PI_LOOKAHEAD, PI_SIM, PI_EXCH, PI_D3, PI_UNIFORM = range(8)
+PI_K, PI_W, PI_GROUPS, PI_LOOKAHEAD, PI_SIM, PI_EXCH, PI_D3, PI_UNIFORM, PI_STOP = range(9)
 
 
 SH_KEYS, SH_COUNTS, SH_LBS, SH_VALS, SH_USED, SH_META = range(6)   # meta: [T, C, min_count]
@@ -3222,7 +3234,12 @@ def _expand_frame(st, dat, pf, pi, ws, d):
     kw = nkeys[node]
     nv, n_cand, i0, min_rejected, ran, i_d2, best_d2, lb_ge4, M, Fc = expand_kernel(
         F, features, group_of, kw, dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS], dat[DT_DIFF], lam,
-        min(budget, nub[node]), pi[PI_EXCH] == 1 and pi[PI_GROUPS] == 1, io, fo, bo, L, dist)
+        min(budget, nub[node]), pi[PI_EXCH] == 1 and pi[PI_GROUPS] == 1, io, fo, bo, L, dist, pi[PI_STOP:PI_STOP + 1])
+    if pi[PI_STOP] != 0:
+        # interrupted at the time limit: nothing of this expansion has been written to the
+        # store, so the node keeps its bounds and the search returns (meta[2] = 4)
+        meta[2] = 4
+        return True
     leaf_risk = nleaf[node]
     FF[ps, FF_LEAF] = leaf_risk
     if nv == 0:
@@ -3624,7 +3641,7 @@ def solve_iter(st, dat, pf, pi, ws, root, budget, only, shared, sh, tid):
                         d -= 1
                         continue
             FF[ps, FF_LB0] = nlb[node]
-            if meta[1] >= meta[3]:
+            if meta[1] >= meta[3] or pi[PI_STOP] != 0:
                 meta[2] = 1
                 _flush_frames(st, ws, d)
                 return
@@ -3949,7 +3966,7 @@ class CompiledOptimizer:
                     data.costs, data.costs.T.copy(), data.diff_costs.copy())
         self.pf = np.array([self.lam, uniform_w, float(data.n)])
         self.pi = np.array([data.K, data.W, 1 if has_groups else 0, 1 if look_ahead else 0, 1 if similar_support else 0,
-                            1 if continuous_feature_exchange else 0, 1, 1 if uniform else 0], dtype=np.int64)
+                            1 if continuous_feature_exchange else 0, 1, 1 if uniform else 0, 0], dtype=np.int64)
         self._alloc(int(STORE_CAPACITY if store_capacity is None else store_capacity))
         self.ws = make_workspace(data.m, data.K, data.W)
         self._no_shared = np.array([1e300])
@@ -3988,8 +4005,29 @@ class CompiledOptimizer:
         features = np.arange(data.m, dtype=np.int64)
         st = self.st
         meta = st[ST_META]
-        chunk = 500
+        # the limits are only checked between chunks, and one expansion of a large node can
+        # take seconds, so the first chunk is a single expansion and the adaptive sizing
+        # below grows it from the measured cost
+        chunk = 1
         budget = None
+        # a single expansion of a large node can itself run for seconds (the pairwise
+        # depth-2 pass is quadratic in the candidates), so a timer raises the stop flag the
+        # compiled code polls inside that pass and between expansions; the kernels release
+        # the GIL, so the timer thread runs while they do
+        self.pi[PI_STOP] = 0
+        if self.memory_limit > 0 and self._mem_bytes() > self.memory_limit:
+            # the initial store is already over the limit: stop before the first expansion
+            self.optimal = False
+            self.stop_reason = "memory"
+            self.iterations = int(meta[1])
+            self.elapsed = time.perf_counter() - self.start_time
+            self.root = root
+            return root
+        timer = None
+        if self.time_limit > 0.0:
+            timer = threading.Timer(self.time_limit, self._raise_stop)
+            timer.daemon = True
+            timer.start()
         try:
             while True:
                 meta[2] = 0
@@ -4005,11 +4043,16 @@ class CompiledOptimizer:
                 dt = time.perf_counter() - t0
                 if meta[2] == 0:
                     break
+                if meta[2] == 4 or self.pi[PI_STOP] != 0:
+                    raise TimeLimitReached("time")
                 if meta[2] == 1 and self.n_jobs > 1 and (self.force_parallel or (time.perf_counter() - self.start_time >= self.parallel_after
                                                                                and self._worth_parallel())):
                     self._run_parallel(root, budget)
                     break
                 if meta[2] == 2:
+                    # the store doubles here, which is where the memory it holds grows
+                    if self.memory_limit > 0 and self._mem_bytes() + _store_bytes(st) > self.memory_limit:
+                        raise TimeLimitReached("memory")
                     self._alloc(st[ST_KEYS].shape[0] * 2, st)
                     st = self.st
                     meta = st[ST_META]
@@ -4036,10 +4079,18 @@ class CompiledOptimizer:
         except TimeLimitReached as exc:
             self.optimal = False
             self.stop_reason = str(exc)
+        finally:
+            if timer is not None:
+                timer.cancel()
+            self.pi[PI_STOP] = 0
         self.iterations = int(meta[1])
         self.elapsed = time.perf_counter() - self.start_time
         self.root = root
         return root
+
+    def _raise_stop(self):
+        """Timer callback at the time limit: ask the compiled search to return."""
+        self.pi[PI_STOP] = 1
 
     def _mem_bytes(self) -> int:
         """Live bytes of this search: main store, the threads' stores, the shared table."""
@@ -4079,6 +4130,8 @@ class CompiledOptimizer:
             resolved = _expand_frame(st, self.dat, self.pf, self.pi, ws, 0)
         self.handoff_expand_time = time.perf_counter() - t_x
         if resolved:
+            if meta[2] == 4:
+                raise TimeLimitReached("time")
             if meta[2] == 2:
                 self._alloc(st[ST_KEYS].shape[0] * 2, st)
                 return self._run_parallel(root, budget)
@@ -4139,6 +4192,8 @@ class CompiledOptimizer:
                             continue
                         if meta_k[2] == 3:
                             raise TimeLimitReached("depth")
+                        if meta_k[2] == 4 or self.pi[PI_STOP] != 0:
+                            raise TimeLimitReached("time")
                         now = time.perf_counter()
                         if now > deadline or state["failure"]:
                             raise TimeLimitReached("time")
@@ -4347,6 +4402,8 @@ def _compiled_worker(opt, shared, lock, tasks, results, memory_limit, deadline):
                     continue
                 if meta[2] == 3:
                     raise TimeLimitReached("depth")
+                if meta[2] == 4:
+                    raise TimeLimitReached("time")
                 now = time.perf_counter()
                 if now > deadline:
                     raise TimeLimitReached("time")
@@ -4406,7 +4463,8 @@ def _compile_search():
     L = np.empty((mf, K)); dist = np.empty(K + 1)
     nv, n_cand, i0, mr, ran, i_d2, bd2, lbg, M, Fc = expand_kernel(dat[DT_F], feats, dat[DT_GROUP], st[ST_KEYS][root],
                                                                  dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS], dat[DT_DIFF],
-                                                                 0.1, 1.0, False, io, fo, bo, L, dist)
+                                                                 0.1, 1.0, False, io, fo, bo, L, dist,
+                                                                 pi[PI_STOP:PI_STOP + 1])
     leaf_stats_words(kw, dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS], dat[DT_DIFF], K)
     child_node(st, dat, pf, pi, root, 0, True, 0.5, 0.1, False, 0, buf)
     _count_words(buf)

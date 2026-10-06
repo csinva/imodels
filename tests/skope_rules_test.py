@@ -1,9 +1,11 @@
 """
 Testing for SkopeRules algorithm
 """
+import warnings
+
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal, assert_no_warnings, assert_raises, suppress_warnings, assert_warns
+from numpy.testing import assert_array_equal, assert_no_warnings, assert_raises
 from sklearn.datasets import load_iris, make_blobs
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ParameterGrid
@@ -42,7 +44,8 @@ def test_skope_rules():
         "min_samples_split": [2, 0.1],
         "n_jobs": [-1, 2]})
 
-    with suppress_warnings():
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
         for params in grid:
             SkopeRulesClassifier(random_state=rng,
                                  **params).fit(X_train, y_train, feature_names=['a', 'b']).predict(X_test)
@@ -68,8 +71,8 @@ def test_skope_rules_error():
     assert_raises(ValueError,
                   SkopeRulesClassifier(max_samples=2.0).fit, X, y)
     # explicitly setting max_samples > n_samples should result in a warning.
-    assert_warns(UserWarning,
-                 SkopeRulesClassifier(max_samples=1000).fit, X, y)
+    with pytest.warns(UserWarning):
+        SkopeRulesClassifier(max_samples=1000).fit(X, y)
     # assert_no_warnings(SkopeRulesClassifier(max_samples=np.int64(2)).fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier(max_samples='foobar').fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier(max_samples=1.5).fit, X, y)
@@ -92,8 +95,8 @@ def test_max_samples_attribute():
     assert clf.max_samples_ == X.shape[0]
 
     clf = SkopeRulesClassifier(max_samples=500)
-    assert_warns(UserWarning,
-                 clf.fit, X, y)
+    with pytest.warns(UserWarning):
+        clf.fit(X, y)
     assert clf.max_samples_ == X.shape[0]
 
     clf = SkopeRulesClassifier(max_samples=0.4).fit(X, y)

@@ -310,3 +310,7 @@ summary { cursor: pointer; }
 /* ---------- footer ---------- */
 #footer { border-top: 1px solid var(--line); color: var(--muted);
           font-size: 0.8rem; }
+
+/* the sidebar's "Our favorite methods" heading links to the blog index */
+a.post-list-head { color: inherit; text-decoration: none; }
+a.post-list-head:hover { color: var(--accent); }
