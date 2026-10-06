@@ -19,8 +19,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def __init__(self, max_depth: int = 5, class_weight=None,
                  criterion: str = 'gini'):
         '''
-        Params
-        ------
+        Parameters
+        ----------
         max_depth
             Maximum depth the list can achieve
         class_weight: dict, 'balanced' or None
@@ -38,8 +38,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def fit(self, X, y, depth: int = 0, feature_names=None, verbose=False):
         """
-        Params
-        ------
+        Parameters
+        ----------
         X: array_like
             Feature set
         y: array_like
@@ -163,23 +163,3 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X = check_array(check_predict_X(self, X))
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
-
-    def __str__(self):
-        '''Print out the list in a nice way
-        '''
-
-        s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
-        precision = 2
-        for rule in self.rules_:
-            if 'col' in rule:
-                prefix = "if" if rule['depth'] == 0 else "else if"
-                sign = '<=' if rule['flip'] else '>'
-                threshold = rule['cutoff'].round(precision)
-                condition = f"{prefix} {rule['col']} {sign} {threshold}"
-                pred_prob = (100 * rule['val_right']).round(precision)
-                num_pts = rule['num_pts_right']
-                s += f"> {condition} | {pred_prob}% pred prob ({num_pts} obs)\n"
-            else:
-                s += f"> else | {(100 * rule['val']).round(precision)}% pred prob ({rule['num_pts']} obs)\n"
-        s += '> ------------------------------\n'
-        return s

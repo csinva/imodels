@@ -68,8 +68,8 @@ class HSTree(RuleInspectionMixin, BaseEstimator):
         Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
         https://arxiv.org/abs/2202.00858
 
-        Params
-        ------
+        Parameters
+        ----------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
             Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
@@ -304,43 +304,6 @@ class HSTree(RuleInspectionMixin, BaseEstimator):
         else:
             return NotImplemented
 
-    def __str__(self):
-        # check if fitted
-        if not checks.check_is_fitted(self.estimator_):
-            s = self.__class__.__name__
-            s += "("
-            s += "est="
-            s += repr(self.estimator_)
-            s += ", "
-            s += "reg_param="
-            s += str(self.reg_param)
-            s += ")"
-            return s
-        elif not hasattr(self.estimator_, "tree_"):
-            # an ensemble: export_text only renders a single tree, so summarize
-            n_trees = len(getattr(self.estimator_, "estimators_", []))
-            s = "> ------------------------------\n"
-            s += "> Tree ensemble with Hierarchical Shrinkage\n"
-            s += "> \tPrediction is made by combining the predictions of each shrunk tree\n"
-            s += "> ------------------------------" + "\n"
-            s += f"> {type(self.estimator_).__name__} of {n_trees} trees, "
-            s += f"reg_param={self.reg_param}\n"
-            if hasattr(self, "complexity_"):
-                s += f"> {self.complexity_} total non-leaf nodes\n"
-            return s
-        else:
-            s = "> ------------------------------\n"
-            s += "> Decision Tree with Hierarchical Shrinkage\n"
-            s += "> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n"
-            s += "> ------------------------------" + "\n"
-
-            if hasattr(self, "feature_names") and self.feature_names is not None:
-                return s + export_text(
-                    self.estimator_, feature_names=self.feature_names, show_weights=True
-                )
-            else:
-                return s + export_text(self.estimator_, show_weights=True)
-
     def __repr__(self):
         # s = self.__class__.__name__
         # s += "("
@@ -508,8 +471,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
     ):
         """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used
@@ -625,8 +588,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
     ):
         """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
-         Params
-        ------
+         Parameters
+        ----------
         estimator_
             Sklearn estimator (already initialized).
             If no estimator_ is passed, sklearn decision tree is used

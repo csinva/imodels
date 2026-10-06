@@ -28,12 +28,19 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
 
     Parameters
     ----------
-        tree : Decision Tree Classifier/Regressor
-        feature_names: list of variable names
+    tree : DecisionTreeClassifier or DecisionTreeRegressor
+        A fitted scikit-learn tree.
+    feature_names : list of str
+        Names of the features.
+    prediction_values : bool, default=False
+        Whether to append each leaf's prediction to its rule.
+    round_thresholds : bool, default=True
+        Whether to round thresholds when writing the rules.
 
     Returns
     -------
-    rules : list of rules.
+    rules : list of str
+        One rule per leaf.
     """
     # XXX todo: check the case where tree is build on subset of features,
     # ie max_features != None

@@ -39,8 +39,8 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                  alpha_l=None, beta_l=None,
                  discretization_method='randomforest', random_state=0):
         '''
-        Params
-        ------
+        Parameters
+        ----------
         n_rules
             number of rules to be used in SA_patternbased and also the output of generate_rules
         supp
@@ -190,9 +190,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         index = pt_max.index(max(pt_max))
         self.rules_ = maps[index][-1][3]
         return self
-
-    def __str__(self):
-        return ' '.join(str(r) for r in self.rules_)
 
     def predict(self, X):
         check_is_fitted(self)

@@ -6,6 +6,7 @@ https://arxiv.org/abs/1706.08457. No dependency on the historical ``irf`` packag
 or private scikit-learn tree builders.
 """
 
+from imodels.util.introspection import TextMixin
 from collections import Counter
 from numbers import Integral, Real
 
@@ -31,7 +32,7 @@ def _check_integer(name, value, minimum):
         raise ValueError(f"{name} must be an integer >= {minimum}.")
 
 
-class _IRFBase(BaseEstimator):
+class _IRFBase(TextMixin, BaseEstimator):
     """Shared iterative reweighting, outer bootstrap, and RIT stability."""
 
     _task = None

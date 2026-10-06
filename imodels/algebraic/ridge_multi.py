@@ -441,17 +441,19 @@ def lowrank_ridge(X, Y, alpha, r):
     """
     Perform ridge regression with many inputs and outputs using a rank-r approximation.
 
-    Parameters:
+    Parameters
+    ----------
     X : numpy.ndarray
         Input features matrix of shape (n_samples, n_features).
     Y : numpy.ndarray
         Output targets matrix of shape (n_samples, n_outputs).
     alpha : float
-        Regularization parameter (alphaa).
+        Regularization parameter (alpha).
     r : int
         Rank for the truncated SVD.
 
-    Returns:
+    Returns
+    -------
     B : numpy.ndarray
         Coefficient matrix of shape (n_features, n_outputs).
     """

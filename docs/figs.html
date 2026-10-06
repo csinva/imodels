@@ -139,7 +139,7 @@ aria-label="View source on GitHub" title="GitHub">
 
                     <pre>
         <code>
-    from imodels import FIGSClassifier, get_clean_dataset
+    from imodels import FIGSClassifier, get_clean_dataset, viz
     from sklearn.model_selection import train_test_split
 
     # prepare data (in this a sample clinical dataset)
@@ -149,12 +149,12 @@ aria-label="View source on GitHub" title="GitHub">
 
     # fit the model
     model = FIGSClassifier(max_rules=4)  # initialize a model
-    model.fit(X_train, y_train)   # fit model
+    model.fit(X_train, y_train, feature_names=feat_names)   # fit model
     preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
     preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 
     # visualize the model
-    model.plot(feature_names=feat_names, filename='out.svg', dpi=300)
+    viz.draw(model, X_train, y_train, class_names=['no CSI', 'CSI'], simple=True).save('out.svg')
             </code>
     </pre>
 
@@ -170,8 +170,8 @@ aria-label="View source on GitHub" title="GitHub">
                     <span class="fig-anchor" id="fig2"></span>
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
-                                src="https://demos.csinva.io/figs/figs_csi_model_small.svg?sanitize=True"
-                                width="85%"></a></p>
+                                src="img/figs_csi_model_small.svg"
+                                width="75%"></a></p>
                     <p class="caption"><b>Fig 2.</b> Simple model learned by FIGS for predicting risk of cervical spinal injury.</p>
 
                     If we want a more flexible model, we can also remove the constraint on the number of rules (changing
@@ -182,7 +182,7 @@ aria-label="View source on GitHub" title="GitHub">
                     <span class="fig-anchor" id="fig3"></span>
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
-                                src="https://demos.csinva.io/figs/figs_csi_model_large.svg?sanitize=True"
+                                src="img/figs_csi_model_large.svg"
                                 width="100%"></a></p>
                     <p class="caption"><b>Fig 3.</b> Slightly larger model learned by FIGS for predicting risk of cervical spinal injury.</p>
 
@@ -255,6 +255,7 @@ aria-label="View source on GitHub" title="GitHub">
 <ul id="index">
 <li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/viz.html" title="Static and interactive figures of fitted models">imodels.viz</a><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

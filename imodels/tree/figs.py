@@ -125,8 +125,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         n_jobs: int = None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         max_rules: int
             Max total number of rules across all trees
         max_trees: int
@@ -212,8 +212,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         depth=None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         compare_nodes_with_sample_weight: Deprecated
             If this is set to true and sample_weight is passed, use sample_weight to compare nodes
             Otherwise, use sample_weight only for picking a split given a particular node
@@ -321,8 +321,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         categorical_features=None,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
@@ -638,32 +638,6 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             + self._tree_to_str_with_data(X[~left],
                                           y[~left], root.right, pprefix)
         )
-
-    def __str__(self):
-        if not hasattr(self, "trees_"):
-            s = self.__class__.__name__
-            s += "("
-            s += "max_rules="
-            s += repr(self.max_rules)
-            s += ", "
-            s += "max_trees="
-            s += repr(self.max_trees)
-            s += ", "
-            s += "max_depth="
-            s += repr(self.max_depth)
-            s += ")"
-            return s
-        else:
-            s = "> ------------------------------\n"
-            s += "> FIGS-Fast Interpretable Greedy-Tree Sums:\n"
-            s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
-            s += "> \tFor classifiers, a softmax function is then applied to the sum.\n"
-            s += "> ------------------------------\n"
-            s += "\n\t+\n".join([self._tree_to_str(t) for t in self.trees_])
-            if hasattr(self, "feature_names_") and self.feature_names_ is not None:
-                for i in range(len(self.feature_names_))[::-1]:
-                    s = s.replace(f"X_{i}", self.feature_names_[i])
-            return s
 
     def print_tree(self, X, y, feature_names=None):
         s = "------------\n" + "\n\t+\n".join(

@@ -69,7 +69,7 @@ All sklearn-compatible and easy to use. <br/>
 </p>
 <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
-<pre><code class="language-python">from imodels import get_clean_dataset, HSTreeClassifierCV # import any imodels model here
+<pre><code class="language-python">from imodels import get_clean_dataset, HSTreeClassifierCV, viz # import any imodels model here
 from sklearn.model_selection import train_test_split
 
 # prepare data (a sample clinical dataset)
@@ -82,23 +82,10 @@ model = HSTreeClassifierCV(max_leaf_nodes=4)  # initialize a tree model and spec
 model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
-print(model) # print the model
+viz.draw(model, X_train, y_train, feature_names=feature_names, class_names=[&quot;no CSI&quot;, &quot;CSI&quot;],
+         title=&quot;Cervical spine injury&quot;).save(&quot;model.svg&quot;)  # draw the model (or print(model) for text)
 </code></pre>
-<pre><code>------------------------------
-Decision Tree with Hierarchical Shrinkage
-Prediction is made by looking at the value in the appropriate leaf of the tree
-------------------------------
-|--- FocalNeuroFindings2 &lt;= 0.50
-|   |--- HighriskDiving &lt;= 0.50
-|   |   |--- Torticollis2 &lt;= 0.50
-|   |   |   |--- value: [0.10]
-|   |   |--- Torticollis2 &gt;  0.50
-|   |   |   |--- value: [0.30]
-|   |--- HighriskDiving &gt;  0.50
-|   |   |--- value: [0.68]
-|--- FocalNeuroFindings2 &gt;  0.50
-|   |--- value: [0.42]
-</code></pre>
+<p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="55%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
 <h3 id="installation">Installation</h3>
 <p>Install with <code>pip install <a title="imodels" href="#imodels">imodels</a></code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help).</p>
 <h3 id="supported-models">Supported models</h3>
@@ -260,41 +247,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </details>
 <h2 id="model-categories">Model categories</h2>
 <p>The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Rule set</th>
-<th style="text-align: center;">Rule list</th>
-<th style="text-align: center;">Rule tree</th>
-<th style="text-align: center;">Algebraic models</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_list.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_tree.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/algebraic_models.jpg"></td>
-</tr>
-</tbody>
-</table>
-<p>Different models and algorithms vary not only in their final form but also in different choices made during modeling, such as how they generate, select, and postprocess rules:</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Rule candidate generation</th>
-<th style="text-align: center;">Rule selection</th>
-<th style="text-align: center;">Rule postprocessing</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_candidates.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_overfit.jpg"></td>
-<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_pruned.jpg"></td>
-</tr>
-</tbody>
-</table>
+<p align="center"><img src="https://csinva.io/imodels/img/model_categories.png" width="100%" alt="The four forms of an interpretable model: rule set, rule list, rule tree and algebraic model, each with the regions it carves out of two features"></p>
 <details>
 <summary>Ex. RuleFit vs. SkopeRules</summary>
 RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
@@ -748,6 +701,7 @@ def __dir__():
 <ul id="index">
 <li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/viz.html" title="Static and interactive figures of fitted models">imodels.viz</a><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>

@@ -209,8 +209,8 @@ def extract_marginal_curves(clf, X, max_evals=100):
     Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
     For GAM, this returns the shape functions
 
-    Params
-    ------
+    Parameters
+    ----------
     clf : classifier
         A classifier with a predict_proba method
     X : array-like

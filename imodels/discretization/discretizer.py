@@ -25,8 +25,8 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
     """
     Discretize numeric data into bins. Base class.
 
-    Params
-    ------
+    Parameters
+    ----------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
 
@@ -290,8 +290,8 @@ class ExtraBasicDiscretizer(TransformerMixin):
     Generates meaningful column names based on bin edges.
     Wraps KBinsDiscretizer from sklearn.
 
-    Params
-    ------
+    Parameters
+    ----------
     dcols : list of strings
         The names of the columns to be discretized.
 
@@ -432,8 +432,8 @@ class BasicDiscretizer(AbstractDiscretizer):
     Discretize numeric data into bins. Provides a wrapper around
     KBinsDiscretizer from sklearn
 
-    Params
-    ------
+    Parameters
+    ----------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
 

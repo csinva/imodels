@@ -1,0 +1,17 @@
+#stage{overflow:auto;padding:8px 16px 40px 22px}
+#canvas{display:block;max-width:100%;height:auto;font-family:var(--dti-font)}
+.term{transition:opacity .2s,transform .35s ease}
+.term.rule,.panel{cursor:pointer}
+.rowbg{transition:fill-opacity .15s}
+.term.rule:hover .rowbg{fill-opacity:1!important}
+.predicting .term:not(.on){opacity:.32}
+.predicting .term.near{opacity:.7}
+.predicting .term .chip.no{opacity:.45}
+.predicting .term .chip.ok rect{stroke:var(--dti-ink);stroke-width:1.2px}
+.predicting .term.on .chip.ok rect{fill:var(--dti-hl)!important;fill-opacity:1!important}
+.predicting .term.on .chip.ok text{fill:var(--dti-card)!important}
+.predicting .term.rule.near .tag.near,.predicting .term.rule.on .tag.on{display:inline!important}
+.panel{transition:opacity .2s}
+.panel:hover>rect:first-of-type{stroke:var(--dti-axis)!important}
+.feat-mode .term:not(.feat),.feat-mode .panel:not(.feat){opacity:.25}
+.mk line,.mk circle,.mk text{pointer-events:none}

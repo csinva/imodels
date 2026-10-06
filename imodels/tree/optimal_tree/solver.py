@@ -1300,14 +1300,18 @@ class BitDataset:
 
     Parameters
     ----------
-    Xb : (n, m) bool array of binary split features.
-    y : (n,) int array of class indices in ``[0, n_classes)``.
-    n_classes : number of classes.
-    costs : optional (K, K) matrix; ``costs[i, j]`` is the cost of predicting
-        class ``i`` when the true class is ``j``.  Defaults to ``1/n`` off the
-        diagonal (unweighted misclassification rate).
-    balance : if True and ``costs`` is None, use ``1 / (K * count_j)`` so every
-        class carries the same total weight (the reference ``balance`` flag).
+    Xb : ndarray of shape (n, m), bool
+        Binary split features.
+    y : ndarray of shape (n,), int
+        Class indices in ``[0, n_classes)``.
+    n_classes : int
+        Number of classes.
+    costs : ndarray of shape (K, K), optional
+        ``costs[i, j]`` is the cost of predicting class ``i`` when the true class is ``j``.
+        Defaults to ``1/n`` off the diagonal (unweighted misclassification rate).
+    balance : bool, default=False
+        If True and ``costs`` is None, use ``1 / (K * count_j)`` so every class carries the
+        same total weight (the reference ``balance`` flag).
     """
 
     def __init__(self, Xb: np.ndarray, y: np.ndarray, n_classes: int,

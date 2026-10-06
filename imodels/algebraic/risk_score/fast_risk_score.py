@@ -14,6 +14,7 @@ https://csinva.io/imodels/fastriskscore.html for the method and the benchmarks.
 """
 
 from __future__ import annotations
+from imodels.util.introspection import TextMixin
 
 import math
 import numbers
@@ -216,7 +217,7 @@ def _levels(col):
     return col.astype(object).astype(str).to_numpy(object)
 
 
-class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
+class FastRiskScoreClassifier(TextMixin, ClassifierMixin, BaseEstimator):
     """Sparse integer risk score (binary classification).
 
     The columns of X are turned into binary features (thresholds of numeric columns, levels of
@@ -392,22 +393,3 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         return 1.0 / (1.0 + np.exp(-(self.scale_ * np.asarray(score, float) + self.intercept_)))
 
     # ----------------------------------------------------------------- display
-    def __str__(self):
-        if not hasattr(self, "coef_"):
-            return "FastRiskScoreClassifier (not fitted)"
-        if not self.points_:
-            return (f"FastRiskScoreClassifier: no feature helps; the risk of "
-                    f"class {self.classes_[1]} is {self.risk(0):.1%} for every row")
-        width = max(len(f) for f in self.points_)
-        lines = [f"FastRiskScoreClassifier: add the points of every line that applies"]
-        for name, v in sorted(self.points_.items(), key=lambda t: -t[1]):
-            lines.append(f"  {name:<{width}}  {v:+d}")
-        pos = sum(v for v in self.points_.values() if v > 0)
-        neg = sum(v for v in self.points_.values() if v < 0)
-        scores = np.arange(neg, pos + 1)
-        lines.append(f"risk of class {self.classes_[1]} for each total score:")
-        cells = [(f"{s:+d}" if s else "0", f"{self.risk(s):.1%}") for s in scores]
-        cw = max(max(len(c[0]), len(c[1])) for c in cells) + 1
-        lines.append("  score " + "".join(c[0].rjust(cw) for c in cells))
-        lines.append("  risk  " + "".join(c[1].rjust(cw) for c in cells))
-        return "\n".join(lines)

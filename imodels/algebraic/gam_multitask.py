@@ -55,8 +55,8 @@ class MultiTaskGAM(BaseEstimator):
         verbose=0,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         Note: args override ebm_kwargs if there are duplicates
         one_hot_prior: bool
             If True and multitask, the linear model will be fit with a prior that the ebm

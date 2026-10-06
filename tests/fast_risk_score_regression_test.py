@@ -37,7 +37,9 @@ def test_large_close_values_get_distinct_names():
     for (_, kind, value, name) in m.binarizer_.rules_:
         assert kind == "le" and float(name.split("<= ")[1]) == value  # applied exactly as printed
     neg = sum(v for v in m.points_.values() if v < 0)
-    assert all(name in str(m) for name in m.points_)
+    printed = str(m)
+    rules = [l.split(None, 1)[1] for l in printed.splitlines() if l.strip().startswith(("+", "-")) and " t " in f" {l} "]
+    assert len(set(rules)) == len(rules) == len(m.points_)  # every rule printed, none alike
     assert f"{neg:+d}" in str(m)  # the score table spans the real totals
 
 

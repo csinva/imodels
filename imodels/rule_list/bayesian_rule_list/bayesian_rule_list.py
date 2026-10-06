@@ -123,7 +123,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
         Returns
         -------
-        self : returns an instance of self.
+        self : BayesianRuleListClassifier
+            The fitted model.
         """
         self.seed()
 

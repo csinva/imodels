@@ -31,6 +31,7 @@ the grid resolution chosen by marginal likelihood; the first 48 are fit jointly.
 Reference implementation: https://github.com/csinva/imodels
 """
 
+from imodels.util.introspection import TextMixin
 from itertools import combinations
 
 import numpy as np
@@ -42,7 +43,7 @@ from imodels.util.arguments import check_predict_X, set_feature_names_in
 from imodels.util.progress import progress_iter
 
 
-class GPGamRegressor(RegressorMixin, BaseEstimator):
+class GPGamRegressor(TextMixin, RegressorMixin, BaseEstimator):
     """A GAM with pairwise interactions, fit as a Gaussian process.
 
     The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``. Every

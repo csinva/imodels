@@ -8,7 +8,7 @@ class LMDIPlus():
     """
     Local MDI+ (LMDI+) Explainer for tree-based models.
 
-    Parameters:
+    Parameters
     ----------
     rf_plus_model : RFPlusModel
         A trained RF+ model.
@@ -39,7 +39,7 @@ class LMDIPlus():
         If `y` is provided, the evaluation is assumed to be on the training set, and if `y` is None, 
         it assumes LFI computation is being performed on unseen test data.
 
-        Parameters:
+        Parameters
         ----------
         X : np.ndarray
             Input feature matrix of shape (n_samples, n_features).
@@ -50,7 +50,7 @@ class LMDIPlus():
         ranking : bool
             If True, converts the LFI scores to feature rankings per sample.
 
-        Returns:
+        Returns
         -------
         local_feature_importances : np.ndarray
             Matrix of shape (n_samples, n_features) containing the averaged LMDI+ scores across trees.
@@ -100,14 +100,14 @@ class LMDIPlus():
         """
         Compute per-tree LMDI+ scores for each sample in X.
 
-        Parameters:
+        Parameters
         ----------
         X : np.ndarray
             Input feature matrix of shape (n_samples, n_features).
         njobs : int
             Number of parallel jobs to use for prediction (if supported).
 
-        Returns:
+        Returns
         -------
         LFIs : np.ndarray
             Matrix of shape (n_samples, n_features, n_trees) containing the per-tree

@@ -111,8 +111,8 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
 
     def fit(self, X, y=None, feature_names=None, sample_weight=None):
         """
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
@@ -160,8 +160,8 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
 
     def _tao_iter_cart(self, X, y, tree, X_score=None, y_score=None, sample_weight=None):
         """Updates tree by applying the tao algorithm to the tree
-        Params
-        ------
+        Parameters
+        ----------
         X: array-like of shape (n_samples, n_features)
             The input samples.
         y: array-like of shape (n_samples,)

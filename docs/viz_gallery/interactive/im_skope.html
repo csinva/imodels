@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skope rules, breast cancer</title>
+<style>
+:root{--dti-page:#f6f6f3;--dti-surface:#ffffff;--dti-card:#ffffff;--dti-ink:#0b0b0b;--dti-ink2:#52514e;--dti-muted:#898781;--dti-grid:#e1e0d9;--dti-axis:#c3c2b7;--dti-ring:#e4e3dd;--dti-ribbon:#b9b8b0;--dti-hl:#0b0b0b;--dti-shadow:#1a1a1a;--dti-c0:#2a78d6;--dti-c1:#eb6834;--dti-c2:#1baf7a;--dti-c3:#eda100;--dti-c4:#e87ba4;--dti-c5:#008300;--dti-c6:#4a3aa7;--dti-c7:#e34948;--dti-c8:#7a6a58;--dti-c9:#5f7f8f;--dti-c10:#9a9a2a;--dti-c11:#8a8a8a;--dti-s0:#6da7ec;--dti-s1:#5598e7;--dti-s2:#3987e5;--dti-s3:#2a78d6;--dti-s4:#256abf;--dti-s5:#1c5cab;--dti-s6:#184f95;--dti-s7:#104281;--dti-s8:#0d366b; --dti-font:Helvetica, 'Helvetica Neue', Arial, 'Nimbus Sans', 'Liberation Sans', sans-serif; color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}}
+:root[data-theme="dark"]{--dti-page:#0d0d0d;--dti-surface:#1a1a19;--dti-card:#222220;--dti-ink:#ffffff;--dti-ink2:#c3c2b7;--dti-muted:#898781;--dti-grid:#2c2c2a;--dti-axis:#4a4a46;--dti-ring:#34342f;--dti-ribbon:#55554f;--dti-hl:#ffffff;--dti-shadow:#000000;--dti-c0:#3987e5;--dti-c1:#d95926;--dti-c2:#199e70;--dti-c3:#c98500;--dti-c4:#d55181;--dti-c5:#008300;--dti-c6:#9085e9;--dti-c7:#e66767;--dti-c8:#a8957f;--dti-c9:#86a6b6;--dti-c10:#b8b84a;--dti-c11:#a0a0a0;--dti-s0:#1c5cab;--dti-s1:#256abf;--dti-s2:#2a78d6;--dti-s3:#3987e5;--dti-s4:#5598e7;--dti-s5:#6da7ec;--dti-s6:#86b6ef;--dti-s7:#9ec5f4;--dti-s8:#b7d3f6; color-scheme:dark}
+/* Shared page shell for every imodels.viz interactive page (trees, rule lists, rule sets, scorecards, GAMs). */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--dti-surface);color:var(--dti-ink);font:13px/1.4 var(--dti-font);-webkit-font-smoothing:antialiased}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr) auto auto;height:100%}
+header{grid-column:1/4;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px;padding:18px 22px 10px}
+.ttl{flex:1 1 320px;min-width:0}
+h1{font-size:18px;font-weight:650;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--dti-ink2);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;color:var(--dti-ink2);font-size:11.5px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .grad{width:140px;height:8px;border-radius:4px;display:inline-block;margin:0 6px;vertical-align:0}
+.legend .lnote{color:var(--dti-muted)}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tools .sep{width:1px;height:20px;background:var(--dti-ring);margin:0 4px}
+button,.ctl{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:8px;height:30px;padding:0 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--dti-axis)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--dti-ink);outline-offset:1px}
+button.on{background:var(--dti-ink);color:var(--dti-card);border-color:var(--dti-ink)}
+button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ctl{cursor:default;gap:8px;padding-right:8px}
+.ctl input[type=range]{width:84px;accent-color:var(--dti-ink)}
+.ctl b{min-width:14px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ctl select{font:inherit;font-size:12px;color:var(--dti-ink);background:transparent;border:0;cursor:pointer}
+#stage{position:relative;min-width:0;min-height:0}
+.hint-bar{position:absolute;left:14px;bottom:12px;font-size:11px;color:var(--dti-muted);pointer-events:none}
+.hint-bar kbd{font:inherit;border:1px solid var(--dti-ring);border-bottom-width:2px;border-radius:4px;padding:0 4px;margin:0 2px;background:var(--dti-card);color:var(--dti-ink2)}
+
+/* features column */
+#hudcol{min-height:0;display:flex;padding:0 12px 12px 0}
+.hud{width:288px;max-height:100%;align-self:flex-start;display:flex;flex-direction:column;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.08);overflow:hidden;font-size:12px}
+.hud.min{width:auto}
+.hud-h{display:flex;align-items:center;gap:8px;padding:9px 8px 8px 12px;border-bottom:1px solid var(--dti-ring)}
+.hud-h b{font-weight:650;font-size:12.5px}
+.hud-h .tt-m{flex:1;font-size:11px}
+.hud-h button{height:24px;width:24px;padding:0;justify-content:center;border:0;background:transparent}
+.hud-h button svg{transition:transform .2s}
+.hud.min .hud-body,.hud.min .hud-note,.hud.min .hud-f,.hud.min .hud-h .tt-m{display:none}
+.hud.min .hud-h{border-bottom:0}
+.hud.min .hud-h button svg{transform:rotate(90deg)}
+.hud-body{overflow-y:auto;padding:4px 0;min-height:0}
+.frow{padding:7px 12px 7px 10px;cursor:pointer;border-left:2px solid transparent}
+.frow:hover,.frow.hot{background:var(--dti-page)}
+.frow.pin{border-left-color:var(--dti-ink);background:var(--dti-page)}
+.frow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.frow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.frow .im{font-variant-numeric:tabular-nums;color:var(--dti-ink2);font-size:11.5px}
+.frow .ib{height:3px;border-radius:2px;background:var(--dti-grid);margin:4px 0 6px}
+.frow .ib span{display:block;height:100%;border-radius:2px;background:var(--dti-ink)}
+.frow svg{display:block;width:100%;height:36px}
+.frow .xv{display:none}
+.predicting .frow .xv{display:inline}
+.frow .meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--dti-muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.hud-note{padding:8px 12px 2px;border-top:1px solid var(--dti-ring);font-size:10.5px;line-height:1.45;color:var(--dti-ink2)}
+.hud-note b{font-weight:600;color:var(--dti-ink)}
+.hud-note code{font-size:10px}
+.hud-f{padding:4px 12px 8px;font-size:10.5px;color:var(--dti-muted)}
+
+/* tooltip */
+#tip{position:fixed;pointer-events:none;max-width:340px;background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;z-index:9}
+#tip.show{opacity:1;transform:none}
+.tt-h{font-size:12.5px;margin-bottom:6px}
+.tt-k{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dti-muted);margin-right:4px}
+.tt-r{margin:0 0 8px;padding:0;list-style:none;color:var(--dti-ink2);font-size:11.5px}
+.tt-r li{padding:1px 0 1px 12px;position:relative}
+.tt-r li:before{content:"";position:absolute;left:2px;top:8px;width:4px;height:4px;border-radius:2px;background:var(--dti-axis)}
+.tt-m{color:var(--dti-muted)}
+.tt-act{margin-top:6px;font-size:11px;color:var(--dti-muted)}
+#tip table,#panel table{border-collapse:collapse;width:100%;font-size:11.5px}
+#tip td,#panel td{padding:2px 0;color:var(--dti-ink2)}
+#tip td:first-child{padding-right:12px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--dti-ink);padding-left:12px}
+td i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+td.bar{width:70px;padding-left:10px}
+td.bar span{display:block;height:5px;border-radius:3px}
+tr.sep td{height:6px}
+
+/* predict panel */
+#panel{width:0;overflow:hidden;border-left:1px solid var(--dti-ring);background:var(--dti-page);transition:width .25s ease}
+#panel.open{width:320px}
+#panel .in{width:320px;height:100%;overflow-y:auto;padding:16px 18px 24px}
+#panel h2{font-size:13px;margin:0 0 2px;font-weight:650}
+#panel h3{font-size:10px;margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--dti-muted)}
+#panel .hint{font-size:11.5px;color:var(--dti-muted);margin-bottom:12px}
+.res{background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.res .big{font-size:20px;font-weight:650;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.res .big i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.res .meta{font-size:11.5px;color:var(--dti-ink2);margin-top:2px}
+.res .truth{font-size:11px;color:var(--dti-muted);margin-top:2px}
+.res .truth b{color:var(--dti-ink2)}
+.probs{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:8px 0 2px;background:var(--dti-grid)}
+.probs span{display:block;height:100%}
+.plabs{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:10.5px;color:var(--dti-ink2);font-variant-numeric:tabular-nums}
+.plabs i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.wf{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;font-size:11.5px;align-items:center}
+.wf .lab{color:var(--dti-ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.wf .bar{grid-column:1/3;height:4px;border-radius:2px;margin-bottom:4px}
+.wf .tot{border-top:1px solid var(--dti-ring);padding-top:4px;color:var(--dti-ink);font-weight:600}
+.path{margin:8px 0 0}
+.wi{display:flex;flex-direction:column;gap:6px}
+.wi button{height:auto;padding:7px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;align-items:center;width:100%}
+.wi .what{font-size:11.5px;color:var(--dti-ink);overflow-wrap:anywhere}
+.wi .what b{font-weight:600}
+.wi .to{font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.wi .to i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.wi .how{grid-column:1/3;font-size:10.5px;color:var(--dti-muted)}
+.wi .none{font-size:11.5px;color:var(--dti-muted)}
+.fld{margin-bottom:10px}
+.fld label{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--dti-ink2);margin-bottom:3px;gap:8px}
+.fld label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld input[type=number]{width:84px;font:inherit;font-size:12px;text-align:right;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.fld input[type=range]{width:100%;accent-color:var(--dti-ink);margin:0}
+.fld select{font:inherit;font-size:12px;color:var(--dti-ink);background:var(--dti-card);border:1px solid var(--dti-ring);border-radius:6px;padding:2px 6px;max-width:150px}
+.fld .ctl2{display:flex;align-items:center;gap:8px;overflow:visible}
+.fld .miss{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--dti-muted);margin:0;cursor:pointer}
+.fld .miss input{margin:0;accent-color:var(--dti-ink)}
+.fld.hot label span{color:var(--dti-ink);font-weight:600}
+.fld.changed input[type=number]{border-color:var(--dti-ink)}
+.row{display:flex;gap:6px;margin-bottom:6px}
+.row button{flex:1;justify-content:center}
+@media (max-width:900px){#hudcol{display:none}}
+@media (max-width:700px){#app{grid-template-columns:minmax(0,1fr)}#panel.open{width:100%;position:absolute;inset:auto 0 0 0;height:55%;border-left:0;border-top:1px solid var(--dti-ring);z-index:6}#panel .in{width:100%}.hint-bar{display:none}}
+
+#stage{overflow:auto;padding:8px 16px 40px 22px}
+#canvas{display:block;max-width:100%;height:auto;font-family:var(--dti-font)}
+.term{transition:opacity .2s,transform .35s ease}
+.term.rule,.panel{cursor:pointer}
+.rowbg{transition:fill-opacity .15s}
+.term.rule:hover .rowbg{fill-opacity:1!important}
+.predicting .term:not(.on){opacity:.32}
+.predicting .term.near{opacity:.7}
+.predicting .term .chip.no{opacity:.45}
+.predicting .term .chip.ok rect{stroke:var(--dti-ink);stroke-width:1.2px}
+.predicting .term.on .chip.ok rect{fill:var(--dti-hl)!important;fill-opacity:1!important}
+.predicting .term.on .chip.ok text{fill:var(--dti-card)!important}
+.predicting .term.rule.near .tag.near,.predicting .term.rule.on .tag.on{display:inline!important}
+.panel{transition:opacity .2s}
+.panel:hover>rect:first-of-type{stroke:var(--dti-axis)!important}
+.feat-mode .term:not(.feat),.feat-mode .panel:not(.feat){opacity:.25}
+.mk line,.mk circle,.mk text{pointer-events:none}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="ttl"><h1>Skope rules, breast cancer</h1><div class="sub">SkopeRulesClassifier  ·  9 rules  ·  569 training samples</div><div class="legend" id="legend"></div></div>
+    <div class="tools">
+      
+      <label class="ctl" id="sortctl" title="Order the rows">Sort <select id="sort" aria-label="Sort rows">
+        <option value="effect">by effect</option><option value="coverage">by coverage</option><option value="model">model order</option></select></label>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-theme" title="Switch light / dark theme" aria-label="Switch light or dark theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg></button>
+      <button id="b-svg" title="Download the current view as SVG"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13.5h10"/></svg>SVG</button>
+      <button id="b-pred" title="Try a sample: see the prediction, how it is reached and what would change it"><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><path d="M4 5.6V8a2 2 0 0 0 2 2h4a2 2 0 0 1 2 2"/></svg>Predict</button>
+    </div>
+  </header>
+  <div id="stage"><svg id="canvas" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 952 402" width="952" font-family="Helvetica, &#x27;Helvetica Neue&#x27;, Arial, &#x27;Nimbus Sans&#x27;, &#x27;Liberation Sans&#x27;, sans-serif"><defs><filter id="dti58-sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="1" stdDeviation="1" style="flood-color:var(--dti-shadow);flood-opacity:0.06"/><feDropShadow dx="0" dy="6" stdDeviation="8" style="flood-color:var(--dti-shadow);flood-opacity:0.07"/></filter></defs><rect x="0" y="0" width="964" height="394" rx="12" filter="url(#dti58-sh)" style="fill:var(--dti-card);stroke:var(--dti-ring);stroke-width:1"/><text x="48" y="28" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">RULE</text><text x="584" y="28" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">EFFECT ON P(BENIGN)</text><text x="714" y="28" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">COVERAGE</text><text x="824" y="28" style="font-size:10px;font-weight:600;fill:var(--dti-muted);letter-spacing:.08em">CLASSES COVERED</text><line x1="0" x2="964" y1="42" y2="42" style="stroke:var(--dti-grid);stroke-width:1"/><g class="chip" data-c="0"><rect x="48" y="52" width="115.8" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="105.9" y="67" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">baseline (intercept)</text></g><text x="584" y="67" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">0</text><g class="term rule" data-t="0" data-rank="1" data-y="84" data-h="30" transform="translate(0,84)" style="transform:translate(0px,84px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">1</text><g class="chip" data-c="0"><rect x="48" y="10" width="129.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="112.9" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst perimeter ≤ 113</text></g><text x="192.5" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="207.2" y="10" width="167.4" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="290.9" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst concave points ≤ 0.135</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="66" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="656" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.139</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="35.3" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">59%</text><clipPath id="dti58-m0"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m0)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="2.1" height="6" style="fill:var(--dti-c0)"/><rect x="828.1" y="18" width="85.9" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="1" data-rank="2" data-y="114" data-h="30" transform="translate(0,114)" style="transform:translate(0px,114px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">2</text><g class="chip" data-c="0"><rect x="48" y="10" width="115.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="105.8" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst radius ≤ 16.8</text></g><text x="178.4" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="193.2" y="10" width="175.1" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="280.7" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean concave points ≤ 0.0492</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="63.2" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="653.2" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.134</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="34.1" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">57%</text><clipPath id="dti58-m1"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m1)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="1.4" height="6" style="fill:var(--dti-c0)"/><rect x="827.4" y="18" width="86.6" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="4" data-rank="3" data-y="144" data-h="30" transform="translate(0,144)" style="transform:translate(0px,144px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">3</text><g class="chip" data-c="0"><rect x="48" y="10" width="129.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="112.9" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst perimeter ≤ 105</text></g><text x="192.5" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="207.2" y="10" width="152.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="283.6" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst smoothness ≤ 0.178</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="62.7" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="652.7" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.132</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="34.7" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">58%</text><clipPath id="dti58-m4"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m4)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="2.1" height="6" style="fill:var(--dti-c0)"/><rect x="828.1" y="18" width="85.9" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="3" data-rank="4" data-y="174" data-h="30" transform="translate(0,174)" style="transform:translate(0px,174px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">4</text><g class="chip" data-c="0"><rect x="48" y="10" width="104.2" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="100.1" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst area ≤ 885</text></g><text x="166.9" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="181.7" y="10" width="138.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="251" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst concavity ≤ 0.369</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="63" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="653" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.133</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="36.1" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">60%</text><clipPath id="dti58-m3"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m3)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="3.1" height="6" style="fill:var(--dti-c0)"/><rect x="829.1" y="18" width="84.9" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="2" data-rank="5" data-y="204" data-h="30" transform="translate(0,204)" style="transform:translate(0px,204px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">5</text><g class="chip" data-c="0"><rect x="48" y="10" width="104.2" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="100.1" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst area ≤ 953</text></g><text x="166.9" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="181.7" y="10" width="167.4" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="265.4" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst concave points ≤ 0.136</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="61.9" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="651.9" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.131</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="36.3" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">60%</text><clipPath id="dti58-m2"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m2)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="2.6" height="6" style="fill:var(--dti-c0)"/><rect x="828.6" y="18" width="85.4" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="5" data-rank="6" data-y="234" data-h="30" transform="translate(0,234)" style="transform:translate(0px,234px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">6</text><g class="chip" data-c="0"><rect x="48" y="10" width="129.5" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="112.8" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst perimeter &gt; 105</text></g><text x="192.3" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="207" y="10" width="175.1" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="294.6" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean concave points ≤ 0.0488</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="52.8" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="642.8" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.112</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="3.9" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">7%</text><clipPath id="dti58-m5"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m5)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="30.9" height="6" style="fill:var(--dti-c0)"/><rect x="856.9" y="18" width="57.1" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="6" data-rank="7" data-y="264" data-h="30" transform="translate(0,264)" style="transform:translate(0px,264px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">7</text><g class="chip" data-c="0"><rect x="48" y="10" width="115.7" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="105.8" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst radius ≤ 16.8</text></g><text x="178.4" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="193.2" y="10" width="174.9" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="280.6" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean concave points &gt; 0.0492</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="37.7" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="627.7" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.0797</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="5.9" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">10%</text><clipPath id="dti58-m6"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m6)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="44" height="6" style="fill:var(--dti-c0)"/><rect x="870" y="18" width="44" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="7" data-rank="8" data-y="294" data-h="30" transform="translate(0,294)" style="transform:translate(0px,294px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">8</text><g class="chip" data-c="0"><rect x="48" y="10" width="104.2" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="100.1" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst area ≤ 811</text></g><text x="166.9" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="181.7" y="10" width="167.3" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="265.3" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst concave points &gt; 0.136</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="33" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="623" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.0697</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="3.9" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">7%</text><clipPath id="dti58-m7"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m7)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="47.6" height="6" style="fill:var(--dti-c0)"/><rect x="873.6" y="18" width="40.4" height="6" style="fill:var(--dti-c1)"/></g></g><g class="term rule" data-t="8" data-rank="9" data-y="324" data-h="30" transform="translate(0,324)" style="transform:translate(0px,324px)"><rect class="rowbg" x="0" y="0" width="964" height="30" style="fill:var(--dti-page);fill-opacity:0"/><line x1="0" x2="964" y1="0" y2="0" style="stroke:var(--dti-grid);stroke-width:1"/><circle class="tag on" cx="16" cy="21" r="4" style="fill:var(--dti-hl);display:none"/><circle class="tag near" cx="16" cy="21" r="3.5" style="fill:none;stroke:var(--dti-hl);stroke-width:1.5;display:none"/><text x="38" y="25" text-anchor="end" style="font-size:11px;font-weight:500;fill:var(--dti-muted);font-variant-numeric:tabular-nums">9</text><g class="chip" data-c="0"><rect x="48" y="10" width="129.5" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="112.8" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">worst perimeter &gt; 113</text></g><text x="192.3" y="25" text-anchor="middle" style="font-size:10.5px;font-weight:400;fill:var(--dti-muted)">and</text><g class="chip" data-c="1"><rect x="207" y="10" width="175.1" height="22" rx="11" style="fill:var(--dti-grid);fill-opacity:0.7"/><text x="294.6" y="25" text-anchor="middle" style="font-size:11.5px;font-weight:500;fill:var(--dti-ink);font-variant-numeric:tabular-nums">mean concave points ≤ 0.0501</text></g><line x1="584" x2="584" y1="4" y2="26" style="stroke:var(--dti-axis);stroke-width:1"/><rect x="584" y="15" width="33" height="12" rx="3" style="fill:var(--dti-c1)"/><text x="623" y="25" style="font-size:11px;font-weight:600;fill:var(--dti-ink);font-variant-numeric:tabular-nums">+0.0697</text><rect x="714" y="18" width="60" height="6" rx="3" style="fill:var(--dti-grid)"/><rect x="714" y="18" width="2.1" height="6" rx="3" style="fill:var(--dti-ink2)"/><text x="782" y="25" style="font-size:11px;font-weight:400;fill:var(--dti-ink2);font-variant-numeric:tabular-nums">4%</text><clipPath id="dti58-m8"><rect x="824" y="18" width="90" height="6" rx="3"/></clipPath><g clip-path="url(#dti58-m8)"><rect x="824" y="18" width="90" height="6" style="fill:var(--dti-grid)"/><rect x="824" y="18" width="48.4" height="6" style="fill:var(--dti-c0)"/><rect x="874.4" y="18" width="39.6" height="6" style="fill:var(--dti-c1)"/></g></g><line x1="0" x2="964" y1="354" y2="354" style="stroke:var(--dti-grid);stroke-width:1"/><text x="48" y="376" style="font-size:11.5px;font-weight:400;fill:var(--dti-ink2)">P(benign) = precision-weighted share of the rules that hold (each rule&#x27;s weight is its out-of-bag precision, normalized to sum to 1).</text></svg></div>
+  <div id="hudcol"><div id="hud" class="hud" aria-label="Features">
+    <div class="hud-h"><b>Features</b><span class="tt-m" id="hud-sub"></span>
+      <button id="hud-x" title="Show or hide the features panel" aria-label="Show or hide the features panel"><svg viewBox="0 0 16 16"><path d="M4 6.5 8 10l4-3.5"/></svg></button></div>
+    <div class="hud-body" id="hud-body"></div>
+    <div class="hud-note" id="hud-note"></div>
+    <div class="hud-f" id="hud-f"></div>
+  </div></div>
+  <aside id="panel" aria-label="Predict"><div class="in">
+    <h2>Try a sample</h2>
+    <div class="hint" id="p-hint"></div>
+    <div class="res" id="res"></div>
+    <div class="row"><button id="b-rand">Random training row</button><button id="b-reset">Reset</button></div>
+    <h3>What would change the prediction</h3>
+    <div class="wi" id="whatif"></div>
+    <h3>Feature values</h3>
+    <div id="fields"></div>
+  </div></aside>
+</div>
+<div id="tip" role="tooltip"></div>
+<script type="application/json" id="dti-data">{"family":"ruleset","task":"classification","terms":[{"k":"rule","w":0.13942167749447257,"c":[[22,"<=",113.15],[27,"<=",0.13505]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[22,27],"txt":"worst perimeter \u2264 113 and worst concave points \u2264 0.135","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst perimeter \u2264 113 and worst concave points \u2264 0.135<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.139 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>58.9% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>8 (2%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>327 (98%)<\/td><\/tr><\/table>","sup":0.5887521968365553},{"k":"rule","w":0.13361244093220287,"c":[[20,"<=",16.795],[7,"<=",0.04923]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[20,7],"txt":"worst radius \u2264 16.8 and mean concave points \u2264 0.0492","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst radius \u2264 16.8 and mean concave points \u2264 0.0492<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.134 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>56.8% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>5 (2%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>318 (98%)<\/td><\/tr><\/table>","sup":0.5676625659050967},{"k":"rule","w":0.13070782265106803,"c":[[23,"<=",952.89999],[27,"<=",0.13595]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[23,27],"txt":"worst area \u2264 953 and worst concave points \u2264 0.136","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst area \u2264 953 and worst concave points \u2264 0.136<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.131 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>60.5% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>10 (3%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>334 (97%)<\/td><\/tr><\/table>","sup":0.6045694200351494},{"k":"rule","w":0.13317891581561558,"c":[[23,"<=",884.54999],[26,"<=",0.3695]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[23,26],"txt":"worst area \u2264 885 and worst concavity \u2264 0.369","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst area \u2264 885 and worst concavity \u2264 0.369<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.133 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>60.1% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>12 (4%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>330 (96%)<\/td><\/tr><\/table>","sup":0.6010544815465729},{"k":"rule","w":0.13245059361974892,"c":[[22,"<=",105.15],[24,"<=",0.17825]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[22,24],"txt":"worst perimeter \u2264 105 and worst smoothness \u2264 0.178","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst perimeter \u2264 105 and worst smoothness \u2264 0.178<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.132 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>57.8% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>8 (2%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>321 (98%)<\/td><\/tr><\/table>","sup":0.5782073813708261},{"k":"rule","w":0.11153734199557806,"c":[[22,">",105.15],[7,"<=",0.048785]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[22,7],"txt":"worst perimeter > 105 and mean concave points \u2264 0.0488","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst perimeter &gt; 105 and mean concave points \u2264 0.0488<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.112 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>6.5% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>13 (35%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>24 (65%)<\/td><\/tr><\/table>","sup":0.06502636203866433},{"k":"rule","w":0.07966952999684146,"c":[[20,"<=",16.795],[7,">",0.04923]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[20,7],"txt":"worst radius \u2264 16.8 and mean concave points > 0.0492","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst radius \u2264 16.8 and mean concave points &gt; 0.0492<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.0797 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>9.8% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>28 (50%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>28 (50%)<\/td><\/tr><\/table>","sup":0.0984182776801406},{"k":"rule","w":0.06971083874723628,"c":[[23,"<=",810.54999],[27,">",0.13595]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[23,27],"txt":"worst area \u2264 811 and worst concave points > 0.136","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst area \u2264 811 and worst concave points &gt; 0.136<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.0697 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>6.5% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>20 (54%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>17 (46%)<\/td><\/tr><\/table>","sup":0.06502636203866433},{"k":"rule","w":0.06971083874723628,"c":[[22,">",113.15],[7,"<=",0.050085]],"f":-1,"ctr":0.0,"e":null,"vals":null,"g":null,"clip":null,"tied":null,"fs":[22,7],"txt":"worst perimeter > 113 and mean concave points \u2264 0.0501","tip":"<div class='tt-h'><span class='tt-k'>rule<\/span> <b>worst perimeter &gt; 113 and mean concave points \u2264 0.0501<\/b><\/div><table><tr><td>adds<\/td><td class='num' colspan=3>+0.0697 to the P(benign) when it holds<\/td><\/tr><tr><td>coverage<\/td><td class='num' colspan=3>3.5% of samples<\/td><\/tr><tr><td>malignant<\/td><td class='num' colspan=3>11 (55%)<\/td><\/tr><tr><td>benign<\/td><td class='num' colspan=3>9 (45%)<\/td><\/tr><\/table>","sup":0.0351493848857645}],"intercept":0.0,"link":"clip","threshold":0.0,"linkScale":1.0,"linkOffset":0.0,"feats":[{"i":22,"name":"worst perimeter","imp":0.21232098808246339,"lo":50.41,"hi":251.2,"v":97.66,"step":1.0,"kind":"continuous","levels":null,"missing":false,"nsplit":4,"thr":[105.15,105.15,113.15,113.15],"hlo":50.41,"hhi":251.2,"hist":[[0,5],[0,13],[0,36],[0,39],[1,77],[4,74],[3,57],[15,31],[19,20],[18,4],[25,1],[18,0],[18,0],[16,0],[18,0],[17,0],[12,0],[7,0],[5,0],[3,0],[3,0],[4,0],[3,0],[1,0],[1,0],[0,0],[0,0],[1,0]],"ends":["50.4","251"]},{"i":27,"name":"worst concave points","imp":0.18230016081436534,"lo":0.0,"hi":0.291,"v":0.09993,"step":0.0015,"kind":"continuous","levels":null,"missing":false,"nsplit":3,"thr":[0.13505,0.13595,0.13595],"hlo":0.0,"hhi":0.291,"hist":[[0,15],[0,8],[1,20],[0,21],[0,28],[0,39],[2,41],[1,49],[4,37],[1,29],[7,24],[7,12],[5,12],[10,13],[22,4],[18,3],[16,2],[27,0],[12,0],[20,0],[16,0],[12,0],[4,0],[8,0],[8,0],[6,0],[2,0],[3,0]],"ends":["0","0.291"]},{"i":23,"name":"worst area","imp":0.17817368840216452,"lo":185.2,"hi":4254.0,"v":686.5,"step":20.0,"kind":"continuous","levels":null,"missing":false,"nsplit":3,"thr":[810.54999,884.54999,952.89999],"hlo":185.2,"hhi":4254.0,"hist":[[0,27],[0,87],[5,121],[14,82],[25,33],[25,6],[14,0],[30,1],[16,0],[17,0],[21,0],[9,0],[13,0],[4,0],[3,0],[5,0],[3,0],[1,0],[2,0],[0,0],[3,0],[0,0],[1,0],[0,0],[0,0],[0,0],[0,0],[1,0]],"ends":["185","4,254"]},{"i":7,"name":"mean concave points","imp":0.15862948534566632,"lo":0.0,"hi":0.2012,"v":0.0335,"step":0.001,"kind":"continuous","levels":null,"missing":false,"nsplit":4,"thr":[0.048785,0.04923,0.04923,0.050085],"hlo":0.0,"hhi":0.2012,"hist":[[0,36],[0,50],[1,70],[5,79],[7,48],[1,25],[5,19],[18,12],[18,7],[16,7],[13,3],[21,1],[30,0],[20,0],[10,0],[9,0],[4,0],[10,0],[2,0],[4,0],[7,0],[2,0],[3,0],[1,0],[0,0],[2,0],[2,0],[1,0]],"ends":["0","0.201"]},{"i":20,"name":"worst radius","imp":0.1095053235153722,"lo":7.93,"hi":36.04,"v":14.97,"step":0.14,"kind":"continuous","levels":null,"missing":false,"nsplit":2,"thr":[16.795,16.795],"hlo":7.93,"hhi":36.04,"hist":[[0,2],[0,14],[0,30],[0,37],[1,53],[3,87],[2,54],[15,42],[16,27],[22,8],[13,2],[19,1],[22,0],[13,0],[18,0],[17,0],[14,0],[13,0],[6,0],[3,0],[4,0],[3,0],[4,0],[0,0],[1,0],[2,0],[0,0],[1,0]],"ends":["7.93","36"]},{"i":24,"name":"worst smoothness","imp":0.07965385132608126,"lo":0.07117,"hi":0.2226,"v":0.1313,"step":0.00076,"kind":"continuous","levels":null,"missing":false,"nsplit":1,"thr":[0.17825],"hlo":0.07117,"hhi":0.2226,"hist":[[0,1],[0,1],[0,3],[1,8],[1,18],[2,25],[4,25],[9,35],[8,22],[16,40],[13,44],[12,39],[29,26],[24,28],[25,12],[19,12],[8,6],[14,3],[7,4],[7,2],[2,0],[7,1],[1,1],[0,1],[0,0],[1,0],[0,0],[2,0]],"ends":["0.0712","0.223"]},{"i":26,"name":"worst concavity","imp":0.07941650251388714,"lo":0.0,"hi":1.252,"v":0.2267,"step":0.0063,"kind":"continuous","levels":null,"missing":false,"nsplit":1,"thr":[0.3695],"hlo":0.0,"hhi":1.252,"hist":[[1,55],[1,54],[1,53],[2,63],[5,44],[18,31],[15,18],[25,16],[37,8],[17,2],[14,5],[18,0],[12,1],[10,1],[9,1],[13,1],[3,1],[2,1],[3,1],[0,0],[3,0],[1,0],[0,0],[0,0],[1,0],[0,0],[1,0],[0,1]],"ends":["0","1.25"]}],"samples":[{"x":{"22":123.4,"27":0.1609,"23":1138.0,"7":0.05259,"20":19.07,"24":0.1464,"26":0.2914},"y":"malignant"},{"x":{"22":152.9,"27":0.1956,"23":1623.0,"7":0.08271,"20":24.56,"24":0.1249,"26":0.5755},"y":"malignant"},{"x":{"22":105.9,"27":0.1105,"23":733.5,"7":0.03736,"20":15.48,"24":0.1026,"26":0.3662},"y":"benign"},{"x":{"22":107.3,"27":0.2258,"23":740.4,"7":0.05439,"20":15.53,"24":0.161,"26":0.503},"y":"malignant"},{"x":{"22":59.9,"27":0.04419,"23":274.9,"7":0.007799,"20":9.507,"24":0.1733,"26":0.1168},"y":"benign"},{"x":{"22":122.4,"27":0.2701,"23":896.9,"7":0.08783,"20":17.62,"24":0.1525,"26":0.5539},"y":"malignant"},{"x":{"22":158.8,"27":0.186,"23":1956.0,"7":0.07017,"20":24.99,"24":0.1238,"26":0.2416},"y":"malignant"},{"x":{"22":103.4,"27":0.1741,"23":741.6,"7":0.08089,"20":15.47,"24":0.1791,"26":0.5355},"y":"malignant"},{"x":{"22":62.56,"27":0.04786,"23":284.4,"7":0.02872,"20":9.733,"24":0.1207,"26":0.1434},"y":"benign"},{"x":{"22":97.58,"27":0.07174,"23":729.8,"7":0.02443,"20":15.35,"24":0.1216,"26":0.1049},"y":"benign"},{"x":{"22":86.26,"27":0.06042,"23":509.6,"7":0.03003,"20":13.15,"24":0.1424,"26":0.0942},"y":"benign"},{"x":{"22":158.8,"27":0.1923,"23":1696.0,"7":0.128,"20":23.68,"24":0.1347,"26":0.4932},"y":"malignant"},{"x":{"22":80.88,"27":0.09608,"23":491.8,"7":0.02929,"20":12.65,"24":0.1389,"26":0.1804},"y":"benign"},{"x":{"22":115.9,"27":0.1129,"23":947.9,"7":0.04528,"20":17.71,"24":0.1206,"26":0.231},"y":"benign"},{"x":{"22":108.1,"27":0.09594,"23":830.5,"7":0.02925,"20":16.3,"24":0.1089,"26":0.3779},"y":"benign"},{"x":{"22":133.3,"27":0.1535,"23":1292.0,"7":0.06254,"20":20.38,"24":0.1263,"26":0.429},"y":"malignant"},{"x":{"22":141.3,"27":0.1841,"23":1298.0,"7":0.1469,"20":20.33,"24":0.1392,"26":0.2432},"y":"malignant"},{"x":{"22":119.1,"27":0.1785,"23":959.5,"7":0.08653,"20":17.67,"24":0.164,"26":0.6922},"y":"malignant"},{"x":{"22":98.91,"27":0.05185,"23":739.1,"7":0.01238,"20":15.5,"24":0.105,"26":0.106},"y":"benign"},{"x":{"22":105.8,"27":0.0753,"23":819.7,"7":0.01374,"20":16.22,"24":0.09445,"26":0.1565},"y":"benign"},{"x":{"22":92.12,"27":0.1017,"23":595.6,"7":0.0339,"20":13.9,"24":0.09926,"26":0.3344},"y":"benign"},{"x":{"22":98.84,"27":0.09678,"23":708.8,"7":0.02456,"20":15.14,"24":0.1276,"26":0.1786},"y":"benign"},{"x":{"22":83.85,"27":0.04052,"23":543.4,"7":0.01108,"20":13.2,"24":0.1037,"26":0.06243},"y":"benign"},{"x":{"22":89.71,"27":0.0866,"23":611.1,"7":0.02272,"20":14.11,"24":0.1176,"26":0.1703},"y":"benign"},{"x":{"22":68.73,"27":0.0377,"23":359.4,"7":0.01257,"20":10.85,"24":0.1526,"26":0.06141},"y":"benign"},{"x":{"22":144.9,"27":0.1564,"23":1417.0,"7":0.08886,"20":21.65,"24":0.1463,"26":0.3458},"y":"malignant"},{"x":{"22":63.34,"27":0.03846,"23":270.0,"7":0.02308,"20":9.414,"24":0.1179,"26":0.1544},"y":"benign"},{"x":{"22":102.5,"27":0.08219,"23":764.0,"7":0.04408,"20":15.75,"24":0.1081,"26":0.3064},"y":"benign"},{"x":{"22":133.5,"27":0.2543,"23":1189.0,"7":0.109,"20":19.59,"24":0.1703,"26":0.5018},"y":"malignant"},{"x":{"22":110.1,"27":0.06575,"23":931.4,"7":0.02739,"20":17.26,"24":0.1148,"26":0.1547},"y":"malignant"},{"x":{"22":95.1,"27":0.1045,"23":687.6,"7":0.0287,"20":14.9,"24":0.1282,"26":0.1876},"y":"benign"},{"x":{"22":84.58,"27":0.07431,"23":547.8,"7":0.0177,"20":13.34,"24":0.1123,"26":0.1145},"y":"benign"},{"x":{"22":170.3,"27":0.182,"23":2009.0,"7":0.08691,"20":25.73,"24":0.1353,"26":0.3617},"y":"malignant"},{"x":{"22":88.54,"27":0.06343,"23":553.7,"7":0.01924,"20":13.5,"24":0.1298,"26":0.05233},"y":"benign"},{"x":{"22":85.1,"27":0.0716,"23":553.6,"7":0.03515,"20":13.36,"24":0.1137,"26":0.0612},"y":"malignant"},{"x":{"22":108.6,"27":0.1599,"23":766.9,"7":0.05532,"20":15.85,"24":0.1316,"26":0.3103},"y":"benign"},{"x":{"22":117.2,"27":0.09123,"23":1009.0,"7":0.04835,"20":18.13,"24":0.1338,"26":0.1663},"y":"benign"},{"x":{"22":220.8,"27":0.2688,"23":3216.0,"7":0.1878,"20":33.12,"24":0.1472,"26":0.534},"y":"malignant"},{"x":{"22":139.5,"27":0.1939,"23":1239.0,"7":0.07488,"20":20.42,"24":0.1381,"26":0.3508},"y":"malignant"},{"x":{"22":97.82,"27":0.1342,"23":580.6,"7":0.04846,"20":13.78,"24":0.1175,"26":0.4896},"y":"benign"},{"x":{"22":50.41,"27":0.0,"23":185.2,"7":0.0,"20":7.93,"24":0.1584,"26":0.0},"y":"benign"},{"x":{"22":150.1,"27":0.2102,"23":1610.0,"7":0.108,"20":22.39,"24":0.1478,"26":0.3786},"y":"malignant"},{"x":{"22":79.57,"27":0.04306,"23":489.5,"7":0.01553,"20":12.57,"24":0.1356,"26":0.08803},"y":"benign"},{"x":{"22":168.2,"27":0.228,"23":2022.0,"7":0.1155,"20":25.68,"24":0.1368,"26":0.4399},"y":"malignant"},{"x":{"22":85.07,"27":0.08698,"23":521.3,"7":0.021,"20":13.05,"24":0.1453,"26":0.1811},"y":"benign"},{"x":{"22":150.2,"27":0.1425,"23":1657.0,"7":0.07726,"20":23.06,"24":0.1054,"26":0.2606},"y":"malignant"},{"x":{"22":136.5,"27":0.181,"23":1299.0,"7":0.06606,"20":20.42,"24":0.1396,"26":0.3965},"y":"malignant"},{"x":{"22":107.4,"27":0.1095,"23":826.4,"7":0.03027,"20":16.51,"24":0.106,"26":0.1611},"y":"benign"},{"x":{"22":69.86,"27":0.02579,"23":368.6,"7":0.0129,"20":11.02,"24":0.1275,"26":0.02168},"y":"benign"},{"x":{"22":93.22,"27":0.09783,"23":605.8,"7":0.03078,"20":14.09,"24":0.1326,"26":0.3476},"y":"benign"},{"x":{"22":157.1,"27":0.2134,"23":1748.0,"7":0.08481,"20":23.17,"24":0.1517,"26":0.4211},"y":"malignant"},{"x":{"22":70.1,"27":0.03125,"23":362.7,"7":0.01875,"20":10.93,"24":0.1143,"26":0.04158},"y":"benign"},{"x":{"22":91.46,"27":0.1205,"23":574.7,"7":0.03745,"20":13.83,"24":0.1304,"26":0.2434},"y":"benign"},{"x":{"22":92.04,"27":0.09331,"23":653.6,"7":0.02704,"20":14.49,"24":0.1419,"26":0.2177},"y":"malignant"},{"x":{"22":124.9,"27":0.1514,"23":1156.0,"7":0.08087,"20":19.26,"24":0.1546,"26":0.3791},"y":"malignant"},{"x":{"22":84.08,"27":0.07025,"23":532.8,"7":0.01963,"20":13.14,"24":0.1275,"26":0.08636},"y":"benign"},{"x":{"22":229.3,"27":0.2756,"23":3234.0,"7":0.1913,"20":33.13,"24":0.153,"26":0.6451},"y":"malignant"},{"x":{"22":111.6,"27":0.1673,"23":806.9,"7":0.06526,"20":16.39,"24":0.1737,"26":0.3809},"y":"malignant"},{"x":{"22":82.68,"27":0.08288,"23":495.1,"7":0.01777,"20":12.77,"24":0.1342,"26":0.186},"y":"benign"},{"x":{"22":76.91,"27":0.02022,"23":436.1,"7":0.007583,"20":11.98,"24":0.1424,"26":0.01335},"y":"benign"},{"x":{"22":79.67,"27":0.06548,"23":475.8,"7":0.02322,"20":12.51,"24":0.1531,"26":0.09823},"y":"benign"},{"x":{"22":68.09,"27":0.05159,"23":355.2,"7":0.01407,"20":10.75,"24":0.1467,"26":0.04043},"y":"benign"},{"x":{"22":132.8,"27":0.1739,"23":1284.0,"7":0.05736,"20":20.38,"24":0.1436,"26":0.5036},"y":"malignant"},{"x":{"22":92.15,"27":0.108,"23":638.4,"7":0.04107,"20":14.44,"24":0.1429,"26":0.1377},"y":"benign"},{"x":{"22":109.4,"27":0.1397,"23":803.6,"7":0.07064,"20":16.34,"24":0.1277,"26":0.2604},"y":"benign"},{"x":{"22":99.21,"27":0.09858,"23":634.3,"7":0.0295,"20":14.42,"24":0.1288,"26":0.3439},"y":"benign"},{"x":{"22":82.69,"27":0.05509,"23":489.8,"7":0.01502,"20":12.68,"24":0.1144,"26":0.1226},"y":"benign"},{"x":{"22":126.3,"27":0.2014,"23":1035.0,"7":0.08399,"20":18.49,"24":0.1883,"26":0.5703},"y":"malignant"},{"x":{"22":87.4,"27":0.05366,"23":577.0,"7":0.01171,"20":13.62,"24":0.09616,"26":0.1186},"y":"benign"},{"x":{"22":99.16,"27":0.06987,"23":670.6,"7":0.02031,"20":14.84,"24":0.1105,"26":0.1346},"y":"benign"},{"x":{"22":88.12,"27":0.08224,"23":566.9,"7":0.02402,"20":13.65,"24":0.1314,"26":0.09385},"y":"benign"},{"x":{"22":102.2,"27":0.1359,"23":758.2,"7":0.05271,"20":15.79,"24":0.1312,"26":0.2675},"y":"malignant"},{"x":{"22":99.66,"27":0.04537,"23":745.3,"7":0.008507,"20":15.51,"24":0.08484,"26":0.1091},"y":"benign"},{"x":{"22":101.2,"27":0.06222,"23":718.9,"7":0.01339,"20":15.14,"24":0.09384,"26":0.1384},"y":"benign"},{"x":{"22":69.92,"27":0.02579,"23":376.3,"7":0.005159,"20":11.11,"24":0.1126,"26":0.01235},"y":"benign"},{"x":{"22":83.24,"27":0.0268,"23":534.0,"7":0.01149,"20":13.19,"24":0.09439,"26":0.01674},"y":"benign"},{"x":{"22":159.8,"27":0.2507,"23":1933.0,"7":0.0974,"20":25.28,"24":0.171,"26":0.8489},"y":"malignant"},{"x":{"22":143.2,"27":0.1827,"23":1362.0,"7":0.09934,"20":20.99,"24":0.1449,"26":0.392},"y":"malignant"},{"x":{"22":99.7,"27":0.1288,"23":711.2,"7":0.04781,"20":15.11,"24":0.144,"26":0.239},"y":"benign"},{"x":{"22":83.9,"27":0.03264,"23":505.6,"7":0.00816,"20":13.03,"24":0.1204,"26":0.06194},"y":"benign"},{"x":{"22":89.88,"27":0.06548,"23":582.6,"7":0.02749,"20":13.76,"24":0.1494,"26":0.305},"y":"benign"},{"x":{"22":84.16,"27":0.07864,"23":516.4,"7":0.0325,"20":13.06,"24":0.146,"26":0.1087},"y":"benign"},{"x":{"22":58.08,"27":0.07879,"23":249.8,"7":0.02168,"20":9.092,"24":0.163,"26":0.5381},"y":"benign"},{"x":{"22":117.7,"27":0.153,"23":1030.0,"7":0.03334,"20":18.1,"24":0.1389,"26":0.2712},"y":"malignant"},{"x":{"22":134.9,"27":0.1456,"23":1227.0,"7":0.07953,"20":20.01,"24":0.1255,"26":0.2489},"y":"malignant"},{"x":{"22":104.5,"27":0.1001,"23":830.6,"7":0.02648,"20":16.36,"24":0.1006,"26":0.135},"y":"benign"},{"x":{"22":87.36,"27":0.08194,"23":553.0,"7":0.02822,"20":13.58,"24":0.1452,"26":0.1688},"y":"benign"},{"x":{"22":115.0,"27":0.1357,"23":733.5,"7":0.02833,"20":15.44,"24":0.1201,"26":0.6556},"y":"benign"},{"x":{"22":97.33,"27":0.1453,"23":675.2,"7":0.05381,"20":14.8,"24":0.1428,"26":0.3438},"y":"benign"},{"x":{"22":86.0,"27":0.05356,"23":562.0,"7":0.01638,"20":13.45,"24":0.1244,"26":0.1449},"y":"benign"},{"x":{"22":95.48,"27":0.0221,"23":698.7,"7":0.004419,"20":14.97,"24":0.09023,"26":0.01379},"y":"benign"},{"x":{"22":177.4,"27":0.2493,"23":1651.0,"7":0.09961,"20":24.09,"24":0.1247,"26":0.7242},"y":"malignant"},{"x":{"22":94.44,"27":0.03333,"23":684.6,"7":0.00625,"20":14.91,"24":0.08567,"26":0.03866},"y":"benign"},{"x":{"22":65.74,"27":0.07222,"23":335.9,"7":0.01667,"20":10.51,"24":0.1504,"26":0.07161},"y":"benign"},{"x":{"22":108.5,"27":0.09186,"23":862.0,"7":0.04349,"20":16.76,"24":0.1223,"26":0.2492},"y":"benign"},{"x":{"22":79.26,"27":0.04306,"23":458.0,"7":0.01076,"20":12.36,"24":0.1282,"26":0.03582},"y":"benign"},{"x":{"22":88.18,"27":0.009259,"23":608.8,"7":0.001852,"20":14.0,"24":0.08125,"26":0.007977},"y":"benign"},{"x":{"22":112.0,"27":0.1119,"23":876.5,"7":0.05364,"20":16.84,"24":0.1131,"26":0.2322},"y":"malignant"},{"x":{"22":85.51,"27":0.1218,"23":521.7,"7":0.03485,"20":13.14,"24":0.1688,"26":0.2873},"y":"benign"},{"x":{"22":172.0,"27":0.2422,"23":2081.0,"7":0.1562,"20":26.23,"24":0.1502,"26":0.7053},"y":"malignant"},{"x":{"22":160.0,"27":0.2152,"23":1671.0,"7":0.1265,"20":24.19,"24":0.1278,"26":0.3703},"y":"malignant"},{"x":{"22":97.96,"27":0.1054,"23":657.0,"7":0.02471,"20":14.54,"24":0.1275,"26":0.2569},"y":"benign"},{"x":{"22":87.78,"27":0.07632,"23":567.9,"7":0.01863,"20":13.67,"24":0.1377,"26":0.2267},"y":"benign"},{"x":{"22":202.4,"27":0.2089,"23":2906.0,"7":0.141,"20":30.67,"24":0.1515,"26":0.4819},"y":"malignant"},{"x":{"22":96.69,"27":0.07763,"23":705.6,"7":0.03264,"20":15.05,"24":0.1172,"26":0.07003},"y":"benign"},{"x":{"22":107.5,"27":0.1476,"23":830.9,"7":0.07483,"20":16.43,"24":0.1257,"26":0.2846},"y":"malignant"},{"x":{"22":99.43,"27":0.1284,"23":701.9,"7":0.03783,"20":15.11,"24":0.1425,"26":0.1935},"y":"benign"},{"x":{"22":180.9,"27":0.2248,"23":2073.0,"7":0.2012,"20":26.02,"24":0.1696,"26":0.5803},"y":"malignant"},{"x":{"22":145.4,"27":0.197,"23":1437.0,"7":0.08293,"20":21.53,"24":0.1401,"26":0.6399},"y":"malignant"},{"x":{"22":87.65,"27":0.0914,"23":529.9,"7":0.02534,"20":13.13,"24":0.1026,"26":0.3076},"y":"benign"},{"x":{"22":103.7,"27":0.05813,"23":840.8,"7":0.01877,"20":16.46,"24":0.1011,"26":0.04746},"y":"benign"},{"x":{"22":85.56,"27":0.008772,"23":564.1,"7":0.002924,"20":13.5,"24":0.1038,"26":0.005579},"y":"benign"},{"x":{"22":130.3,"27":0.2034,"23":1272.0,"7":0.09479,"20":20.19,"24":0.1855,"26":0.7356},"y":"malignant"},{"x":{"22":97.59,"27":0.07911,"23":699.4,"7":0.0278,"20":15.1,"24":0.1339,"26":0.1381},"y":"benign"},{"x":{"22":90.24,"27":0.01111,"23":624.1,"7":0.004167,"20":14.23,"24":0.1021,"26":0.001845},"y":"benign"},{"x":{"22":79.62,"27":0.03922,"23":453.5,"7":0.01471,"20":12.12,"24":0.08864,"26":0.1201},"y":"benign"},{"x":{"22":96.66,"27":0.1708,"23":614.9,"7":0.06987,"20":15.53,"24":0.1536,"26":0.4858},"y":"benign"},{"x":{"22":145.6,"27":0.1379,"23":1590.0,"7":0.06847,"20":22.52,"24":0.1465,"26":0.3965},"y":"malignant"},{"x":{"22":91.06,"27":0.05921,"23":628.5,"7":0.01762,"20":14.34,"24":0.1218,"26":0.04462},"y":"benign"},{"x":{"22":79.76,"27":0.1075,"23":440.0,"7":0.03341,"20":11.92,"24":0.1418,"26":0.2299},"y":"benign"},{"x":{"22":71.08,"27":0.08333,"23":357.4,"7":0.02438,"20":10.83,"24":0.1461,"26":0.1783},"y":"benign"},{"x":{"22":69.47,"27":0.1075,"23":328.1,"7":0.07038,"20":10.6,"24":0.2006,"26":0.2913},"y":"benign"},{"x":{"22":85.22,"27":0.06913,"23":546.3,"7":0.01393,"20":13.3,"24":0.128,"26":0.1471},"y":"benign"},{"x":{"22":111.8,"27":0.1716,"23":888.3,"7":0.06873,"20":17.09,"24":0.1851,"26":0.4024},"y":"malignant"},{"x":{"22":70.76,"27":0.06528,"23":375.4,"7":0.0178,"20":11.06,"24":0.1413,"26":0.08423},"y":"benign"},{"x":{"22":86.04,"27":0.06835,"23":527.8,"7":0.02017,"20":13.12,"24":0.1406,"26":0.2923},"y":"benign"},{"x":{"22":119.8,"27":0.2229,"23":928.8,"7":0.1242,"20":17.73,"24":0.1765,"26":0.4429},"y":"malignant"},{"x":{"22":129.8,"27":0.1583,"23":1121.0,"7":0.08488,"20":19.28,"24":0.159,"26":0.3597},"y":"malignant"},{"x":{"22":102.8,"27":0.1221,"23":745.5,"7":0.05778,"20":15.7,"24":0.1313,"26":0.256},"y":"benign"},{"x":{"22":160.2,"27":0.2148,"23":1809.0,"7":0.1322,"20":24.3,"24":0.1268,"26":0.4433},"y":"malignant"},{"x":{"22":92.74,"27":0.06335,"23":622.9,"7":0.01261,"20":14.17,"24":0.1256,"26":0.123},"y":"benign"},{"x":{"22":83.51,"27":0.0875,"23":507.2,"7":0.02386,"20":12.79,"24":0.09457,"26":0.3218},"y":"benign"},{"x":{"22":87.36,"27":0.1092,"23":488.4,"7":0.02978,"20":12.57,"24":0.08799,"26":0.2912},"y":"benign"},{"x":{"22":87.0,"27":0.0812,"23":550.6,"7":0.02157,"20":13.35,"24":0.155,"26":0.2758},"y":"benign"},{"x":{"22":65.59,"27":0.05087,"23":310.1,"7":0.0218,"20":10.01,"24":0.09836,"26":0.1397},"y":"benign"},{"x":{"22":109.8,"27":0.1357,"23":928.2,"7":0.04563,"20":17.32,"24":0.1354,"26":0.1947},"y":"benign"},{"x":{"22":100.9,"27":0.1181,"23":689.1,"7":0.0351,"20":14.8,"24":0.1351,"26":0.4504},"y":"benign"},{"x":{"22":155.3,"27":0.1721,"23":1660.0,"7":0.1043,"20":23.14,"24":0.1376,"26":0.489},"y":"malignant"},{"x":{"22":71.98,"27":0.06499,"23":384.0,"7":0.01775,"20":11.16,"24":0.1402,"26":0.1055},"y":"benign"},{"x":{"22":108.4,"27":0.1225,"23":808.9,"7":0.04938,"20":16.21,"24":0.1306,"26":0.3349},"y":"malignant"},{"x":{"22":82.08,"27":0.01667,"23":492.7,"7":0.002941,"20":12.76,"24":0.1166,"26":0.005518},"y":"benign"},{"x":{"22":85.67,"27":0.05882,"23":554.9,"7":0.02864,"20":13.46,"24":0.1296,"26":0.1039},"y":"benign"},{"x":{"22":188.5,"27":0.1595,"23":2499.0,"7":0.1595,"20":28.11,"24":0.1142,"26":0.3201},"y":"malignant"},{"x":{"22":54.49,"27":0.05,"23":223.6,"7":0.01364,"20":8.678,"24":0.1596,"26":0.3393},"y":"benign"},{"x":{"22":65.27,"27":0.04762,"23":302.0,"7":0.02381,"20":9.981,"24":0.1015,"26":0.09441},"y":"benign"},{"x":{"22":152.4,"27":0.255,"23":1461.0,"7":0.1401,"20":22.25,"24":0.1545,"26":0.3853},"y":"malignant"},{"x":{"22":69.05,"27":0.1025,"23":300.2,"7":0.05252,"20":10.28,"24":0.1902,"26":0.2099},"y":"benign"},{"x":{"22":95.29,"27":0.1407,"23":633.7,"7":0.05074,"20":14.38,"24":0.1533,"26":0.3582},"y":"benign"},{"x":{"22":88.52,"27":0.101,"23":552.3,"7":0.0444,"20":13.5,"24":0.1349,"26":0.1366},"y":"benign"},{"x":{"22":129.0,"27":0.1216,"23":1233.0,"7":0.05943,"20":19.92,"24":0.1314,"26":0.2802},"y":"malignant"},{"x":{"22":111.4,"27":0.1414,"23":862.1,"7":0.04223,"20":16.67,"24":0.1294,"26":0.3755},"y":"benign"},{"x":{"22":62.86,"27":0.02564,"23":295.8,"7":0.01282,"20":9.845,"24":0.1103,"26":0.07993},"y":"benign"},{"x":{"22":62.06,"27":0.02778,"23":273.9,"7":0.009259,"20":9.565,"24":0.1639,"26":0.09001},"y":"benign"},{"x":{"22":95.14,"27":0.06384,"23":626.9,"7":0.0209,"20":14.45,"24":0.1214,"26":0.07127},"y":"benign"},{"x":{"22":136.1,"27":0.1847,"23":1344.0,"7":0.1203,"20":20.88,"24":0.1634,"26":0.5588},"y":"malignant"},{"x":{"22":71.25,"27":0.0812,"23":353.6,"7":0.02292,"20":10.75,"24":0.1233,"26":0.4341},"y":"benign"},{"x":{"22":71.12,"27":0.02381,"23":384.9,"7":0.005495,"20":11.25,"24":0.1285,"26":0.04384},"y":"benign"},{"x":{"22":83.61,"27":0.04262,"23":542.5,"7":0.01162,"20":13.28,"24":0.09958,"26":0.03046},"y":"benign"},{"x":{"22":174.9,"27":0.2247,"23":2232.0,"7":0.1286,"20":26.73,"24":0.1438,"26":0.681},"y":"malignant"},{"x":{"22":103.1,"27":0.1069,"23":749.9,"7":0.06495,"20":15.8,"24":0.1347,"26":0.1373},"y":"benign"},{"x":{"22":145.4,"27":0.1674,"23":1549.0,"7":0.08665,"20":22.25,"24":0.1503,"26":0.3272},"y":"malignant"},{"x":{"22":86.57,"27":0.09815,"23":549.8,"7":0.03132,"20":13.32,"24":0.1526,"26":0.149},"y":"benign"},{"x":{"22":96.42,"27":0.07911,"23":684.5,"7":0.03251,"20":14.92,"24":0.1066,"26":0.0846},"y":"benign"},{"x":{"22":251.2,"27":0.2625,"23":4254.0,"7":0.1689,"20":36.04,"24":0.1357,"26":0.6833},"y":"malignant"},{"x":{"22":83.09,"27":0.04766,"23":496.2,"7":0.01787,"20":12.81,"24":0.1293,"26":0.03122},"y":"benign"},{"x":{"22":88.84,"27":0.06493,"23":595.7,"7":0.02343,"20":13.89,"24":0.1227,"26":0.2439},"y":"benign"},{"x":{"22":101.7,"27":0.1021,"23":767.3,"7":0.06602,"20":15.77,"24":0.09983,"26":0.222},"y":"benign"},{"x":{"22":71.94,"27":0.05575,"23":375.6,"7":0.01915,"20":11.17,"24":0.1406,"26":0.06572},"y":"benign"},{"x":{"22":86.6,"27":0.08211,"23":564.2,"7":0.02331,"20":13.59,"24":0.1217,"26":0.1943},"y":"benign"},{"x":{"22":157.6,"27":0.2255,"23":1540.0,"7":0.1103,"20":22.75,"24":0.1218,"26":0.4734},"y":"malignant"},{"x":{"22":78.78,"27":0.06918,"23":457.8,"7":0.02594,"20":12.26,"24":0.1345,"26":0.1797},"y":"benign"},{"x":{"22":135.1,"27":0.1136,"23":1320.0,"7":0.04744,"20":20.92,"24":0.1315,"26":0.208},"y":"malignant"},{"x":{"22":66.61,"27":0.02564,"23":301.0,"7":0.005128,"20":9.965,"24":0.1086,"26":0.1868},"y":"benign"},{"x":{"22":100.2,"27":0.1048,"23":706.7,"7":0.04304,"20":15.3,"24":0.1241,"26":0.1326},"y":"benign"},{"x":{"22":177.0,"27":0.2733,"23":1986.0,"7":0.162,"20":25.12,"24":0.1536,"26":0.7892},"y":"malignant"},{"x":{"22":93.63,"27":0.08045,"23":624.1,"7":0.02995,"20":14.45,"24":0.1475,"26":0.1423},"y":"benign"},{"x":{"22":100.3,"27":0.05104,"23":725.9,"7":0.01141,"20":15.49,"24":0.1157,"26":0.08115},"y":"benign"},{"x":{"22":123.5,"27":0.2115,"23":1025.0,"7":0.08815,"20":18.23,"24":0.1551,"26":0.5203},"y":"malignant"},{"x":{"22":163.2,"27":0.2113,"23":1760.0,"7":0.1121,"20":23.86,"24":0.1464,"26":0.5179},"y":"malignant"},{"x":{"22":113.9,"27":0.1827,"23":869.3,"7":0.06463,"20":17.04,"24":0.1613,"26":0.4069},"y":"malignant"},{"x":{"22":96.09,"27":0.07283,"23":630.5,"7":0.0311,"20":14.5,"24":0.1312,"26":0.189},"y":"benign"},{"x":{"22":71.79,"27":0.04589,"23":380.9,"7":0.01967,"20":11.21,"24":0.1398,"26":0.02085},"y":"benign"},{"x":{"22":98.27,"27":0.07963,"23":715.5,"7":0.01896,"20":15.33,"24":0.1287,"26":0.06231},"y":"benign"},{"x":{"22":87.82,"27":0.08312,"23":579.7,"7":0.01781,"20":13.75,"24":0.1298,"26":0.1255},"y":"benign"},{"x":{"22":81.39,"27":0.04815,"23":476.5,"7":0.01313,"20":12.44,"24":0.09545,"26":0.07239},"y":"benign"},{"x":{"22":66.53,"27":0.0,"23":342.9,"7":0.0,"20":10.62,"24":0.1234,"26":0.0},"y":"benign"},{"x":{"22":95.29,"27":0.04195,"23":648.3,"7":0.01256,"20":14.5,"24":0.1118,"26":0.07698},"y":"benign"},{"x":{"22":68.62,"27":0.1145,"23":297.1,"7":0.04908,"20":10.06,"24":0.1221,"26":0.4609},"y":"benign"},{"x":{"22":88.7,"27":0.05602,"23":574.4,"7":0.02107,"20":13.71,"24":0.1384,"26":0.102},"y":"benign"},{"x":{"22":105.9,"27":0.1423,"23":762.6,"7":0.08534,"20":16.11,"24":0.1386,"26":0.196},"y":"benign"},{"x":{"22":117.7,"27":0.2163,"23":909.4,"7":0.0852,"20":17.11,"24":0.1732,"26":0.5911},"y":"malignant"},{"x":{"22":85.09,"27":0.08263,"23":522.9,"7":0.02179,"20":13.05,"24":0.1426,"26":0.1164},"y":"benign"},{"x":{"22":211.5,"27":0.2264,"23":2782.0,"7":0.1003,"20":30.79,"24":0.1199,"26":0.3794},"y":"malignant"},{"x":{"22":92.48,"27":0.07958,"23":629.6,"7":0.03275,"20":14.37,"24":0.1072,"26":0.1062},"y":"benign"},{"x":{"22":152.5,"27":0.243,"23":1709.0,"7":0.1279,"20":23.57,"24":0.1444,"26":0.4504},"y":"malignant"},{"x":{"22":140.5,"27":0.1984,"23":1436.0,"7":0.06527,"20":21.58,"24":0.1558,"26":0.3889},"y":"malignant"},{"x":{"22":96.31,"27":0.06608,"23":621.9,"7":0.01883,"20":14.13,"24":0.09329,"26":0.1604},"y":"benign"},{"x":{"22":113.8,"27":0.1226,"23":973.1,"7":0.03263,"20":17.8,"24":0.1301,"26":0.363},"y":"malignant"},{"x":{"22":82.76,"27":0.07887,"23":472.4,"7":0.02932,"20":12.4,"24":0.1363,"26":0.1412},"y":"benign"},{"x":{"22":57.17,"27":0.0,"23":248.0,"7":0.0,"20":9.077,"24":0.1256,"26":0.0},"y":"benign"},{"x":{"22":70.88,"27":0.0656,"23":385.2,"7":0.01514,"20":11.14,"24":0.1234,"26":0.1277},"y":"benign"},{"x":{"22":141.2,"27":0.2066,"23":1408.0,"7":0.08811,"20":22.51,"24":0.1365,"26":0.3241},"y":"malignant"},{"x":{"22":60.9,"27":0.01389,"23":285.5,"7":0.003472,"20":9.699,"24":0.09861,"26":0.01472},"y":"benign"},{"x":{"22":69.35,"27":0.02222,"23":366.3,"7":0.01111,"20":10.94,"24":0.09794,"26":0.03986},"y":"benign"},{"x":{"22":77.8,"27":0.06413,"23":436.6,"7":0.02257,"20":12.02,"24":0.1087,"26":0.1564},"y":"benign"},{"x":{"22":153.9,"27":0.206,"23":1740.0,"7":0.1194,"20":23.96,"24":0.1514,"26":0.5936},"y":"malignant"},{"x":{"22":142.0,"27":0.1825,"23":1313.0,"7":0.1021,"20":20.82,"24":0.1251,"26":0.3829},"y":"malignant"},{"x":{"22":166.8,"27":0.2112,"23":1946.0,"7":0.08941,"20":25.37,"24":0.1562,"26":0.4159},"y":"malignant"},{"x":{"22":91.29,"27":0.06005,"23":632.9,"7":0.02068,"20":14.35,"24":0.1289,"26":0.139},"y":"benign"},{"x":{"22":103.9,"27":0.1017,"23":783.6,"7":0.04951,"20":16.01,"24":0.1216,"26":0.17},"y":"benign"},{"x":{"22":104.3,"27":0.1362,"23":728.3,"7":0.06139,"20":15.29,"24":0.138,"26":0.4234},"y":"malignant"},{"x":{"22":107.0,"27":0.1505,"23":709.0,"7":0.07798,"20":15.3,"24":0.08949,"26":0.6783},"y":"benign"},{"x":{"22":78.44,"27":0.03002,"23":470.9,"7":0.006434,"20":12.36,"24":0.09994,"26":0.02318},"y":"benign"},{"x":{"22":57.26,"27":0.02564,"23":242.2,"7":0.005917,"20":8.964,"24":0.1297,"26":0.0688},"y":"benign"},{"x":{"22":78.27,"27":0.0875,"23":457.5,"7":0.02755,"20":12.32,"24":0.1358,"26":0.1275},"y":"benign"},{"x":{"22":125.1,"27":0.2393,"23":980.9,"7":0.09756,"20":18.07,"24":0.139,"26":0.6305},"y":"malignant"},{"x":{"22":127.1,"27":0.2027,"23":1095.0,"7":0.08923,"20":18.81,"24":0.1878,"26":0.4704},"y":"malignant"},{"x":{"22":74.22,"27":0.03203,"23":402.8,"7":0.01201,"20":11.54,"24":0.1219,"26":0.07987},"y":"benign"},{"x":{"22":163.1,"27":0.1999,"23":1972.0,"7":0.08591,"20":25.7,"24":0.1497,"26":0.4317},"y":"malignant"},{"x":{"22":101.7,"27":0.1459,"23":768.9,"7":0.04562,"20":15.65,"24":0.1785,"26":0.4425},"y":"malignant"},{"x":{"22":83.67,"27":0.06296,"23":527.2,"7":0.01349,"20":13.1,"24":0.1144,"26":0.09203},"y":"benign"},{"x":{"22":161.2,"27":0.1765,"23":1780.0,"7":0.07785,"20":24.31,"24":0.1327,"26":0.2702},"y":"malignant"},{"x":{"22":184.6,"27":0.265,"23":1821.0,"7":0.152,"20":25.74,"24":0.165,"26":0.9387},"y":"malignant"},{"x":{"22":89.27,"27":0.0578,"23":597.5,"7":0.01615,"20":13.9,"24":0.1256,"26":0.1992},"y":"benign"},{"x":{"22":79.15,"27":0.08542,"23":478.6,"7":0.02594,"20":12.47,"24":0.1483,"26":0.1624},"y":"benign"},{"x":{"22":102.9,"27":0.06946,"23":803.7,"7":0.02957,"20":16.11,"24":0.1115,"26":0.09189},"y":"benign"},{"x":{"22":86.16,"27":0.06968,"23":546.7,"7":0.026,"20":13.33,"24":0.1271,"26":0.1046},"y":"benign"},{"x":{"22":76.51,"27":0.1465,"23":351.9,"7":0.05941,"20":10.85,"24":0.1143,"26":0.603},"y":"benign"},{"x":{"22":79.46,"27":0.08946,"23":472.4,"7":0.07404,"20":12.4,"24":0.1359,"26":0.07153},"y":"benign"},{"x":{"22":133.5,"27":0.1813,"23":1229.0,"7":0.06018,"20":20.01,"24":0.1563,"26":0.5409},"y":"malignant"},{"x":{"22":199.5,"27":0.182,"23":3143.0,"7":0.08465,"20":30.75,"24":0.1363,"26":0.2861},"y":"malignant"},{"x":{"22":73.47,"27":0.04464,"23":395.4,"7":0.01216,"20":11.52,"24":0.1341,"26":0.02639},"y":"benign"},{"x":{"22":88.91,"27":0.07909,"23":543.9,"7":0.03738,"20":13.32,"24":0.1358,"26":0.1956},"y":"benign"},{"x":{"22":120.4,"27":0.1099,"23":1021.0,"7":0.06597,"20":18.07,"24":0.1243,"26":0.2803},"y":"malignant"},{"x":{"22":115.7,"27":0.1834,"23":985.5,"7":0.08123,"20":17.87,"24":0.1368,"26":0.3587},"y":"malignant"},{"x":{"22":79.93,"27":0.07431,"23":471.4,"7":0.0248,"20":12.41,"24":0.1369,"26":0.1067},"y":"benign"},{"x":{"22":84.93,"27":0.1318,"23":476.1,"7":0.0555,"20":12.84,"24":0.161,"26":0.2247},"y":"benign"},{"x":{"22":69.1,"27":0.03846,"23":364.2,"7":0.009615,"20":10.93,"24":0.1199,"26":0.0935},"y":"benign"},{"x":{"22":79.29,"27":0.06203,"23":459.3,"7":0.02173,"20":12.36,"24":0.1118,"26":0.07529},"y":"benign"},{"x":{"22":122.1,"27":0.1775,"23":939.7,"7":0.09194,"20":17.39,"24":0.1377,"26":0.5897},"y":"malignant"},{"x":{"22":66.5,"27":0.0,"23":330.6,"7":0.0,"20":10.49,"24":0.1073,"26":0.0},"y":"benign"},{"x":{"22":82.74,"27":0.02796,"23":523.4,"7":0.005592,"20":13.07,"24":0.1013,"26":0.007732},"y":"benign"},{"x":{"22":91.63,"27":0.05601,"23":645.8,"7":0.01867,"20":14.4,"24":0.09402,"26":0.1838},"y":"benign"},{"x":{"22":125.4,"27":0.2475,"23":832.7,"7":0.09711,"20":16.35,"24":0.1419,"26":0.9019},"y":"malignant"},{"x":{"22":114.6,"27":0.1614,"23":925.1,"7":0.09029,"20":17.31,"24":0.1648,"26":0.3024},"y":"malignant"},{"x":{"22":88.83,"27":0.0569,"23":547.4,"7":0.01527,"20":13.34,"24":0.1208,"26":0.162},"y":"benign"},{"x":{"22":93.85,"27":0.08829,"23":624.6,"7":0.02027,"20":14.29,"24":0.1368,"26":0.2413},"y":"benign"},{"x":{"22":102.3,"27":0.05754,"23":782.1,"7":0.01939,"20":15.98,"24":0.1045,"26":0.0775},"y":"benign"},{"x":{"22":146.0,"27":0.2173,"23":1479.0,"7":0.1259,"20":22.03,"24":0.1665,"26":0.5308},"y":"malignant"},{"x":{"22":110.6,"27":0.1556,"23":897.0,"7":0.05985,"20":17.06,"24":0.1654,"26":0.2678},"y":"malignant"},{"x":{"22":113.1,"27":0.1251,"23":861.5,"7":0.05397,"20":16.97,"24":0.1235,"26":0.2114},"y":"benign"},{"x":{"22":75.4,"27":0.03571,"23":403.7,"7":0.01071,"20":11.48,"24":0.09527,"26":0.1925},"y":"benign"},{"x":{"22":114.2,"27":0.1251,"23":880.8,"7":0.03528,"20":17.27,"24":0.122,"26":0.2151},"y":"benign"},{"x":{"22":101.9,"27":0.1427,"23":719.8,"7":0.03152,"20":15.35,"24":0.1624,"26":0.2654},"y":"benign"},{"x":{"22":71.68,"27":0.05334,"23":367.0,"7":0.01778,"20":11.05,"24":0.1467,"26":0.13},"y":"benign"},{"x":{"22":99.71,"27":0.08056,"23":706.2,"7":0.02563,"20":15.34,"24":0.1311,"26":0.1759},"y":"benign"},{"x":{"22":101.6,"27":0.08704,"23":773.4,"7":0.0188,"20":15.85,"24":0.1264,"26":0.1206},"y":"benign"},{"x":{"22":75.19,"27":0.0,"23":439.6,"7":0.0,"20":11.92,"24":0.09267,"26":0.0},"y":"benign"},{"x":{"22":91.62,"27":0.09851,"23":633.5,"7":0.02272,"20":14.34,"24":0.1225,"26":0.1887},"y":"benign"},{"x":{"22":148.2,"27":0.1218,"23":1538.0,"7":0.05627,"20":22.32,"24":0.1021,"26":0.3207},"y":"malignant"},{"x":{"22":77.79,"27":0.03413,"23":441.2,"7":0.007875,"20":11.95,"24":0.1076,"26":0.09755},"y":"benign"},{"x":{"22":63.3,"27":0.08512,"23":275.6,"7":0.0151,"20":9.473,"24":0.1641,"26":0.1754},"y":"benign"},{"x":{"22":77.37,"27":0.01111,"23":458.0,"7":0.003333,"20":12.2,"24":0.1259,"26":0.004955},"y":"benign"},{"x":{"22":110.2,"27":0.1308,"23":867.1,"7":0.03876,"20":16.76,"24":0.1077,"26":0.3114},"y":"benign"},{"x":{"22":166.4,"27":0.1708,"23":1688.0,"7":0.06772,"20":23.36,"24":0.1322,"26":0.3865},"y":"malignant"},{"x":{"22":171.1,"27":0.2685,"23":1938.0,"7":0.1504,"20":25.3,"24":0.1592,"26":0.5344},"y":"malignant"},{"x":{"22":81.23,"27":0.04715,"23":467.8,"7":0.008907,"20":12.34,"24":0.1092,"26":0.08324},"y":"benign"},{"x":{"22":112.0,"27":0.1147,"23":906.6,"7":0.03221,"20":17.18,"24":0.1065,"26":0.3151},"y":"benign"},{"x":{"22":90.14,"27":0.1555,"23":476.4,"7":0.03613,"20":12.36,"24":0.1391,"26":0.4779},"y":"benign"},{"x":{"22":94.22,"27":0.1258,"23":591.2,"7":0.05603,"20":14.19,"24":0.1343,"26":0.2573},"y":"benign"},{"x":{"22":97.66,"27":0.06189,"23":661.5,"7":0.02142,"20":14.8,"24":0.1005,"26":0.1453},"y":"benign"},{"x":{"22":87.16,"27":0.1218,"23":472.9,"7":0.02854,"20":12.58,"24":0.1347,"26":0.7436},"y":"benign"},{"x":{"22":78.07,"27":0.03953,"23":470.0,"7":0.006588,"20":12.36,"24":0.1171,"26":0.01854},"y":"benign"},{"x":{"22":93.76,"27":0.06987,"23":663.5,"7":0.01473,"20":14.73,"24":0.1213,"26":0.1364},"y":"benign"},{"x":{"22":79.73,"27":0.08272,"23":450.0,"7":0.02757,"20":12.04,"24":0.1102,"26":0.3021},"y":"benign"},{"x":{"22":87.38,"27":0.0585,"23":576.0,"7":0.02098,"20":13.72,"24":0.1142,"26":0.145},"y":"benign"},{"x":{"22":99.0,"27":0.1282,"23":698.8,"7":0.03384,"20":15.15,"24":0.1162,"26":0.2282},"y":"benign"},{"x":{"22":88.1,"27":0.06498,"23":594.7,"7":0.01499,"20":13.87,"24":0.1234,"26":0.08653},"y":"benign"},{"x":{"22":64.01,"27":0.0,"23":317.0,"7":0.0,"20":10.17,"24":0.146,"26":0.0},"y":"benign"},{"x":{"22":113.2,"27":0.1329,"23":848.7,"7":0.03085,"20":16.89,"24":0.1471,"26":0.3796},"y":"malignant"},{"x":{"22":160.5,"27":0.1613,"23":1646.0,"7":0.09431,"20":23.73,"24":0.1417,"26":0.4185},"y":"malignant"},{"x":{"22":128.8,"27":0.152,"23":1223.0,"7":0.06638,"20":19.77,"24":0.15,"26":0.2829},"y":"malignant"},{"x":{"22":195.0,"27":0.2432,"23":2227.0,"7":0.1501,"20":27.66,"24":0.1294,"26":0.4756},"y":"malignant"},{"x":{"22":92.94,"27":0.05614,"23":621.2,"7":0.02424,"20":14.2,"24":0.114,"26":0.1212},"y":"benign"},{"x":{"22":82.66,"27":0.06402,"23":503.0,"7":0.01861,"20":12.78,"24":0.1413,"26":0.07708},"y":"benign"},{"x":{"22":74.35,"27":0.04044,"23":421.1,"7":0.0137,"20":11.68,"24":0.103,"26":0.0458},"y":"benign"},{"x":{"22":88.14,"27":0.1416,"23":528.1,"7":0.05564,"20":13.36,"24":0.178,"26":0.3186},"y":"benign"},{"x":{"22":135.1,"27":0.1325,"23":1321.0,"7":0.106,"20":20.6,"24":0.128,"26":0.2623},"y":"malignant"},{"x":{"22":81.25,"27":0.1056,"23":473.8,"7":0.02639,"20":12.45,"24":0.1073,"26":0.269},"y":"benign"},{"x":{"22":206.8,"27":0.291,"23":2360.0,"7":0.1823,"20":28.4,"24":0.1701,"26":0.9608},"y":"malignant"},{"x":{"22":80.92,"27":0.05741,"23":483.1,"7":0.01148,"20":12.61,"24":0.1223,"26":0.07915},"y":"benign"},{"x":{"22":152.2,"27":0.1625,"23":1575.0,"7":0.1043,"20":22.54,"24":0.1374,"26":0.4},"y":"malignant"},{"x":{"22":98.87,"27":0.2575,"23":567.7,"7":0.1052,"20":14.91,"24":0.2098,"26":0.6869},"y":"malignant"},{"x":{"22":65.13,"27":0.06227,"23":314.9,"7":0.02076,"20":10.23,"24":0.1324,"26":0.08867},"y":"benign"},{"x":{"22":100.4,"27":0.05563,"23":734.6,"7":0.01737,"20":15.4,"24":0.1017,"26":0.1472},"y":"benign"},{"x":{"22":171.1,"27":0.198,"23":2053.0,"7":0.1062,"20":25.93,"24":0.1495,"26":0.6121},"y":"malignant"},{"x":{"22":151.7,"27":0.1767,"23":1332.0,"7":0.1118,"20":20.96,"24":0.1037,"26":0.3639},"y":"malignant"},{"x":{"22":71.53,"27":0.09744,"23":390.4,"7":0.03965,"20":11.28,"24":0.1402,"26":0.1898},"y":"benign"},{"x":{"22":126.9,"27":0.1732,"23":1031.0,"7":0.09052,"20":18.55,"24":0.1365,"26":0.5026},"y":"malignant"},{"x":{"22":130.7,"27":0.1474,"23":1260.0,"7":0.06576,"20":20.05,"24":0.1168,"26":0.2318},"y":"malignant"},{"x":{"22":86.43,"27":0.06664,"23":520.5,"7":0.01428,"20":13.07,"24":0.1249,"26":0.256},"y":"benign"},{"x":{"22":123.5,"27":0.2035,"23":981.2,"7":0.08866,"20":17.79,"24":0.1415,"26":0.5862},"y":"malignant"},{"x":{"22":73.07,"27":0.0991,"23":390.2,"7":0.03716,"20":11.26,"24":0.1301,"26":0.3486},"y":"benign"},{"x":{"22":117.9,"27":0.1838,"23":1044.0,"7":0.0598,"20":18.33,"24":0.1552,"26":0.4967},"y":"malignant"},{"x":{"22":105.9,"27":0.08308,"23":829.5,"7":0.0226,"20":16.43,"24":0.1226,"26":0.206},"y":"benign"},{"x":{"22":140.9,"27":0.1776,"23":1485.0,"7":0.0795,"20":21.84,"24":0.1434,"26":0.3853},"y":"malignant"},{"x":{"22":129.3,"27":0.2248,"23":1165.0,"7":0.08773,"20":19.38,"24":0.1415,"26":0.7087},"y":"malignant"},{"x":{"22":99.17,"27":0.06845,"23":688.6,"7":0.02369,"20":15.05,"24":0.1264,"26":0.1377},"y":"benign"},{"x":{"22":89.02,"27":0.09265,"23":547.4,"7":0.04391,"20":13.37,"24":0.1096,"26":0.2388},"y":"benign"},{"x":{"22":108.8,"27":0.2208,"23":697.7,"7":0.08025,"20":15.03,"24":0.1651,"26":0.6943},"y":"malignant"},{"x":{"22":81.93,"27":0.1105,"23":475.7,"7":0.04497,"20":12.64,"24":0.1415,"26":0.2302},"y":"benign"},{"x":{"22":88.87,"27":0.03612,"23":586.8,"7":0.01835,"20":13.82,"24":0.1068,"26":0.03469},"y":"benign"},{"x":{"22":81.76,"27":0.02832,"23":515.9,"7":0.01699,"20":12.9,"24":0.08409,"26":0.02237},"y":"benign"},{"x":{"22":152.1,"27":0.1966,"23":1535.0,"7":0.1255,"20":22.69,"24":0.1192,"26":0.4024},"y":"malignant"},{"x":{"22":114.1,"27":0.1108,"23":809.2,"7":0.063,"20":16.46,"24":0.1312,"26":0.3219},"y":"benign"},{"x":{"22":113.8,"27":0.112,"23":967.0,"7":0.04335,"20":17.58,"24":0.1246,"26":0.2866},"y":"malignant"},{"x":{"22":84.46,"27":0.05013,"23":545.9,"7":0.02923,"20":13.3,"24":0.09701,"26":0.04833},"y":"benign"},{"x":{"22":97.17,"27":0.1012,"23":643.8,"7":0.03088,"20":14.48,"24":0.1312,"26":0.209},"y":"benign"},{"x":{"22":86.2,"27":0.1138,"23":531.2,"7":0.03142,"20":13.25,"24":0.1405,"26":0.2806},"y":"benign"},{"x":{"22":165.3,"27":0.2105,"23":2010.0,"7":0.131,"20":25.58,"24":0.1211,"26":0.6991},"y":"malignant"},{"x":{"22":126.7,"27":0.1418,"23":1124.0,"7":0.05302,"20":18.98,"24":0.1139,"26":0.3403},"y":"malignant"},{"x":{"22":161.1,"27":0.2048,"23":1873.0,"7":0.0609,"20":24.54,"24":0.1498,"26":0.4634},"y":"malignant"},{"x":{"22":98.4,"27":0.0589,"23":749.9,"7":0.02733,"20":15.53,"24":0.1281,"26":0.05307},"y":"benign"},{"x":{"22":82.04,"27":0.07431,"23":467.6,"7":0.01969,"20":12.4,"24":0.1352,"26":0.2596},"y":"benign"},{"x":{"22":106.0,"27":0.1521,"23":788.0,"7":0.06759,"20":16.01,"24":0.1794,"26":0.3381},"y":"malignant"},{"x":{"22":139.9,"27":0.149,"23":1403.0,"7":0.07731,"20":21.31,"24":0.1338,"26":0.3446},"y":"malignant"},{"x":{"22":96.05,"27":0.1015,"23":677.9,"7":0.03821,"20":14.97,"24":0.1426,"26":0.2671},"y":"benign"},{"x":{"22":148.7,"27":0.1732,"23":1589.0,"7":0.1149,"20":22.63,"24":0.1275,"26":0.5673},"y":"malignant"},{"x":{"22":75.79,"27":0.05052,"23":439.6,"7":0.01406,"20":12.02,"24":0.1333,"26":0.1144},"y":"benign"},{"x":{"22":106.4,"27":0.1986,"23":827.2,"7":0.09601,"20":16.31,"24":0.1862,"26":0.6376},"y":"malignant"},{"x":{"22":104.6,"27":0.08485,"23":793.7,"7":0.03781,"20":16.11,"24":0.1216,"26":0.06648},"y":"benign"},{"x":{"22":101.4,"27":0.1407,"23":708.8,"7":0.04812,"20":15.14,"24":0.1147,"26":0.366},"y":"benign"},{"x":{"22":89.61,"27":0.0737,"23":515.8,"7":0.02799,"20":12.88,"24":0.145,"26":0.2403},"y":"benign"},{"x":{"22":80.79,"27":0.05556,"23":496.7,"7":0.007246,"20":12.68,"24":0.112,"26":0.2079},"y":"benign"},{"x":{"22":156.1,"27":0.1573,"23":1750.0,"7":0.08683,"20":24.22,"24":0.119,"26":0.4098},"y":"malignant"},{"x":{"22":64.48,"27":0.105,"23":284.4,"7":0.01924,"20":9.628,"24":0.1724,"26":0.2456},"y":"benign"},{"x":{"22":91.11,"27":0.05556,"23":583.1,"7":0.01692,"20":13.75,"24":0.1256,"26":0.1167},"y":"benign"},{"x":{"22":119.4,"27":0.1546,"23":888.7,"7":0.05182,"20":16.82,"24":0.1637,"26":0.6956},"y":"malignant"},{"x":{"22":78.28,"27":0.07926,"23":424.8,"7":0.02642,"20":11.88,"24":0.1213,"26":0.1916},"y":"benign"},{"x":{"22":108.6,"27":0.1184,"23":906.5,"7":0.04489,"20":16.99,"24":0.1265,"26":0.3169},"y":"malignant"},{"x":{"22":139.2,"27":0.1571,"23":1410.0,"7":0.05814,"20":21.31,"24":0.1234,"26":0.3538},"y":"malignant"},{"x":{"22":109.1,"27":0.1489,"23":809.8,"7":0.04819,"20":16.25,"24":0.1313,"26":0.1804},"y":"benign"},{"x":{"22":149.6,"27":0.1964,"23":1304.0,"7":0.1198,"20":20.8,"24":0.1873,"26":0.9034},"y":"malignant"},{"x":{"22":143.7,"27":0.2462,"23":1226.0,"7":0.1377,"20":19.85,"24":0.1504,"26":0.6181},"y":"malignant"},{"x":{"22":152.2,"27":0.1642,"23":1603.0,"7":0.08795,"20":22.93,"24":0.1398,"26":0.3157},"y":"malignant"},{"x":{"22":89.0,"27":0.1105,"23":527.4,"7":0.06021,"20":13.33,"24":0.1287,"26":0.2216},"y":"benign"},{"x":{"22":152.0,"27":0.1613,"23":1645.0,"7":0.1015,"20":23.23,"24":0.1097,"26":0.3092},"y":"malignant"},{"x":{"22":84.35,"27":0.0914,"23":517.8,"7":0.0228,"20":13.06,"24":0.1369,"26":0.1316},"y":"benign"},{"x":{"22":94.11,"27":0.09222,"23":683.4,"7":0.03731,"20":14.85,"24":0.1278,"26":0.1533},"y":"benign"},{"x":{"22":84.11,"27":0.04793,"23":533.1,"7":0.02054,"20":13.18,"24":0.1048,"26":0.04921},"y":"benign"},{"x":{"22":96.08,"27":0.08586,"23":656.7,"7":0.01723,"20":14.67,"24":0.1089,"26":0.105},"y":"benign"},{"x":{"22":155.0,"27":0.1628,"23":1731.0,"7":0.09791,"20":23.69,"24":0.1166,"26":0.3215},"y":"malignant"},{"x":{"22":91.36,"27":0.07407,"23":605.5,"7":0.06556,"20":14.08,"24":0.1451,"26":0.08539},"y":"benign"},{"x":{"22":72.62,"27":0.06136,"23":374.4,"7":0.03068,"20":11.16,"24":0.13,"26":0.1295},"y":"benign"},{"x":{"22":90.81,"27":0.08235,"23":600.6,"7":0.02377,"20":13.88,"24":0.1097,"26":0.1764},"y":"benign"},{"x":{"22":117.7,"27":0.1252,"23":989.5,"7":0.04079,"20":17.77,"24":0.1491,"26":0.3327},"y":"malignant"},{"x":{"22":115.0,"27":0.1772,"23":811.3,"7":0.06462,"20":16.86,"24":0.1559,"26":0.3744},"y":"malignant"},{"x":{"22":125.9,"27":0.1479,"23":1088.0,"7":0.06462,"20":19.56,"24":0.1552,"26":0.3976},"y":"malignant"},{"x":{"22":92.82,"27":0.1053,"23":607.3,"7":0.02369,"20":14.06,"24":0.1276,"26":0.2028},"y":"benign"},{"x":{"22":86.67,"27":0.08411,"23":552.0,"7":0.03279,"20":13.57,"24":0.158,"26":0.1889},"y":"benign"},{"x":{"22":81.6,"27":0.01852,"23":513.1,"7":0.005051,"20":12.85,"24":0.1001,"26":0.04116},"y":"benign"},{"x":{"22":170.1,"27":0.2091,"23":2145.0,"7":0.08994,"20":26.14,"24":0.1624,"26":0.3879},"y":"malignant"},{"x":{"22":97.67,"27":0.09722,"23":677.3,"7":0.03483,"20":14.77,"24":0.1478,"26":0.3009},"y":"benign"},{"x":{"22":84.48,"27":0.02784,"23":544.2,"7":0.006423,"20":13.34,"24":0.1104,"26":0.01938},"y":"benign"},{"x":{"22":178.6,"27":0.1941,"23":1926.0,"7":0.1144,"20":25.05,"24":0.1281,"26":0.4251},"y":"malignant"},{"x":{"22":129.3,"27":0.1541,"23":1269.0,"7":0.05189,"20":20.11,"24":0.1414,"26":0.2902},"y":"malignant"},{"x":{"22":162.7,"27":0.1563,"23":1872.0,"7":0.0834,"20":24.47,"24":0.1223,"26":0.4146},"y":"malignant"},{"x":{"22":86.92,"27":0.07393,"23":549.9,"7":0.02798,"20":13.45,"24":0.1521,"26":0.1622},"y":"benign"},{"x":{"22":121.4,"27":0.1667,"23":971.4,"7":0.08624,"20":18.55,"24":0.1411,"26":0.3355},"y":"malignant"},{"x":{"22":67.03,"27":0.06517,"23":330.7,"7":0.01504,"20":10.41,"24":0.1548,"26":0.09412},"y":"benign"},{"x":{"22":186.8,"27":0.2388,"23":2398.0,"7":0.09498,"20":27.32,"24":0.1512,"26":0.5372},"y":"malignant"},{"x":{"22":76.51,"27":0.086,"23":410.4,"7":0.02867,"20":11.69,"24":0.1335,"26":0.2534},"y":"benign"},{"x":{"22":96.53,"27":0.08216,"23":688.9,"7":0.02652,"20":14.91,"24":0.1034,"26":0.0626},"y":"benign"},{"x":{"22":92.0,"27":0.025,"23":636.9,"7":0.003261,"20":14.41,"24":0.1128,"26":0.0112},"y":"benign"},{"x":{"22":184.6,"27":0.2654,"23":2019.0,"7":0.1471,"20":25.38,"24":0.1622,"26":0.7119},"y":"malignant"},{"x":{"22":99.31,"27":0.1096,"23":674.7,"7":0.05303,"20":15.05,"24":0.1456,"26":0.1246},"y":"benign"},{"x":{"22":97.19,"27":0.06019,"23":725.9,"7":0.01329,"20":15.34,"24":0.09711,"26":0.1564},"y":"benign"},{"x":{"22":81.41,"27":0.0931,"23":440.4,"7":0.02218,"20":12.13,"24":0.1327,"26":0.2939},"y":"benign"},{"x":{"22":86.97,"27":0.09391,"23":549.1,"7":0.037,"20":13.5,"24":0.1385,"26":0.1242},"y":"benign"},{"x":{"22":124.1,"27":0.1712,"23":943.2,"7":0.07364,"20":17.46,"24":0.1678,"26":0.7026},"y":"malignant"},{"x":{"22":85.07,"27":0.07116,"23":523.7,"7":0.01945,"20":13.09,"24":0.1208,"26":0.1811},"y":"benign"},{"x":{"22":83.12,"27":0.06544,"23":508.9,"7":0.02069,"20":12.97,"24":0.1183,"26":0.08105},"y":"benign"},{"x":{"22":70.89,"27":0.04074,"23":357.1,"7":0.02037,"20":10.88,"24":0.136,"26":0.07162},"y":"benign"},{"x":{"22":91.38,"27":0.08187,"23":545.2,"7":0.02882,"20":13.34,"24":0.1427,"26":0.09915},"y":"benign"},{"x":{"22":153.2,"27":0.1932,"23":1606.0,"7":0.074,"20":22.88,"24":0.1442,"26":0.3784},"y":"malignant"},{"x":{"22":58.36,"27":0.0,"23":259.2,"7":0.0,"20":9.262,"24":0.1162,"26":0.0},"y":"benign"},{"x":{"22":113.5,"27":0.1205,"23":808.9,"7":0.0389,"20":16.22,"24":0.134,"26":0.404},"y":"benign"},{"x":{"22":113.3,"27":0.2051,"23":844.4,"7":0.08172,"20":16.41,"24":0.1574,"26":0.5106},"y":"malignant"},{"x":{"22":89.69,"27":0.08388,"23":580.9,"7":0.0239,"20":13.86,"24":0.1172,"26":0.181},"y":"benign"},{"x":{"22":76.08,"27":0.09514,"23":411.1,"7":0.04268,"20":11.69,"24":0.1662,"26":0.1256},"y":"benign"},{"x":{"22":88.33,"27":0.06266,"23":559.5,"7":0.03326,"20":13.56,"24":0.1432,"26":0.1603},"y":"benign"},{"x":{"22":83.69,"27":0.07485,"23":489.5,"7":0.01404,"20":12.76,"24":0.1303,"26":0.1927},"y":"benign"},{"x":{"22":136.8,"27":0.2073,"23":1315.0,"7":0.1028,"20":20.96,"24":0.1789,"26":0.4784},"y":"malignant"},{"x":{"22":116.2,"27":0.1447,"23":799.6,"7":0.05598,"20":15.89,"24":0.1446,"26":0.5186},"y":"malignant"},{"x":{"22":102.3,"27":0.07971,"23":777.5,"7":0.02877,"20":16.31,"24":0.1218,"26":0.122},"y":"benign"},{"x":{"22":92.04,"27":0.08411,"23":618.8,"7":0.02548,"20":14.19,"24":0.1194,"26":0.1769},"y":"benign"},{"x":{"22":98.0,"27":0.06106,"23":706.0,"7":0.02344,"20":15.01,"24":0.09368,"26":0.1359},"y":"benign"},{"x":{"22":106.0,"27":0.07828,"23":831.0,"7":0.02791,"20":16.46,"24":0.1142,"26":0.2437},"y":"benign"},{"x":{"22":125.0,"27":0.1827,"23":1102.0,"7":0.1097,"20":18.79,"24":0.1531,"26":0.583},"y":"malignant"},{"x":{"22":69.57,"27":0.09127,"23":357.6,"7":0.02738,"20":10.84,"24":0.1384,"26":0.2},"y":"benign"}],"scoreName":"P(benign)","legend":[{"k":"dot","col":"var(--dti-c0)","label":"malignant"},{"k":"dot","col":"var(--dti-c1)","label":"benign"},{"k":"note","label":"bars are colored by the class a term favors"}],"impNote":"<b>%<\/b> is the feature's share of how much the model's terms move the P(benign) across the training data (standard deviation of each term's contribution, split evenly among the features it uses). Bars are relative to the top feature; ticks mark thresholds the model uses.","classes":[{"name":"malignant","col":"var(--dti-c0)"},{"name":"benign","col":"var(--dti-c1)"}],"pos":"var(--dti-c1)","neg":"var(--dti-c0)","target":"target","chart":null,"sig":3,"rowsTop":84,"note":"P(benign) = precision-weighted share of the rules that hold (each rule's weight is its out-of-bag precision, normalized to sum to 1).","fileName":"SkopeRulesClassifier"}</script>
+<script>
+/* Shared runtime for imodels.viz interactive pages.
+ * A model script calls DTI.init() for utilities, draws its view, then calls S.start(hooks):
+ *   predict(x)        -> {cls, proba} for classifiers or {value} for regressors (pure)
+ *   explain(x, pred)  -> HTML shown under the prediction (path, waterfall, ...)
+ *   show(x, pred)     -> update the drawing for input x (x = null clears it)
+ *   highlight(f)      -> emphasize what uses feature f (null clears)
+ *   exportSvg()       -> SVG text of the current view
+ *   onOpen / onClose  -> optional layout hooks when the Predict panel opens / closes
+ */
+window.DTI = (function () {
+  "use strict";
+
+  function init() {
+    const D = JSON.parse(document.getElementById("dti-data").textContent);
+    const S = {D};
+    const $ = (id) => document.getElementById(id);
+    const sig = D.sig || 3;
+
+    // ---------- formatting
+    S.esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    S.fmt = (v, digits) => {
+      if (v == null || !isFinite(v)) return String(v);
+      if (Math.abs(v) < 1e-12) return "0";
+      const g = digits || sig, a = Math.abs(v);
+      if (a >= 1e6 || a < 1e-3) return v.toExponential(g - 1).replace("e+", "e").replace("-", "−");
+      const d = Math.max(g - Math.floor(Math.log10(a)) - 1, 0);
+      return Number(v.toFixed(d)).toLocaleString("en-US", {maximumFractionDigits: d}).replace("-", "−");
+    };
+    S.signed = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + S.fmt(Math.abs(v));
+    S.pct = (p) => (p >= 0.995 && p < 1 ? ">99" : p > 0 && p <= 0.005 ? "<1" : (100 * p).toFixed(0)) + "%";
+    const isClf = D.task === "classification";
+    S.isClf = isClf;
+    S.classDot = (k) => `<i style="background:${D.classes[k].col}"></i>${S.esc(D.classes[k].name)}`;
+
+    // ---------- legend (same look on every page)
+    $("legend").innerHTML = (D.legend || []).map((it) => {
+      if (it.k === "dot") return `<span><i style="background:${it.col}"></i>${S.esc(it.label)}</span>`;
+      if (it.k === "grad") return `<span>${S.esc(it.label)}</span><span class="tt-m">${S.fmt(it.lo)}</span>` +
+        `<span class="grad" style="background:linear-gradient(90deg,${it.stops.join(",")})"></span><span class="tt-m">${S.fmt(it.hi)}</span>`;
+      return `<span class="lnote">${S.esc(it.label)}</span>`;
+    }).join("");
+
+    // ---------- tooltip
+    const tip = $("tip");
+    let tipOn = false;
+    S.tip = (html) => { tip.innerHTML = html; tip.classList.add("show"); tipOn = true; };
+    S.hideTip = () => { tip.classList.remove("show"); tipOn = false; };
+    addEventListener("pointermove", (e) => {
+      if (!tipOn) return;
+      let x = e.clientX + 16, y = e.clientY + 16;
+      if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - tip.offsetWidth - 16;
+      if (y + tip.offsetHeight > innerHeight - 8) y = Math.max(8, innerHeight - tip.offsetHeight - 8);
+      tip.style.left = x + "px"; tip.style.top = y + "px";
+    });
+
+    // ---------- theme
+    const root = document.documentElement;
+    $("b-theme").onclick = () => {
+      const dark = root.dataset.theme === "dark" || (root.dataset.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      root.dataset.theme = dark ? "light" : "dark";
+    };
+    S.resolveVars = (text) => {
+      const cs = getComputedStyle(root);
+      return text.replace(/var\((--dti-[a-z0-9]+)\)/g, (_, v) => cs.getPropertyValue(v).trim());
+    };
+    S.surface = () => getComputedStyle(root).getPropertyValue("--dti-surface").trim();
+
+    // ---------- features column
+    const hud = $("hud"), hudBody = $("hud-body");
+    const FW = 264, FH = 26;
+    let hoverF = null, pinned = null, H = {};
+    function sparkline(f) {
+      const sx = (v) => Math.max(0, Math.min(1, (v - f.hlo) / (f.hhi - f.hlo || 1))) * FW;
+      let out = `<line x1="0" x2="${FW}" y1="${FH + 0.5}" y2="${FH + 0.5}" style="stroke:var(--dti-axis)"/>`;
+      if (f.hist) {
+        const nb = f.hist.length, bw = FW / nb, top = Math.max(1, ...f.hist.map((b) => b.reduce((a, c) => a + c, 0)));
+        const w = Math.min(bw - 1, 22);
+        f.hist.forEach((b, i) => {
+          let y = FH;
+          b.forEach((c, k) => {
+            if (!c) return;
+            const h = (c / top) * (FH - 2);
+            y -= h;
+            const col = isClf && b.length > 1 ? D.classes[k].col : "var(--dti-s4)";
+            out += `<rect x="${(i * bw + (bw - w) / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" style="fill:${col}"/>`;
+          });
+        });
+      }
+      for (const t of f.thr) out += `<line x1="${sx(t).toFixed(1)}" x2="${sx(t).toFixed(1)}" y1="${FH + 2}" y2="${FH + 8}" style="stroke:var(--dti-ink);stroke-width:1.5"/>`;
+      out += `<line class="xv" y1="-1" y2="${FH}" style="stroke:var(--dti-hl);stroke-width:2"/>`;
+      return `<svg viewBox="0 -2 ${FW} ${FH + 12}" preserveAspectRatio="none" aria-hidden="true">${out}</svg>`;
+    }
+    function buildHud(word) {
+      const tot = D.feats.reduce((a, f) => a + f.imp, 0) || 1, maxImp = Math.max(...D.feats.map((f) => f.imp), 1e-12);
+      $("hud-sub").textContent = `${D.feats.length} used · sorted by importance`;
+      $("hud-note").innerHTML = D.impNote || "";
+      $("hud-f").textContent = `Hover a feature to highlight the ${word}s that use it. Click to pin.`;
+      hudBody.innerHTML = D.feats.map((f) => {
+        const ends = f.ends || [S.fmt(f.hlo), S.fmt(f.hhi)], n = f.nsplit;
+        return `<div class="frow" data-f="${f.i}">
+          <div class="top"><span class="nm" title="${S.esc(f.name)}">${S.esc(f.name)}</span><span class="im">${(100 * f.imp / tot).toFixed(1)}%</span></div>
+          <div class="ib"><span style="width:${(100 * f.imp / maxImp).toFixed(1)}%"></span></div>
+          ${sparkline(f)}
+          <div class="meta"><span>${S.esc(ends[0])}</span><span>${n} ${word}${n === 1 ? "" : "s"}</span><span>${S.esc(ends[1])}</span></div></div>`;
+      }).join("");
+      hudBody.querySelectorAll(".frow").forEach((row) => {
+        const f = +row.dataset.f;
+        row.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        row.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+        row.addEventListener("click", () => { pinned = pinned === f ? null : f; applyFeat(); });
+      });
+      $("hud-x").onclick = () => hud.classList.toggle("min");
+      if (innerWidth < 1100) hud.classList.add("min");  // keep the model in view on smaller screens
+    }
+    function applyFeat() {
+      const f = hoverF ?? pinned;
+      if (H.highlight) H.highlight(f);
+      hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("pin", +r.dataset.f === pinned));
+    }
+    S.reapplyHighlight = applyFeat;
+    S.hotFeatures = (fs) => hudBody.querySelectorAll(".frow").forEach((r) => r.classList.toggle("hot", fs.includes(+r.dataset.f)));
+
+    // ---------- predict panel
+    const panel = $("panel"), fields = $("fields"), res = $("res"), wi = $("whatif"), predBtn = $("b-pred");
+    let x = null, truth = null, truthLabel = "";
+    const featByIdx = {};
+    D.feats.forEach((f) => (featByIdx[f.i] = f));
+    S.feat = (i) => featByIdx[i];
+    // a feature value as read by people: level name, "missing", or the number
+    S.val = (i, v, digits) => {
+      const f = featByIdx[i];
+      if (v == null || Number.isNaN(v)) return "missing";
+      if (f && f.levels) return f.levels[Math.round(v)] ?? S.fmt(v);
+      return S.fmt(v, digits);
+    };
+    const isMissing = (v) => v == null || Number.isNaN(v);
+    // samples store missing values as null
+    const fromSample = (sx) => { const o = {}; for (const k in sx) o[k] = sx[k] == null ? NaN : sx[k]; return o; };
+    S.x = () => x;
+    S.predicting = () => !!x;
+    function defaults() { const o = {}; D.feats.forEach((f) => (o[f.i] = f.v)); return o; }
+    function buildFields() {
+      fields.innerHTML = D.feats.map((f) => {
+        const nm = S.esc(f.name);
+        if (f.levels) {  // categorical: pick a level (or missing)
+          return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span>
+            <select aria-label="${nm}">${f.levels.map((l, k) => `<option value="${k}">${S.esc(l)}</option>`).join("")}` +
+            `${f.missing ? `<option value="nan">(missing)</option>` : ""}</select></label></div>`;
+        }
+        return `<div class="fld" data-f="${f.i}"><label><span title="${nm}">${nm}</span><span class="ctl2">` +
+          (f.missing ? `<label class="miss" title="Treat ${nm} as missing"><input type="checkbox"> missing</label>` : "") +
+          `<input type="number" step="${f.step}" value="${+(+f.v).toPrecision(6)}" aria-label="${nm}"></span></label>
+          <input type="range" min="${f.lo}" max="${f.hi}" step="${f.step}" value="${f.v}" aria-label="${nm} slider"></div>`;
+      }).join("");
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, ft = featByIdx[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        const changed = () => { truth = null; refresh(); };
+        if (sel) sel.addEventListener("change", () => { x[f] = sel.value === "nan" ? NaN : +sel.value; changed(); });
+        if (num) num.addEventListener("input", () => {
+          if (num.value === "") return;
+          x[f] = +num.value; rng.value = num.value; if (miss) miss.checked = false; changed();
+        });
+        if (rng) rng.addEventListener("input", () => {
+          x[f] = +rng.value; num.value = +(+rng.value).toPrecision(6); if (miss) miss.checked = false; changed();
+        });
+        if (miss) miss.addEventListener("change", () => { x[f] = miss.checked ? NaN : +num.value || ft.v; changed(); });
+        el.addEventListener("pointerenter", () => { hoverF = f; applyFeat(); });
+        el.addEventListener("pointerleave", () => { hoverF = null; applyFeat(); });
+      });
+    }
+    function setFields() {
+      fields.querySelectorAll(".fld").forEach((el) => {
+        const f = +el.dataset.f, v = x[f];
+        const num = el.querySelector("[type=number]"), rng = el.querySelector("[type=range]");
+        const sel = el.querySelector("select"), miss = el.querySelector(".miss input");
+        if (sel) { sel.value = isMissing(v) ? "nan" : String(Math.round(v)); return; }
+        if (miss) miss.checked = isMissing(v);
+        if (isMissing(v)) { num.value = ""; return; }
+        num.value = +(+v).toPrecision(6);
+        rng.value = v;
+      });
+    }
+    function resultHtml(p) {
+      let html = `<div class="tt-k">Prediction</div>`;
+      if (isClf) {
+        const k = p.cls;
+        html += `<div class="big">${S.classDot(k)}</div>`;
+        if (p.proba) {
+          const shown = D.classes.length === 2 ? 1 : k;
+          html += `<div class="meta">P(${S.esc(D.classes[shown].name)}) = ${S.pct(p.proba[shown])}${p.note ? " \u00b7 " + p.note : ""}</div>`;
+          html += `<div class="probs">${p.proba.map((q, j) => q > 0 ? `<span style="width:${(100 * q).toFixed(2)}%;background:${D.classes[j].col}" title="${S.esc(D.classes[j].name)} ${S.pct(q)}"></span>` : "").join("")}</div>`;
+          html += `<div class="plabs">${p.proba.map((q, j) => q > 0.005 ? `<span><i style="background:${D.classes[j].col}"></i>${S.esc(D.classes[j].name)} ${S.pct(q)}</span>` : "").join("")}</div>`;
+        } else if (p.note) html += `<div class="meta">${p.note}</div>`;
+      } else {
+        html += `<div class="big">${S.fmt(p.value, Math.max(sig, 4))}</div>`;
+        if (p.note) html += `<div class="meta">${p.note}</div>`;
+      }
+      if (truth != null) html += `<div class="truth">${S.esc(truthLabel)} <b>${S.esc(truth)}</b></div>`;
+      return html + (H.explain ? H.explain(x, p) : "");
+    }
+    function refresh() {
+      const p = H.predict(x);
+      res.innerHTML = resultHtml(p);
+      if (H.show) H.show(x, p);
+      for (const f of D.feats) {
+        const ln = hudBody.querySelector(`.frow[data-f="${f.i}"] .xv`);
+        if (!ln) continue;
+        ln.style.visibility = isMissing(x[f.i]) ? "hidden" : "";
+        const px = (Math.max(0, Math.min(1, (x[f.i] - f.hlo) / (f.hhi - f.hlo || 1))) * FW).toFixed(1);
+        ln.setAttribute("x1", px); ln.setAttribute("x2", px);
+      }
+      hud.classList.add("predicting");
+      whatIf(p);
+      applyFeat();
+    }
+    S.refresh = () => { if (x) refresh(); };
+
+    // ---------- what would change the prediction
+    // the roundest number just past threshold t (above when up, else below) that crosses no other
+    // threshold, so an applied change reads cleanly (1.8 rather than 1.750001)
+    function nicePast(t, up, span, thr) {
+      const tol = span * 1e-3;
+      for (let p = 1; p <= 12; p++) {
+        const step = Math.pow(10, Math.floor(Math.log10(Math.abs(t) || 1)) - p + 1);
+        const v = +((up ? Math.floor(t / step) + 1 : Math.ceil(t / step) - 1) * step).toPrecision(p + 1);
+        const clear = thr.every((o) => !(up ? o > t && o < v : o < t && o > v));
+        if ((up ? v > t : v < t) && Math.abs(v - t) <= tol && clear) return v;
+      }
+      return up ? t + span * 1e-6 : t - span * 1e-6;
+    }
+    function candidates(f, cur) {
+      const span = (f.hi - f.lo) || 1, out = [];
+      if (f.missing && !isMissing(cur)) out.push({v: NaN, txt: "missing"});
+      if (f.levels) {
+        f.levels.forEach((l, k) => { if (isMissing(cur) || k !== Math.round(cur)) out.push({v: k, txt: l}); });
+        return out;
+      }
+      if (f.kind === "binary") return out.concat([{v: 0, txt: "0"}, {v: 1, txt: "1"}].filter((c) => c.v !== cur));
+      for (const t of f.thr) {
+        if (f.kind === "integer") {
+          out.push({v: Math.floor(t), txt: S.fmt(Math.floor(t), 12)}, {v: Math.floor(t) + 1, txt: S.fmt(Math.floor(t) + 1, 12)});
+        } else {
+          let dg = sig;  // enough digits that the threshold reads differently from the current value
+          // (only when they really differ: a value sitting on the cut keeps the short form)
+          while (dg < 8 && !isMissing(cur) && Math.abs(t - cur) > span * 1e-5 && S.fmt(t, dg) === S.fmt(cur, dg)) dg++;
+          out.push({v: nicePast(t, false, span, f.thr), txt: `\u2264 ${S.fmt(t, dg)}`, t},
+                   {v: nicePast(t, true, span, f.thr), txt: `> ${S.fmt(t, dg)}`, t});
+        }
+      }
+      for (let q = 0; q <= 8; q++) {
+        let v = f.lo + span * q / 8;
+        if (f.kind === "integer") v = Math.round(v);
+        out.push({v, txt: S.fmt(v)});
+      }
+      return out.filter((c) => isMissing(c.v) || isMissing(cur) || Math.abs(c.v - cur) > 1e-12);
+    }
+    // how big a change is, as a share of the feature's range (switching a level or to / from missing counts as half)
+    function dist(f, c, cur) {
+      if (f.levels || isMissing(c.v) || isMissing(cur)) return 0.5;
+      return Math.abs(c.v - cur) / ((f.hi - f.lo) || 1);
+    }
+    function whatIf(base) {
+      const rows = [];
+      for (const f of D.feats) {
+        const cur = x[f.i];
+        let best = null;
+        for (const c of candidates(f, cur)) {
+          const xx = Object.assign({}, x, {[f.i]: c.v});
+          const p = H.predict(xx), d = dist(f, c, cur);
+          if (isClf) {
+            const flips = p.cls !== base.cls;
+            // prefer the smallest change that flips the class; otherwise the biggest drop in the current class
+            const drop = p.proba && base.proba ? base.proba[base.cls] - p.proba[base.cls] : 0;
+            const key = flips ? [0, d] : [1, -drop];
+            if (!flips && drop < 0.005) continue;  // ignore changes that barely move the probability
+            if (!best || key[0] < best.key[0] || (key[0] === best.key[0] && key[1] < best.key[1])) best = {f, c, p, key, flips, drop};
+          } else {
+            const delta = p.value - base.value;
+            if (Math.abs(delta) <= 1e-9 * (1 + Math.abs(base.value))) continue;
+            const key = [0, -Math.abs(delta)];
+            if (!best || key[1] < best.key[1]) best = {f, c, p, key, delta};
+          }
+        }
+        if (best) rows.push(best);
+      }
+      rows.sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1]);
+      rows.forEach((r) => (r.changes = [{f: r.f, c: r.c}]));
+      const flipping = rows.filter((r) => r.flips), lowering = rows.filter((r) => !r.flips);
+      const pairs = isClf && !flipping.length ? pairFlips(base) : [];
+      const cls = S.esc(D.classes[base.cls] ? D.classes[base.cls].name : "");
+      const groups = isClf
+        ? [["Smallest single-feature changes that flip the class:", flipping.slice(0, 4)],
+           ["No single change flips the class. Smallest pairs of changes that do:", pairs],
+           [`Changes that lower P(${cls}) most without flipping it:`, lowering.slice(0, Math.max(0, 4 - flipping.length - pairs.length))]]
+        : [["Single-feature changes that move the prediction most:", rows.slice(0, 5)]];
+      const show = [];
+      let html = "";
+      for (const [lead, list] of groups) {
+        if (!list.length) continue;
+        html += `<div class="none">${lead}</div>`;
+        for (const r of list) {
+          const to = isClf
+            ? `${S.classDot(r.p.cls)}${r.p.proba ? " " + S.pct(r.p.proba[r.p.cls]) : ""}`
+            : `${S.fmt(r.p.value, Math.max(sig, 4))} <span class="tt-m">(${S.signed(r.delta)})</span>`;
+          const what = r.changes.map((ch) => {
+            let dg = sig;
+            while (dg < 8 && ch.c.t != null && !isMissing(x[ch.f.i]) &&
+                   Math.abs(ch.c.t - x[ch.f.i]) > ((ch.f.hi - ch.f.lo) || 1) * 1e-5 &&
+                   S.fmt(ch.c.t, dg) === S.fmt(x[ch.f.i], dg)) dg++;
+            return `<b>${S.esc(ch.f.name)}</b> ${S.esc(S.val(ch.f.i, x[ch.f.i], dg))} \u2192 ${S.esc(ch.c.txt)}`;
+          }).join(" and ");
+          html += `<button data-k="${show.length}" title="Apply ${r.changes.length > 1 ? "these changes" : "this change"}"><span class="what">${what}</span>` +
+            `<span class="to">${to}</span></button>`;
+          show.push(r);
+        }
+      }
+      wi.innerHTML = html || `<div class="none">No change to one or two features moves this prediction.</div>`;
+      wi.querySelectorAll("button").forEach((b) => {
+        const r = show[+b.dataset.k];
+        b.onclick = () => { for (const ch of r.changes) x[ch.f.i] = ch.c.v; truth = null; setFields(); refresh(); };
+      });
+    }
+    // two-feature changes that flip the class, nearest first (top features, nearest candidates only)
+    function pairFlips(base) {
+      const cand = D.feats.slice(0, 10).map((f) => {
+        const cur = x[f.i];
+        return {f, list: candidates(f, cur).map((c) => ({c, d: dist(f, c, cur)})).sort((a, b) => a.d - b.d).slice(0, 12)};
+      });
+      const best = [];
+      for (let a = 0; a < cand.length; a++) for (let b = a + 1; b < cand.length; b++) {
+        let top = null;
+        for (const ca of cand[a].list) for (const cb of cand[b].list) {
+          const d = ca.d + cb.d;
+          if (top && d >= top.key[1]) continue;
+          const p = H.predict(Object.assign({}, x, {[cand[a].f.i]: ca.c.v, [cand[b].f.i]: cb.c.v}));
+          if (p.cls !== base.cls) top = {changes: [{f: cand[a].f, c: ca.c}, {f: cand[b].f, c: cb.c}], p, key: [0, d], flips: true};
+        }
+        if (top) best.push(top);
+      }
+      return best.sort((a, b) => a.key[1] - b.key[1]).slice(0, 3);
+    }
+
+    function open(on) {
+      on = on ?? !panel.classList.contains("open");
+      panel.classList.toggle("open", on);
+      predBtn.classList.toggle("on", on);
+      if (on) {
+        if (!x) { x = defaults(); buildFields(); }
+        refresh();
+        if (H.onOpen) setTimeout(H.onOpen, 270);
+      } else {
+        x = null;
+        hud.classList.remove("predicting");
+        if (H.show) H.show(null, null);
+        if (H.onClose) setTimeout(H.onClose, 270);
+      }
+    }
+    S.open = open;
+    // load a training row into Predict (optionally one matching `keep`)
+    S.loadSample = (keep, why) => {
+      const pool = keep ? D.samples.filter((s) => keep(Object.assign(defaults(), fromSample(s.x)))) : D.samples;
+      if (!pool.length) return false;
+      const s = pool[Math.floor(Math.random() * pool.length)];
+      if (!x) { x = defaults(); buildFields(); }
+      Object.assign(x, fromSample(s.x));
+      truth = s.y;
+      truthLabel = why ? `${why}; true label` : "true label";
+      if (!panel.classList.contains("open")) open(true); else { setFields(); refresh(); }
+      setFields();
+      return true;
+    };
+    S.setValues = (vals) => { if (!x) open(true); Object.assign(x, vals); truth = null; setFields(); refresh(); };
+    S.withX = (vals) => Object.assign({}, x || defaults(), vals);
+    S.defaults = defaults;
+
+    S.start = (hooks) => {
+      H = hooks;
+      buildHud(hooks.word || "term");
+      $("p-hint").textContent = hooks.hint || "Set feature values to see the prediction. Features are ordered by importance.";
+      predBtn.onclick = () => open();
+      const rb = $("b-rand");
+      if (!D.samples.length) rb.style.display = "none";
+      rb.onclick = () => S.loadSample(null);
+      $("b-reset").onclick = () => { x = defaults(); truth = null; setFields(); refresh(); };
+      $("b-svg").onclick = () => {
+        const text = S.resolveVars(hooks.exportSvg());
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], {type: "image/svg+xml"}));
+        a.download = (D.fileName || "model") + ".svg";
+        a.click();
+      };
+    };
+    // a small horizontal waterfall used by additive models and sums of trees
+    S.waterfall = (items, totalLabel, total, pos, neg, limit = 12) => {
+      // the baseline is listed but not drawn: it would set the scale and flatten every contribution
+      const maxc = Math.max(...items.filter(([lab]) => lab !== "baseline").map(([, c]) => Math.abs(c)), 1e-12);
+      const line = (lab, c) => `<div class="lab" title="${S.esc(lab)}">${S.esc(lab)}</div><div class="val">${S.signed(c)}</div>` +
+        (lab === "baseline" ? `<div class="bar"></div>` :
+          `<div class="bar" style="width:${(100 * Math.abs(c) / maxc).toFixed(1)}%;background:${c >= 0 ? pos : neg}"></div>`);
+      let html = items.slice(0, limit).map(([lab, c]) => line(lab, c)).join("");
+      if (items.length > limit) html += `<div class="lab tt-m">+${items.length - limit} smaller terms</div><div></div>`;
+      return `<div class="wf">${html}<div class="lab tot">${S.esc(totalLabel)}</div><div class="val tot">${S.fmt(total, Math.max(sig, 4))}</div></div>`;
+    };
+    return S;
+  }
+  return {init};
+})();
+
+</script>
+<script>
+/* Additive-model pages: rule sets, scorecards, shape functions (GAMs) and linear models. */
+(function () {
+  "use strict";
+  const S = DTI.init(), D = S.D, T = D.terms, esc = S.esc, fmt = S.fmt;
+  const svg = document.getElementById("canvas"), NS = "http://www.w3.org/2000/svg";
+  const OPS = {"<=": (a, b) => a <= b, "<": (a, b) => a < b, ">": (a, b) => a > b, ">=": (a, b) => a >= b, "==": (a, b) => a === b,
+    "!=": (a, b) => a !== b, "isnan": (a) => Number.isNaN(a), "notnan": (a) => !Number.isNaN(a)};
+  const NEG = {"<=": ">", "<": ">=", ">": "<=", ">=": "<", "==": "!=", "!=": "==", "isnan": "notnan", "notnan": "isnan"};
+
+  // ---------- model evaluation (mirrors AdditiveView.score in Python)
+  function interp(v, g, y) {  // np.interp: linear between points, flat beyond the ends
+    if (v <= g[0]) return y[0];
+    if (v >= g[g.length - 1]) return y[y.length - 1];
+    let i = 1;
+    while (g[i] < v) i++;
+    return y[i - 1] + (y[i] - y[i - 1]) * (v - g[i - 1]) / (g[i] - g[i - 1]);
+  }
+  function contrib(t, x) {
+    if (t.k === "rule") return t.c.every(([f, op, v]) => OPS[op](x[f], v)) ? t.w : 0;
+    const v = x[t.f];
+    if (t.k === "linear") return t.w * ((t.clip ? Math.min(t.clip[1], Math.max(t.clip[0], v)) : v) - t.ctr);
+    if (t.k === "curve") {
+      if (!t.tied || t.tied.every(Boolean) || !t.tied.some(Boolean)) return interp(v, t.g, t.vals);
+      let b = 0;  // bin of v: searchsorted(edges, v, "right")
+      while (b < t.e.length && t.e[b] <= v) b++;
+      if (t.tied[b]) return interp(v, t.g, t.vals);
+      const keep = t.tied.map((q) => !q);
+      return interp(v, t.g.filter((_, i) => keep[i]), t.vals.filter((_, i) => keep[i]));
+    }
+    const e = t.e.map((q, i) => (q == null ? (i === 0 ? -Infinity : Infinity) : q));
+    let i = 0;  // bins are (e[i], e[i+1]], matching tree splits
+    while (i < t.vals.length - 1 && v > e[i + 1]) i++;
+    return t.vals[i];
+  }
+  function output(s) {
+    if (D.link === "logistic") return 1 / (1 + Math.exp(-(D.linkScale * s + D.linkOffset)));
+    if (D.link === "clip") return Math.min(1, Math.max(0, s));
+    if (D.link === "exp") return Math.exp(s);
+    if (D.link === "threshold") return s > D.threshold ? 1 : 0;
+    return s;
+  }
+  function predict(x) {
+    const parts = T.map((t) => contrib(t, x));
+    const s = D.intercept + parts.reduce((a, c) => a + c, 0), out = output(s);
+    if (!S.isClf) return {value: out, parts, s};
+    const k = out >= 0.5 ? D.classes.length - 1 : 0;
+    if (D.link === "threshold") {
+      const fired = T.filter((t, i) => t.k === "rule" && parts[i] !== 0).length;
+      return {cls: k, parts, s, note: `${fired} rule${fired === 1 ? "" : "s"} hold${fired === 1 ? "s" : ""}`};
+    }
+    const note = D.scoreName.startsWith("P(") ? "" : `${esc(D.scoreName)} ${fmt(s)}`;
+    return {cls: k, proba: [1 - out, out], parts, s, note};
+  }
+  function explain(x, p) {
+    const items = p.parts.map((c, i) => [T[i].txt, c]).filter(([, c]) => Math.abs(c) > 1e-12)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    if (D.intercept) items.unshift(["baseline", D.intercept]);
+    return S.waterfall(items, D.scoreName, p.s, D.pos, D.neg) + (D.note ? `<div class="tt-m" style="font-size:11px;margin-top:6px">${esc(D.note)}</div>` : "");
+  }
+
+  // ---------- rows (rule sets / scorecards) and panels (GAMs)
+  const rows = [...svg.querySelectorAll(".term")], panels = [...svg.querySelectorAll(".panel")];
+  const condHolds = (c, x) => OPS[c[1]](x[c[0]], c[2]);
+  // smallest input change that makes condition (f, op, v) hold
+  function satisfy(f, op, v) {
+    const ft = S.feat(f), span = (ft.hi - ft.lo) || 1, eps = span * 1e-6;
+    if (op === "isnan") return NaN;
+    if (op === "notnan") return ft.v;
+    if (ft.levels && op === "!=") return v === 0 ? 1 : 0;  // any other level
+    if (ft.kind !== "continuous") {
+      return {"<=": Math.floor(v), "<": Math.ceil(v) - 1, ">": Math.floor(v) + 1, ">=": Math.ceil(v), "==": v,
+        "!=": ft.kind === "binary" ? 1 - v : v + 1}[op];
+    }
+    return {"<=": v, "<": v - eps, ">": v + eps, ">=": v, "==": v, "!=": v + span * 0.01}[op];
+  }
+  function toggleRule(t) {
+    const x = S.x();
+    if (t.c.every((c) => condHolds(c, x))) {  // break it with the smallest single change
+      let best = null;
+      for (const [f, op, v] of t.c) {
+        const nv = satisfy(f, NEG[op], v);
+        const d = Number.isNaN(nv) || Number.isNaN(x[f]) || S.feat(f).levels ? 0.5 : Math.abs(nv - x[f]) / ((S.feat(f).hi - S.feat(f).lo) || 1);
+        if (!best || d < best.d) best = {f, nv, d};
+      }
+      if (best) S.setValues({[best.f]: best.nv});
+    } else {  // make every failing condition hold
+      const vals = {};
+      for (const c of t.c) if (!condHolds(c, Object.assign({}, x, vals))) vals[c[0]] = satisfy(c[0], c[1], c[2]);
+      S.setValues(vals);
+    }
+  }
+  rows.forEach((g) => {
+    const t = T[+g.dataset.t];
+    const act = t.k !== "rule" ? "" : D.samples.length ? "Click to load a training row this rule covers (while predicting, click to switch the rule on or off)."
+      : "While predicting, click to switch the rule on or off.";
+    g.addEventListener("pointerenter", () => { S.tip(t.tip + (act ? `<div class="tt-act">${act}</div>` : "")); S.hotFeatures(t.fs); });
+    g.addEventListener("pointerleave", () => { S.hideTip(); S.hotFeatures([]); });
+    if (t.k === "rule") g.addEventListener("click", () => {
+      if (S.predicting()) toggleRule(t);
+      else if (!S.loadSample((x) => t.c.every((c) => condHolds(c, x)), `training row covered by rule ${g.dataset.rank || ""}`.trim())) S.open(true);
+    });
+  });
+  // GAM panels: click to set the feature to the clicked value
+  panels.forEach((g) => {
+    const m = (D.chart || []).find((c) => c.f === +g.dataset.f);
+    g.addEventListener("pointerenter", () => { S.tip(`<div class="tt-h"><b>${esc(S.feat(m.f).name)}</b></div><div class="tt-act">Click to set ${esc(S.feat(m.f).name)} to the value under the pointer.</div>`); S.hotFeatures([m.f]); });
+    g.addEventListener("pointerleave", () => { S.hideTip(); S.hotFeatures([]); });
+    g.addEventListener("click", (e) => {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      const local = pt.matrixTransform(g.getScreenCTM().inverse());
+      const fr = Math.max(0, Math.min(1, (local.x - m.x0) / (m.x1 - m.x0)));
+      let v = m.lo + fr * (m.hi - m.lo);
+      if (S.feat(m.f).kind !== "continuous") v = Math.round(v);
+      S.setValues({[m.f]: v});
+    });
+  });
+
+  // ---------- sort control (rule sets only)
+  const sortSel = document.getElementById("sort"), sortCtl = document.getElementById("sortctl");
+  if (D.family !== "ruleset" || rows.length < 2) sortCtl.style.display = "none";
+  sortSel.onchange = () => {
+    const key = sortSel.value;
+    const order = rows.slice().sort((a, b) => {
+      const ta = T[+a.dataset.t], tb = T[+b.dataset.t];
+      if (key === "coverage") return (tb.sup ?? -1) - (ta.sup ?? -1);
+      if (key === "model") return +a.dataset.t - +b.dataset.t;
+      return +a.dataset.rank - +b.dataset.rank;
+    });
+    let y = D.rowsTop;
+    for (const g of order) { g.style.transform = `translate(0px, ${y}px)`; y += +g.dataset.h; }
+  };
+
+  // ---------- markers
+  // label: [text, x, y, anchor] placed clear of chart titles
+  function marker(g, x, y0, y1, yDot, label) {
+    let mk = g.querySelector(":scope > .mk");
+    if (!mk) { mk = document.createElementNS(NS, "g"); mk.setAttribute("class", "mk"); g.appendChild(mk); }
+    mk.innerHTML = x == null ? "" : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y1}" style="stroke:var(--dti-hl);stroke-width:2"/>` +
+      (yDot != null ? `<circle cx="${x}" cy="${yDot}" r="4.5" style="fill:var(--dti-hl);stroke:var(--dti-card);stroke-width:1.5"/>` : "") +
+      (label ? `<text x="${label[1]}" y="${label[2]}" text-anchor="${label[3]}" style="font-size:10.5px;font-weight:700;fill:var(--dti-hl);paint-order:stroke;stroke:var(--dti-card);stroke-width:3px">${label[0]}</text>` : "");
+  }
+  function show(x, p) {
+    svg.classList.toggle("predicting", !!x);
+    if (!x) {
+      svg.querySelectorAll(".mk").forEach((m) => (m.innerHTML = ""));
+      svg.querySelectorAll(".rk").forEach((d) => d.setAttribute("r", 4.5));
+      return;
+    }
+    rows.forEach((g) => {
+      const i = +g.dataset.t, t = T[i];
+      if (t.k !== "rule") { g.classList.add("on"); return; }
+      const ok = t.c.map((c) => condHolds(c, x)), n = ok.filter(Boolean).length;
+      g.classList.toggle("on", n === ok.length);
+      g.classList.toggle("near", n === ok.length - 1 && ok.length > 1);
+      g.querySelectorAll(".chip").forEach((ch) => {
+        const j = +ch.dataset.c;
+        ch.classList.toggle("ok", !!ok[j]);
+        ch.classList.toggle("no", !ok[j]);
+      });
+    });
+    if (D.family === "gam" && D.chart) for (const m of D.chart) {
+      const g = svg.querySelector(`.panel[data-f="${m.f}"]`);
+      if (Number.isNaN(x[m.f])) { marker(g, null); continue; }
+      const v = Math.max(m.lo, Math.min(m.hi, x[m.f])), px = m.x0 + (v - m.lo) / (m.hi - m.lo) * (m.x1 - m.x0);
+      const c = T.filter((t) => t.f === m.f).reduce((a, t) => a + contrib(t, x), 0);
+      const py = m.y0 + (m.y1 - m.y0) / 2 - c / m.ymax * (m.y1 - m.y0) / 2;
+      const right = px > (m.x0 + m.x1) / 2;
+      marker(g, px.toFixed(1), m.y0, m.y1, py.toFixed(1), [S.signed(c), (px + (right ? -8 : 8)).toFixed(1), (py - 8).toFixed(1), right ? "end" : "start"]);
+    }
+    if (D.family === "scorecard" && D.chart) {
+      const c = D.chart, v = Math.max(c.smin, Math.min(c.smax, p.s)), px = c.x0 + (v - c.smin) / (c.smax - c.smin || 1) * (c.x1 - c.x0);
+      marker(svg, px.toFixed(1), c.y0, c.y1, null, [`score ${fmt(p.s)}`, (px + 6).toFixed(1), (c.y0 + 14).toFixed(1), "start"]);
+      svg.querySelectorAll(".rk").forEach((d) => d.setAttribute("r", Math.abs(+d.dataset.s - p.s) < 1e-9 ? 7 : 4.5));
+    }
+  }
+
+  S.start({
+    word: D.family === "gam" ? "shape function" : D.family === "scorecard" ? "item" : "term",
+    hint: D.family === "gam" ? "Set feature values, or click inside a panel, to see each feature's contribution. They add up to the prediction."
+      : D.family === "scorecard" ? "Set feature values to see which items score. Click an item to switch it on or off."
+        : "Set feature values to see which rules hold and how the terms add up. Click a rule to switch it on or off.",
+    predict, explain, show,
+    highlight(f) {
+      svg.classList.toggle("feat-mode", f != null);
+      rows.forEach((g) => g.classList.toggle("feat", f != null && T[+g.dataset.t].fs.includes(f)));
+      panels.forEach((g) => g.classList.toggle("feat", f != null && +g.dataset.f === f));
+    },
+    exportSvg() {
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.querySelectorAll(".mk").forEach((m) => m.remove());
+      const text = new XMLSerializer().serializeToString(clone);
+      return text.replace(/(<svg[^>]*>)/, `$1<rect x="-4" y="-4" width="100%" height="100%" fill="${S.surface()}"/>`);
+    },
+  });
+})();
+
+</script>
+</body>
+</html>

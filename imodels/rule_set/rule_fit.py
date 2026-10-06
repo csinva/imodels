@@ -31,44 +31,56 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     Parameters
     ----------
-    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
-                    this will be the mean number of terminal nodes.
-    sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
-                    FP 2004 (Sec. 2)
-    max_rules:      total number of terms included in the final model (both linear and rules)
-                    approximate total number of candidate rules generated for fitting also is based on this
-                    Note that actual number of candidate rules will usually be lower than this due to duplicates.
-    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
-                    sequentially induced. FP 2004 (Sec. 2)
-    lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
-                    by multiplying the winsorised variable by 0.4/stdev.
-    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
-                    terms before standardisation.
-    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                    terminal nodes based on an exponential distribution about tree_size. 
-                    (Friedman Sec 3.3)
-    include_linear: Include linear terms as opposed to only rules
-    alpha:          Regularization strength, will override max_rules parameter
-    cv:             Whether to use cross-validation scores to select the regularization strength 
-                    the final regularization value out of all that satisfy max_rules. If False, the
-                    least regularization possible is used.
-    random_state:   Integer to initialise random objects and provide repeatability.
-    tree_generator: Optional: this object will be used as provided to generate the rules. 
-                    This will override almost all the other properties above. 
-                    Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
-                    A copy is fitted on the training data, so the object passed in is left
-                    untouched (and any previous fit of it is not reused). Note that
-                    n_estimators, max_leaf_nodes and random_state are set on that copy while
-                    the trees are grown, so tuning them on the generator has no effect.
+    n_estimators : int, default=100
+        Number of trees grown to generate candidate rules.
+    tree_size : int, default=4
+        Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
+        this is the mean number of terminal nodes.
+    sample_fract : float or "default", default="default"
+        Fraction of randomly chosen training observations used to produce each tree
+        (Friedman and Popescu 2004, Sec. 2).
+    max_rules : int, default=30
+        Total number of terms included in the final model (both linear terms and rules).
+        The approximate number of candidate rules generated is also based on this; the
+        actual number is usually lower because of duplicates.
+    memory_par : float, default=0.01
+        Scale multiplier (shrinkage factor) applied to each new tree when sequentially
+        induced (Friedman and Popescu 2004, Sec. 2).
+    tree_generator : estimator, optional
+        Used as provided to generate the rules, overriding most of the parameters above.
+        Must be GradientBoostingRegressor(), GradientBoostingClassifier() or
+        RandomForestRegressor(). A copy is fitted on the training data, so the object
+        passed in is left untouched (and any previous fit of it is not reused).
+        n_estimators, max_leaf_nodes and random_state are set on that copy while the
+        trees are grown, so tuning them on the generator has no effect.
+    lin_trim_quantile : float, default=0.025
+        If lin_standardise is True, this quantile is used to trim linear terms before
+        standardisation.
+    lin_standardise : bool, default=True
+        If True, linear terms are standardised as in Friedman and Popescu (Sec. 3.2), by
+        multiplying the winsorised variable by 0.4 / stdev.
+    exp_rand_tree_size : bool, default=True
+        If True, each boosted tree has a different maximum number of terminal nodes, drawn
+        from an exponential distribution about tree_size (Sec. 3.3).
+    include_linear : bool, default=True
+        Include linear terms as well as rules.
+    alpha : float, optional
+        Regularization strength; overrides max_rules.
+    cv : bool, default=True
+        Whether to use cross-validation scores to select the regularization strength, out
+        of all values that satisfy max_rules. If False, the least regularization possible
+        is used.
+    random_state : int, optional
+        Seed for the random objects, for repeatability.
+    verbose : int, default=0
+        Verbosity.
 
     Attributes
     ----------
-    rule_ensemble: RuleEnsemble
-        The rule ensemble
-
-    feature_names: list of strings, optional (default=None)
-        The names of the features (columns)
-
+    rule_ensemble : RuleEnsemble
+        The rule ensemble.
+    feature_names : list of str, optional
+        The names of the features (columns).
     """
 
     def __init__(self,
@@ -269,21 +281,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         rules = rules[rules.coef != 0].sort_values("support", ascending=False)
         pd.set_option('display.max_colwidth', None)
         return rules[['rule', 'coef']].round(decimals)
-
-    def __str__(self):
-        if not hasattr(self, 'coef'):
-            s = self.__class__.__name__
-            s += "("
-            s += "max_rules="
-            s += repr(self.max_rules)
-            s += ")"
-            return s
-        else:
-            s = '> ------------------------------\n'
-            s += '> RuleFit:\n'
-            s += '> \tPredictions are made by summing the coefficients of each rule\n'
-            s += '> ------------------------------\n'
-            return s + self.visualize().to_string(index=False) + '\n'
 
     def _extract_rules(self, X, y) -> List[str]:
         return extract_rulefit(X, y,

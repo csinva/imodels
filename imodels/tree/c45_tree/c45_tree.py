@@ -229,10 +229,6 @@ class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
             normalized = scores / totals
         return np.where(totals > 0, normalized, 1 / scores.shape[1])
 
-    def __str__(self):
-        check_is_fitted(self, ['tree_'])
-        return self.dom_.toprettyxml(newl="\r\n")
-
     def grow_tree(self, X_t: List[list], y_str: List[str], parent, attrs_names):
         """
         Parameters
@@ -342,8 +338,8 @@ class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
 class HSC45TreeClassifier(BaseEstimator):
     def __init__(self, estimator_: C45TreeClassifier, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
         """
-        Params
-        ------
+        Parameters
+        ----------
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be < 0)
 

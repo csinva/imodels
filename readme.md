@@ -25,7 +25,7 @@
 Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
-from imodels import get_clean_dataset, HSTreeClassifierCV # import any imodels model here
+from imodels import get_clean_dataset, viz, HSTreeClassifierCV # import any imodels model here
 from sklearn.model_selection import train_test_split
 
 # prepare data (a sample clinical dataset)
@@ -38,25 +38,11 @@ model = HSTreeClassifierCV(max_leaf_nodes=4)  # initialize a tree model and spec
 model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
-print(model) # print the model
+viz.draw(model, X_train, y_train, feature_names=feature_names, class_names=["no CSI", "CSI"],
+         title="Cervical spine injury").save("model.svg")  # draw the model (or print(model) for text, viz.interactive(model) for interaction)
 ```
 
-```
-------------------------------
-Decision Tree with Hierarchical Shrinkage
-Prediction is made by looking at the value in the appropriate leaf of the tree
-------------------------------
-|--- FocalNeuroFindings2 <= 0.50
-|   |--- HighriskDiving <= 0.50
-|   |   |--- Torticollis2 <= 0.50
-|   |   |   |--- value: [0.10]
-|   |   |--- Torticollis2 >  0.50
-|   |   |   |--- value: [0.30]
-|   |--- HighriskDiving >  0.50
-|   |   |--- value: [0.68]
-|--- FocalNeuroFindings2 >  0.50
-|   |--- value: [0.42]
-```
+<p align="center"><img src="https://csinva.io/imodels/img/readme_hstree.svg" width="55%" alt="The fitted hierarchical-shrinkage tree drawn by imodels.viz"></p>
 
 ### Installation
 
@@ -126,16 +112,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
 
-|                           Rule set                           |                        Rule list                        |                        Rule tree                        |                       Algebraic models                       |
-| :----------------------------------------------------------: | :-----------------------------------------------------: | :-----------------------------------------------------: | :----------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_list.jpg"> | <img src="https://csinva.io/imodels/img/rule_tree.jpg"> | <img src="https://csinva.io/imodels/img/algebraic_models.jpg"> |
-
-Different models and algorithms vary not only in their final form but also in different choices made during modeling, such as how they generate, select, and postprocess rules:
-
-|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing|
-| :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_candidates.jpg"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
-
+<p align="center"><img src="https://csinva.io/imodels/img/model_categories.png" width="100%" alt="The four forms of an interpretable model: rule set, rule list, rule tree and algebraic model, each with the regions it carves out of two features"></p>
 
 <details>
 <summary>Ex. RuleFit vs. SkopeRules</summary>

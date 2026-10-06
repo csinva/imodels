@@ -58,8 +58,8 @@ def _tqdm(iterable=None, total=None, desc=None, leave=False):
 def progress_iter(iterable, verbose=False, desc=None, total=None, leave=False):
     """Wrap `iterable` in a progress bar when `verbose` is truthy.
 
-    Params
-    ------
+    Parameters
+    ----------
     iterable
         what the fit loop iterates over
     verbose: bool or int

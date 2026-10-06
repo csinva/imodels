@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels.viz</title>
+<meta name="description" content="Static and interactive visualizations of fitted models. `draw` renders a model as a self-contained SVG figure (save it as .svg, .png, .pdf or .html), …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="../style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<header id="site-header">
+<a href="../index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="../index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+<article id="content">
+<section id="section-intro">
+<p>Static and interactive visualizations of fitted models.</p>
+<p><code><a title="imodels.viz.draw" href="#imodels.viz.draw">draw()</a></code> renders a model as a self-contained SVG figure (save it as .svg, .png, .pdf or .html), and
+<code><a title="imodels.viz.interactive" href="#imodels.viz.interactive">interactive()</a></code> builds a single offline HTML page to explore it: fold and unfold trees, highlight a
+feature, route a sample through the model, and see the smallest change that would flip its prediction.</p>
+<p>Supported models, each drawn so that it reproduces the model's own <code>predict</code> / <code>predict_proba</code>:</p>
+<ul>
+<li><strong>imodels</strong>: trees (GreedyTree, DecisionTreeCCP, HSTree, TaoTree, C4.5, FastSmallTree), sums of trees
+(FIGS, IRF), rule lists (GreedyRuleList, OneR, FastFrugalTree, BayesianRuleList), rule sets (RuleFit,
+FPLasso, SkopeRules, FPSkope, BoostedRules, Slipper, BayesianRuleSet), scoring systems
+(FastRiskScore, SLIM) and additive models (TreeGAM, GPGam, MarginalShrinkageLinearRegressor).</li>
+<li><strong>scikit-learn</strong>: decision trees, random forests, extra trees, gradient boosting, histogram gradient
+boosting, linear and logistic models, GLMs, linear SVMs and isotonic regression. Pipelines whose
+earlier steps only scale features are drawn in raw units.</li>
+</ul>
+<pre><code class="language-python">from imodels import FIGSClassifier
+from imodels.viz import draw, interactive
+
+model = FIGSClassifier(max_rules=8).fit(X, y)
+draw(model, X, y).save(&quot;figs.svg&quot;)                # static figure
+interactive(model, X, y).save(&quot;figs.html&quot;)        # interactive page, one offline file
+</code></pre>
+<p>Both functions show inline in Jupyter. See the <a href="https://csinva.io/imodels/viz.html">gallery post</a>
+for examples of every kind of model.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Static and interactive visualizations of fitted models.
+
+`draw` renders a model as a self-contained SVG figure (save it as .svg, .png, .pdf or .html), and
+`interactive` builds a single offline HTML page to explore it: fold and unfold trees, highlight a
+feature, route a sample through the model, and see the smallest change that would flip its prediction.
+
+Supported models, each drawn so that it reproduces the model&#39;s own `predict` / `predict_proba`:
+
+- **imodels**: trees (GreedyTree, DecisionTreeCCP, HSTree, TaoTree, C4.5, FastSmallTree), sums of trees
+  (FIGS, IRF), rule lists (GreedyRuleList, OneR, FastFrugalTree, BayesianRuleList), rule sets (RuleFit,
+  FPLasso, SkopeRules, FPSkope, BoostedRules, Slipper, BayesianRuleSet), scoring systems
+  (FastRiskScore, SLIM) and additive models (TreeGAM, GPGam, MarginalShrinkageLinearRegressor).
+- **scikit-learn**: decision trees, random forests, extra trees, gradient boosting, histogram gradient
+  boosting, linear and logistic models, GLMs, linear SVMs and isotonic regression. Pipelines whose
+  earlier steps only scale features are drawn in raw units.
+
+```python
+from imodels import FIGSClassifier
+from imodels.viz import draw, interactive
+
+model = FIGSClassifier(max_rules=8).fit(X, y)
+draw(model, X, y).save(&#34;figs.svg&#34;)                # static figure
+interactive(model, X, y).save(&#34;figs.html&#34;)        # interactive page, one offline file
+```
+
+Both functions show inline in Jupyter. See the [gallery post](https://csinva.io/imodels/viz.html)
+for examples of every kind of model.
+&#34;&#34;&#34;
+
+from ._interactive import InteractiveTree, interactive
+from ._static import TreeFigure, draw
+
+__all__ = [&#34;draw&#34;, &#34;interactive&#34;, &#34;TreeFigure&#34;, &#34;InteractiveTree&#34;]</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.viz.draw"><code class="name flex">
+<span>def <span class="ident">draw</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, x=None, max_depth=None, orientation='TB', theme='light', style='auto', title=None, subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Render a fitted sklearn decision tree as a static, publication-quality SVG.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>fitted DecisionTreeClassifier / DecisionTreeRegressor / ExtraTree*, a Pipeline</code></dt>
+<dd>ending in one, or a single tree from an ensemble (<code>forest.estimators_[0]</code>).</dd>
+<dt><strong><code>X</code></strong>, <strong><code>y</code></strong> :&ensp;<code>optional training (or held-out) data. When given, each split node shows the</code></dt>
+<dd>distribution of its split feature (stacked class histogram or feature/target
+scatter) and split thresholds on binary / integer features read naturally.</dd>
+<dt>x : optional single sample; its decision path is highlighted.</dt>
+<dt>max_depth : draw only the top <code>max_depth</code> levels; deeper subtrees are shown as stacked cards.</dt>
+<dt>orientation : "TB" (top to bottom) or "LR" (left to right).</dt>
+<dt>theme : "light" or "dark".</dt>
+<dt>style : "detailed", "compact" or "auto" (compact for trees with more than 24 leaves).</dt>
+<dt>precision : significant digits for thresholds and values.</dt>
+<dt><strong><code>simple</code></strong> :&ensp;<code><a title="imodels.viz.draw" href="#imodels.viz.draw">draw()</a> each node as a plain box filled by its class proportions (or predicted</code></dt>
+<dd>value) instead of the detailed card with charts.</dd>
+</dl>
+<p>max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
+         x=None, max_depth=None, orientation=&#34;TB&#34;, theme=&#34;light&#34;, style=&#34;auto&#34;, title=None,
+         subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None):
+    &#34;&#34;&#34;Render a fitted sklearn decision tree as a static, publication-quality SVG.
+
+    Parameters
+    ----------
+    model : fitted DecisionTreeClassifier / DecisionTreeRegressor / ExtraTree*, a Pipeline
+        ending in one, or a single tree from an ensemble (``forest.estimators_[0]``).
+    X, y : optional training (or held-out) data. When given, each split node shows the
+        distribution of its split feature (stacked class histogram or feature/target
+        scatter) and split thresholds on binary / integer features read naturally.
+    x : optional single sample; its decision path is highlighted.
+    max_depth : draw only the top ``max_depth`` levels; deeper subtrees are shown as stacked cards.
+    orientation : &#34;TB&#34; (top to bottom) or &#34;LR&#34; (left to right).
+    theme : &#34;light&#34; or &#34;dark&#34;.
+    style : &#34;detailed&#34;, &#34;compact&#34; or &#34;auto&#34; (compact for trees with more than 24 leaves).
+    precision : significant digits for thresholds and values.
+    simple : draw each node as a plain box filled by its class proportions (or predicted
+        value) instead of the detailed card with charts.
+    max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6).
+    &#34;&#34;&#34;
+    info = to_view(model, X, y, feature_names, class_names, target_name, output)
+    if isinstance(info, AdditiveView):
+        from ._render_views import render_view
+
+        return TreeFigure(render_view(info, Paint(theme), precision, new_uid(),
+                                      x=x, title=title, subtitle=subtitle))
+    if max_trees is not None:
+        info.shown_roots = info.roots[:max(1, int(max_trees))]
+    style = _resolve_style(style, info, max_depth)
+    P = Paint(theme)
+    artist = Artist(info, P, style=style, sig=precision, uid=new_uid(), x=x,
+                    simple=simple)
+    pred = None
+    path = []
+    if x is not None:
+        path = instance_path(info, x)
+        pred = prediction_text(info, path[-1], precision)
+    artist.set_path(path)
+    fig = Figure(info, artist, P, orientation=orientation, max_depth=max_depth, title=title,
+                 subtitle=subtitle, legend=legend, background=background, prediction=pred)
+    return TreeFigure(fig.svg())</code></pre>
+</details>
+</dd>
+<dt id="imodels.viz.interactive"><code class="name flex">
+<span>def <span class="ident">interactive</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, title=None, subtitle=None, theme='auto', orientation='TB', style='auto', initial_depth=None, precision=3, max_samples=400, simple='auto', output=0, height=720, max_trees=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build an interactive, self-contained HTML view of a fitted sklearn decision tree.</p>
+<p>Click a split to collapse or expand it, drag to pan, scroll to zoom, hover for the full
+decision rule, and use the Predict panel to route a custom or sampled input through the tree.</p>
+<p>theme : "auto" (follows the viewer's OS), "light" or "dark".
+initial_depth : levels expanded on load (default: all if the tree has &lt;= 63 nodes, else 3).
+max_samples : rows of X embedded for the "random sample" button (0 to embed none).
+simple : start in simple mode (plain boxes filled by class proportions). "auto" (default) does so
+for trees with more than 32 leaves; the page has a toggle either way.
+max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6). Predictions
+always use every tree.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
+                title=None, subtitle=None, theme=&#34;auto&#34;, orientation=&#34;TB&#34;, style=&#34;auto&#34;,
+                initial_depth=None, precision=3, max_samples=400, simple=&#34;auto&#34;, output=0, height=720,
+                max_trees=None):
+    &#34;&#34;&#34;Build an interactive, self-contained HTML view of a fitted sklearn decision tree.
+
+    Click a split to collapse or expand it, drag to pan, scroll to zoom, hover for the full
+    decision rule, and use the Predict panel to route a custom or sampled input through the tree.
+
+    theme : &#34;auto&#34; (follows the viewer&#39;s OS), &#34;light&#34; or &#34;dark&#34;.
+    initial_depth : levels expanded on load (default: all if the tree has &lt;= 63 nodes, else 3).
+    max_samples : rows of X embedded for the &#34;random sample&#34; button (0 to embed none).
+    simple : start in simple mode (plain boxes filled by class proportions). &#34;auto&#34; (default) does so
+        for trees with more than 32 leaves; the page has a toggle either way.
+    max_trees : for ensembles (forests, boosting), how many trees to draw (default: 6). Predictions
+        always use every tree.
+    &#34;&#34;&#34;
+    info = to_view(model, X, y, feature_names, class_names, target_name, output)
+    from ._views import AdditiveView
+
+    if isinstance(info, AdditiveView):
+        from ._interactive_view import interactive_view
+
+        return interactive_view(info, title=title, subtitle=subtitle, theme=theme, precision=precision,
+                                max_samples=max_samples, height=height)
+    style = _resolve_style(style, info, None) if style != &#34;auto&#34; or info.X is None else (
+        &#34;detailed&#34; if info.n_leaves &lt;= 300 else &#34;compact&#34;)
+    P = Paint(&#34;light&#34;, use_vars=True)
+    uid = new_uid()
+    # big trees embed every card, so keep the per-node scatter lighter
+    A = Artist(info, P, style=style, sig=precision, uid=uid, max_points=260 if len(info.nodes) &lt;= 63 else 110)
+    A.set_path([])
+
+    if max_trees is not None:
+        info.shown_roots = info.roots[:max(1, int(max_trees))]
+    shown = set(info.shown_roots or info.roots)
+    root_of = {}
+    for r in info.roots:
+        stack = [r]
+        while stack:
+            i = stack.pop()
+            root_of[i] = r
+            if not info.nodes[i].is_leaf:
+                stack += [info.nodes[i].left, info.nodes[i].right]
+
+    nodes = []
+    for nd in info.nodes:
+        lab = info.edge_label(nd.id, precision)
+        if root_of.get(nd.id) not in shown:  # a tree that is not drawn: only what prediction needs
+            nodes.append(dict(
+                id=nd.id, p=nd.parent, l=nd.left, r=nd.right, d=nd.depth, hidden=True, leaf=nd.is_leaf,
+                c=[[int(f), op, float(v)] for f, op, v in nd.split], fs=nd.features, f=nd.feature if nd.simple else -1,
+                nl=nd.nan_left, n=nd.n, wt=nd.weight, lab=lab,
+                v=getattr(nd, &#34;value&#34;, None) if getattr(nd, &#34;value&#34;, None) is not None
+                else (float(nd.counts[0]) if not info.is_clf else None),
+                pr=[round(float(q), 6) for q in nd.counts / (nd.counts.sum() or 1)] if info.is_clf else None,
+                pc=info.prediction(nd) if info.is_clf else None))
+            continue
+        c = A.card(nd.id)
+        sc = A.card(nd.id, simple=True)
+        nodes.append(dict(nl=nd.nan_left,
+            id=nd.id, p=nd.parent, l=nd.left, r=nd.right, d=nd.depth, w=round(c[&#34;w&#34;], 1), h=round(c[&#34;h&#34;], 1),
+            svg=c[&#34;svg&#34;], sw=round(sc[&#34;w&#34;], 1), sh=round(sc[&#34;h&#34;], 1), ssvg=sc[&#34;svg&#34;],
+            mix=[[col, round(f, 5)] for col, f in A.mix(nd)], n=nd.n, wt=nd.weight, col=A.node_color(nd), lab=lab,
+            labw=round(text_width(lab, 10.5, True) + 14, 1), f=nd.feature if nd.simple else -1, t=nd.threshold,
+            c=[[int(f), op, float(v)] for f, op, v in nd.split], fs=nd.features,
+            st=info.split_text(nd.id, precision) if not nd.is_leaf else &#34;&#34;,
+            desc=info.n_descendants(nd.id), leaf=nd.is_leaf, chart=c[&#34;chart&#34;],
+            v=getattr(nd, &#34;value&#34;, None) if getattr(nd, &#34;value&#34;, None) is not None
+            else (float(nd.counts[0]) if not info.is_clf else None),
+            tip=_tooltip(info, A, nd.id, precision),
+            pr=[round(float(q), 6) for q in nd.counts / (nd.counts.sum() or 1)] if info.is_clf else None,
+            pc=info.prediction(nd) if info.is_clf else None,
+        ))
+    if info.layout == &#34;cascade&#34;:  # name each rule&#39;s outcome after its rule
+        for nd in info.nodes:
+            if not nd.is_leaf and nd.label:
+                side = nd.left if info.nodes[nd.left].is_leaf else nd.right
+                nodes[side][&#34;ruleLabel&#34;] = f&#34;{nd.label} outcome&#34;
+
+    imp, imp_kind = info.importances()
+    if not isinstance(model, TreeInfo) and info.combine == &#34;single&#34; and info.layout == &#34;tree&#34;:
+        try:  # sklearn trees: use the estimator&#39;s own numbers
+            imp, imp_kind = _unwrap(model).feature_importances_, &#34;impurity&#34;
+        except (TypeError, AttributeError):
+            pass
+    used = sorted({f for nd in info.nodes for f in nd.features}, key=lambda f: -imp[f])
+    feats = []
+    for f in used:
+        thr = [v for nd in info.nodes for g, _, v in nd.split if g == f]
+        if info.X is not None:
+            col = info.X[:, f]
+            col = col[np.isfinite(col)]
+            lo, hi, med = float(col.min()), float(col.max()), float(np.median(col))
+        else:
+            lo, hi = min(thr), max(thr)
+            span = (hi - lo) or abs(hi) or 1.0
+            lo, hi, med = lo - 0.25 * span, hi + 0.25 * span, float(np.median(thr))
+        kind = info.feature_kind.get(f, &#34;continuous&#34;)
+        step = 1 if kind in (&#34;binary&#34;, &#34;integer&#34;) else float(f&#34;{(hi - lo) / 200:.2g}&#34;) or 0.01
+        feats.append(dict(i=f, name=info.feature_names[f], imp=float(imp[f]), lo=lo, hi=hi,
+                          v=round(med) if kind != &#34;continuous&#34; else med, step=step, kind=kind,
+                          nsplit=len(thr), thr=sorted(thr), **_marginal(info, A, f, thr)))
+
+    samples = []
+    if info.X is not None and max_samples:
+        rng = np.random.default_rng(0)
+        rows = rng.choice(len(info.X), min(max_samples, len(info.X)), replace=False)
+        for r in rows:
+            truth = None
+            if info.y is not None:
+                truth = info.class_names[int(info.y[r])] if info.is_clf else fmt(info.y[r], max(precision, 4))
+            samples.append(dict(x={str(f): float(info.X[r, f]) for f in used}, y=truth, row=int(r)))
+
+    sub = subtitle
+    if sub is None:
+        sub = info.summary()
+    if info.is_clf:
+        note = {&#34;sum&#34;: &#34;leaf values add up to the log-odds&#34;, &#34;mean&#34;: &#34;the trees&#39; predictions are averaged&#34;}.get(info.combine)
+        legend = class_legend(info.class_names, P, note)
+    else:
+        label = &#34;leaf value, added across trees&#34; if info.combine == &#34;sum&#34; else f&#34;predicted {info.target_name}&#34;
+        legend = [dict(k=&#34;grad&#34;, label=label, lo=info.value_range[0], hi=info.value_range[1],
+                       stops=[f&#34;var(--dti-s{j})&#34; for j in range(9)])]
+    crit = info.criterion.replace(&#34;_&#34;, &#34; &#34;) or &#34;impurity&#34;
+    if imp_kind == &#34;impurity&#34;:
+        imp_note = (f&#34;&lt;b&gt;%&lt;/b&gt; is the feature&#39;s share of the model&#39;s total {esc(crit)} reduction, summed over its &#34;
+                    &#34;splits and weighted by samples (sklearn&#39;s &lt;code&gt;feature_importances_&lt;/code&gt; definition). &#34;)
+    else:
+        imp_note = &#34;&lt;b&gt;%&lt;/b&gt; is the feature&#39;s share of all samples reaching a split on it (impurities were not available). &#34;
+    imp_note += &#34;Bars are relative to the top feature; ticks under each distribution mark split thresholds.&#34;
+    data = dict(
+        nodes=nodes, feats=feats, samples=samples, task=info.task,
+        classes=[dict(name=n, col=P.cls(k)) for k, n in enumerate(info.class_names or [])],
+        legend=legend, impNote=imp_note, fileName=info.model_name,
+        target=info.target_name, orientation=orientation.upper(),
+        initialDepth=initial_depth if initial_depth is not None else (99 if len(nodes) &lt;= 63 else 3),
+        maxDepth=info.max_depth, simple=bool(info.n_leaves &gt; 32 if simple == &#34;auto&#34; else simple),
+        defs=defs(uid, P), sig=precision, bandMax=BAND,
+        roots=info.roots, shown=list(info.shown_roots or info.roots), combine=info.combine, layout=info.layout, link=info.link, intercept=info.intercept,
+    )
+    page_title = title or f&#34;{info.model_name} ({info.n_leaves} leaves)&#34;
+    out = build_page(&#34;tree&#34;, title=page_title, subtitle=sub, theme=theme, data=data)
+    return InteractiveTree(out, height)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.viz.InteractiveTree"><code class="flex name class">
+<span>class <span class="ident">InteractiveTree</span></span>
+<span>(</span><span>html_text, height=720)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Self-contained interactive page. Displays inline in Jupyter; <code>save</code> writes .html.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InteractiveTree:
+    &#34;&#34;&#34;Self-contained interactive page. Displays inline in Jupyter; ``save`` writes .html.&#34;&#34;&#34;
+
+    def __init__(self, html_text, height=720):
+        self.html = html_text
+        self.height = height
+
+    def save(self, path):
+        if os.path.splitext(str(path))[1].lower() not in (&#34;.html&#34;, &#34;.htm&#34;):
+            raise ValueError(&#34;Interactive trees save to .html&#34;)
+        with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+            f.write(self.html)
+        return path
+
+    def _repr_html_(self):
+        return (f&#39;&lt;iframe srcdoc=&#34;{html.escape(self.html, quote=True)}&#34; &#39;
+                f&#39;style=&#34;width:100%;height:{self.height}px;border:0;border-radius:12px&#34; loading=&#34;lazy&#34;&gt;&lt;/iframe&gt;&#39;)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.viz.InteractiveTree.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, path):
+    if os.path.splitext(str(path))[1].lower() not in (&#34;.html&#34;, &#34;.htm&#34;):
+        raise ValueError(&#34;Interactive trees save to .html&#34;)
+    with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+        f.write(self.html)
+    return path</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.viz.TreeFigure"><code class="flex name class">
+<span>class <span class="ident">TreeFigure</span></span>
+<span>(</span><span>svg)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A rendered tree. Displays inline in Jupyter; <code>save</code> writes .svg/.png/.pdf/.html.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TreeFigure:
+    &#34;&#34;&#34;A rendered tree. Displays inline in Jupyter; ``save`` writes .svg/.png/.pdf/.html.&#34;&#34;&#34;
+
+    def __init__(self, svg):
+        self.svg = svg
+
+    def _repr_svg_(self):
+        return self.svg
+
+    def __str__(self):
+        return self.svg
+
+    def save(self, path, scale=2.0):
+        ext = os.path.splitext(str(path))[1].lower()
+        if ext == &#34;.svg&#34;:
+            with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+                f.write(self.svg)
+        elif ext in (&#34;.png&#34;, &#34;.pdf&#34;):
+            try:
+                import cairosvg
+            except ImportError as e:  # pragma: no cover
+                raise ImportError(&#34;PNG/PDF export needs cairosvg: pip install cairosvg&#34;) from e
+            fn = cairosvg.svg2png if ext == &#34;.png&#34; else cairosvg.svg2pdf
+            from ._text import EXPORT_FONT, FONT_STACK, esc
+
+            svg = self.svg.replace(f&#39;font-family=&#34;{esc(FONT_STACK)}&#34;&#39;, f&#39;font-family=&#34;{EXPORT_FONT}&#34;&#39;, 1)
+            fn(bytestring=svg.encode(&#34;utf-8&#34;), write_to=str(path), scale=scale if ext == &#34;.png&#34; else 1.0)
+        elif ext in (&#34;.html&#34;, &#34;.htm&#34;):
+            with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+                f.write(&#34;&lt;!doctype html&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;title&gt;Decision tree&lt;/title&gt;&#34;
+                        &#34;&lt;body style=&#39;margin:0;display:flex;justify-content:center&#39;&gt;&#34; + self.svg + &#34;&lt;/body&gt;&#34;)
+        else:
+            raise ValueError(f&#34;Unsupported extension {ext!r}; use .svg, .png, .pdf or .html&#34;)
+        return path</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.viz.TreeFigure.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, path, scale=2.0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, path, scale=2.0):
+    ext = os.path.splitext(str(path))[1].lower()
+    if ext == &#34;.svg&#34;:
+        with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+            f.write(self.svg)
+    elif ext in (&#34;.png&#34;, &#34;.pdf&#34;):
+        try:
+            import cairosvg
+        except ImportError as e:  # pragma: no cover
+            raise ImportError(&#34;PNG/PDF export needs cairosvg: pip install cairosvg&#34;) from e
+        fn = cairosvg.svg2png if ext == &#34;.png&#34; else cairosvg.svg2pdf
+        from ._text import EXPORT_FONT, FONT_STACK, esc
+
+        svg = self.svg.replace(f&#39;font-family=&#34;{esc(FONT_STACK)}&#34;&#39;, f&#39;font-family=&#34;{EXPORT_FONT}&#34;&#39;, 1)
+        fn(bytestring=svg.encode(&#34;utf-8&#34;), write_to=str(path), scale=scale if ext == &#34;.png&#34; else 1.0)
+    elif ext in (&#34;.html&#34;, &#34;.htm&#34;):
+        with open(path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+            f.write(&#34;&lt;!doctype html&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;title&gt;Decision tree&lt;/title&gt;&#34;
+                    &#34;&lt;body style=&#39;margin:0;display:flex;justify-content:center&#39;&gt;&#34; + self.svg + &#34;&lt;/body&gt;&#34;)
+    else:
+        raise ValueError(f&#34;Unsupported extension {ext!r}; use .svg, .png, .pdf or .html&#34;)
+    return path</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/viz.html" title="Static and interactive figures of fitted models">imodels.viz</a><span class="post-date">Oct '26</span></li>
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Oct '26</span></li>
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3><a class="post-list-head" href="https://csinva.io/imodels/models.html" title="All classes, by category">Prediction classes &rarr;</a></h3>
+<ul class="class-list">
+<li><span class="cat-dot" title="uncategorized"></span><a title="imodels.viz.InteractiveTree" href="#imodels.viz.InteractiveTree">InteractiveTree</a></li>
+<li><span class="cat-dot" title="uncategorized"></span><a title="imodels.viz.TreeFigure" href="#imodels.viz.TreeFigure">TreeFigure</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

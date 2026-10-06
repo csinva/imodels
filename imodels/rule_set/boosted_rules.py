@@ -9,8 +9,8 @@ from imodels.util.introspection import RuleInspectionMixin
 class BoostedRulesClassifier(RuleInspectionMixin, AdaBoostClassifier):
     '''An easy-interpretable classifier optimizing simple logical rules.
 
-    Params
-    ------
+    Parameters
+    ----------
     estimator: object with fit and predict methods
         Defaults to DecisionTreeClassifier with AdaBoost.
         For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
@@ -57,8 +57,8 @@ class BoostedRulesClassifier(RuleInspectionMixin, AdaBoostClassifier):
 class BoostedRulesRegressor(RuleInspectionMixin, AdaBoostRegressor):
     '''An easy-interpretable regressor optimizing simple logical rules.
 
-    Params
-    ------
+    Parameters
+    ----------
     estimator: object with fit and predict methods
         Defaults to DecisionTreeRegressor with AdaBoost.
     '''

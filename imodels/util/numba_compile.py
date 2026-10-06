@@ -79,8 +79,8 @@ def notify_first_compile(module_file, model_name, duration, cache_enabled=True, 
     """Print a notice to stderr before the first fit of ``model_name`` in this process compiles its
     numba search, unless the compiled code is already cached on disk.
 
-    Params
-    ------
+    Parameters
+    ----------
     module_file: str
         ``__file__`` of the module that defines the kernels
     model_name: str

@@ -119,8 +119,12 @@ def get_clean_dataset(
     y: np.ndarray
         outcome
     feature_names: list
-    (if passing test_size, will return more outputs)
-    (if multitask dataset, will return target_col_names as well)
+        feature names
+    X_test, y_test : np.ndarray
+        only when ``test_size`` is given: the test split (X and y above are then the
+        training split)
+    target_col_names : list
+        only for multitask datasets (with ``return_target_col_names=True``)
 
     Example
     -------

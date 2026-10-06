@@ -11,7 +11,7 @@ import os
 import shutil
 
 STAGING = 'imodels'          # pdoc's fresh output, before it is copied over docs/
-HANDWRITTEN_DIRS = {'pages', 'img', 'conda', 'paper', STAGING}
+HANDWRITTEN_DIRS = {'pages', 'img', 'conda', 'paper', 'viz_gallery', STAGING}  # viz_gallery: pages/viz_gallery.py
 
 # the blog pages at the root are rendered from docs/pages/ by build_pages.py
 keep = {f for f in os.listdir('pages') if f.endswith('.html')}

@@ -35,8 +35,8 @@ def require_optional_dependency(package: str, model_name: str, purpose: str = ''
 
     For models that cannot run at all without the dependency.
 
-    Params
-    ------
+    Parameters
+    ----------
     package: str
         name of the package to import, e.g. 'interpret'
     model_name: str
@@ -58,8 +58,8 @@ def warn_optional_dependency(package: str, model_name: str, fallback: str,
 
     For models that still work without the dependency, but behave differently.
 
-    Params
-    ------
+    Parameters
+    ----------
     package: str
         name of the package to import, e.g. 'cvxpy'
     model_name: str

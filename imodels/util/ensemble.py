@@ -9,9 +9,12 @@ class ResidualBoostingRegressor(BaseEstimator, RegressorMixin):
         A meta-estimator that fits a base estimator to the residuals of the
         previous estimators.
 
-        Parameters:
-        - estimator: The estimator to fit on the residual of the previous step.
-        - n_estimators: The number of estimators to fit.
+        Parameters
+        ----------
+        estimator : estimator
+            The estimator to fit on the residual of the previous step.
+        n_estimators : int, default=10
+            The number of estimators to fit.
         """
         self.estimator = estimator
         self.n_estimators = n_estimators
@@ -20,14 +23,17 @@ class ResidualBoostingRegressor(BaseEstimator, RegressorMixin):
         """
         Fit the ensemble of base estimators on the training data.
 
-        Parameters:
-        - X: array-like of shape (n_samples, n_features)
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
             Training data.
-        - y: array-like of shape (n_samples,)
+        y : array-like of shape (n_samples,)
             Target values.
 
-        Returns:
-        - self: object
+        Returns
+        -------
+        self : ResidualBoostingRegressor
+            The fitted model.
         """
         # Check that X and y have correct shape
         X, y = check_X_y(X, y)
@@ -48,12 +54,14 @@ class ResidualBoostingRegressor(BaseEstimator, RegressorMixin):
         """
         Predict regression target for X.
 
-        Parameters:
-        - X: array-like of shape (n_samples, n_features)
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
             The input samples.
 
-        Returns:
-        - y_pred: ndarray of shape (n_samples,)
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
             The predicted values.
         """
         # Check is fit had been called

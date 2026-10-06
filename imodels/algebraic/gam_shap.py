@@ -14,10 +14,16 @@ class ShapGAM(BaseEstimator):
         """
         Initialize the ensemble EBM classifier.
 
-        Parameters:
-        - n_estimators: Number of EBM classifiers to create with different random subsets of features.
-        - feature_fraction: Fraction of features to use for each EBM classifier.
-        - random_state: Seed for random number generator to ensure reproducibility.
+        Parameters
+        ----------
+        n_estimators : int, default=10
+            Number of EBM classifiers to create with different random subsets of features.
+        feature_fraction : float or "uniform", default=0.7
+            Fraction of features to use for each EBM classifier ("uniform": a random fraction each time).
+        random_state : int, optional
+            Seed for the random number generator, for reproducibility.
+        ebm_kwargs : dict, optional
+            Keyword arguments passed to each ExplainableBoostingMachine.
         """
         require_optional_dependency(
             'interpret', type(self).__name__,

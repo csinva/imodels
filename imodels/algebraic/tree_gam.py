@@ -47,8 +47,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         verbose=0,
     ):
         """
-        Params
-        ------
+        Parameters
+        ----------
         n_boosting_rounds : int
             Number of boosting rounds for the cyclic boosting.
         max_leaf_nodes : int
@@ -308,8 +308,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
 
     def predict_proba(self, X, marginal_only=False):
         """
-        Params
-        ------
+        Parameters
+        ----------
         marginal_only: bool
             If True, only use the marginal effects.
         """

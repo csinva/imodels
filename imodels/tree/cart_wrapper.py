@@ -56,17 +56,6 @@ class GreedyTreeClassifier(RulesMixin, DecisionTreeClassifier):
         """
         self.complexity_ = compute_tree_complexity(self.tree_)
 
-    def __str__(self):
-        s = '> ------------------------------\n'
-        s += '> Greedy CART Tree:\n'
-        s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
-        s += '> ------------------------------' + '\n'
-        if hasattr(self, 'feature_names') and self.feature_names is not None:
-            return s + export_text(self, feature_names=self.feature_names, show_weights=True)
-        else:
-            return s + export_text(self, show_weights=True)
-
-
 class GreedyTreeRegressor(RulesMixin, DecisionTreeRegressor):
     """Wrapper around sklearn greedy tree regressor
     """
@@ -108,9 +97,3 @@ class GreedyTreeRegressor(RulesMixin, DecisionTreeRegressor):
         """Set complexity as number of non-leaf nodes
         """
         self.complexity_ = compute_tree_complexity(self.tree_)
-
-    def __str__(self):
-        if hasattr(self, 'feature_names') and self.feature_names is not None:
-            return 'GreedyTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
-        else:
-            return 'GreedyTree:\n' + export_text(self, show_weights=True)

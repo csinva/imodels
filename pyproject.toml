@@ -44,6 +44,9 @@ Repository = "https://github.com/csinva/imodels"
 include = ["imodels*"]
 exclude = ["notebooks*", "tests*", "docs*"]
 
+[tool.setuptools.package-data]
+"imodels.viz" = ["assets/*"]  # page templates, styles and scripts for imodels.viz.interactive
+
 [dependency-groups]
 dev = [
     "jupyter>=1.1.1",
@@ -68,4 +71,5 @@ optional = [
   "interpret", # for imodels.algebraic.gam_multitask
   "numba>=0.60", # for imodels.tree.optimal_tree
   "glmnet", # for imodels.tree.rf_plus.rf_plus; this is deprecated - should remove
+  "cairosvg", # for saving imodels.viz figures as .png / .pdf
 ]

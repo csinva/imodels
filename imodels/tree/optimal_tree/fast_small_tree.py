@@ -535,13 +535,3 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         return {**node,
                 "true": self._display_tree(node["true"]),
                 "false": self._display_tree(node["false"])}
-
-    def __str__(self):
-        if not hasattr(self, "tree_"):
-            return f"{type(self).__name__}(unfitted)"
-        status = "certified optimal" if self.optimal_ else "NOT certified optimal"
-        return (f"> ------------------------------\n"
-                f"> FastSmallTree: {self.n_leaves_} leaves, "
-                f"objective {self.objective_:.4g} ({status})\n"
-                f"> ------------------------------\n"
-                f"{TreeClassifier(self._display_tree(self.tree_))}")
