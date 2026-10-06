@@ -87,13 +87,34 @@ def _marginal(info, artist, f, thr):
 
 
 class InteractiveTree:
-    """Self-contained interactive page. Displays inline in Jupyter; ``save`` writes .html."""
+    """An interactive page for a model, returned by `interactive`: one self-contained HTML file.
+    Displays inline in Jupyter.
+
+    Attributes
+    ----------
+    html : str
+        The page as HTML text.
+    height : int
+        Height in pixels when shown inline in Jupyter.
+    """
 
     def __init__(self, html_text, height=720):
         self.html = html_text
         self.height = height
 
     def save(self, path):
+        """Write the page to an .html file.
+
+        Parameters
+        ----------
+        path : str or path-like
+            Output file, ending in .html or .htm.
+
+        Returns
+        -------
+        path : str or path-like
+            The path written.
+        """
         if os.path.splitext(str(path))[1].lower() not in (".html", ".htm"):
             raise ValueError("Interactive trees save to .html")
         with open(path, "w", encoding="utf-8") as f:

@@ -44,7 +44,13 @@ def prediction_text(info, leaf, sig=3):
 
 
 class TreeFigure:
-    """A rendered tree. Displays inline in Jupyter; ``save`` writes .svg/.png/.pdf/.html."""
+    """A static figure of a model, returned by `draw`. Displays inline in Jupyter.
+
+    Attributes
+    ----------
+    svg : str
+        The figure as SVG text.
+    """
 
     def __init__(self, svg):
         self.svg = svg
@@ -56,6 +62,21 @@ class TreeFigure:
         return self.svg
 
     def save(self, path, scale=2.0):
+        """Write the figure to a file.
+
+        Parameters
+        ----------
+        path : str or path-like
+            Output file; its extension picks the format: .svg, .png, .pdf or .html.
+            PNG and PDF need cairosvg.
+        scale : float, default=2.0
+            Resolution multiplier for PNG (PDF is vector, so it is unaffected).
+
+        Returns
+        -------
+        path : str or path-like
+            The path written.
+        """
         ext = os.path.splitext(str(path))[1].lower()
         if ext == ".svg":
             with open(path, "w", encoding="utf-8") as f:
@@ -72,7 +93,7 @@ class TreeFigure:
             fn(bytestring=svg.encode("utf-8"), write_to=str(path), scale=scale if ext == ".png" else 1.0)
         elif ext in (".html", ".htm"):
             with open(path, "w", encoding="utf-8") as f:
-                f.write("<!doctype html><meta charset='utf-8'><title>Decision tree</title>"
+                f.write("<!doctype html><meta charset='utf-8'><title>Model</title>"
                         "<body style='margin:0;display:flex;justify-content:center'>" + self.svg + "</body>")
         else:
             raise ValueError(f"Unsupported extension {ext!r}; use .svg, .png, .pdf or .html")
