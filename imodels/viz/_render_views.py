@@ -36,13 +36,18 @@ class ViewPainter:
     def header(self, width, title, subtitle):
         """Title, subtitle and legend. The legend sits on the subtitle's line when there is room."""
         P, parts, y = self.P, [], 0
+        sub_top, sub_x = y, 0.0
         if title:
             parts.append(_text(0, 18, title, 18, P("ink"), 650))
-            y = 26
-        sub_top = y
+            tw = text_width(title, 18, True) + 18
+            if subtitle and tw + text_width(subtitle, 12) <= width:  # subtitle on the title's line
+                sub_top, sub_x = 5, tw
+            else:
+                y = 26
+                sub_top = y
         if subtitle:
-            parts.append(_text(0, y + 13, subtitle, 12, P("ink2")))
-            y += 19
+            parts.append(_text(sub_x, sub_top + 13, subtitle, 12, P("ink2")))
+            y = max(y, sub_top + 19) if sub_x == 0 else 26
         if self.v.is_clf:
             items = [(self.P.cls(k), n) for k, n in enumerate(self.v.class_names)]
             note = "bars are colored by the class a term favors"
@@ -51,8 +56,8 @@ class ViewPainter:
             items = [(self.pos, up), (self.neg, down)]
             note = None
         leg_w = sum(text_width(lab, 11.5) + 26 for _, lab in items) + (text_width(note, 11.5) + 6 if note else 0)
-        inline = bool(subtitle) and text_width(subtitle, 12) + 28 + leg_w <= width
-        x, ly = (text_width(subtitle, 12) + 28, sub_top + 3) if inline else (0.0, y + 3)
+        inline = bool(subtitle) and sub_x + text_width(subtitle, 12) + 28 + leg_w <= width
+        x, ly = (sub_x + text_width(subtitle, 12) + 28, sub_top + 3) if inline else (0.0, y + 3)
         for col, lab in items:
             parts.append(f'<circle cx="{_n(x + 5)}" cy="{_n(ly + 6)}" r="5" style="{_st(col)}"/>')
             parts.append(_text(x + 15, ly + 10, lab, 11.5, P("ink2")))
@@ -279,6 +284,8 @@ def scorecard_body(vp):
         y += 18
     table_h = y
     chart_start = len(out)
+    # the risk chart is no taller than the table beside it
+    chart_h = float(np.clip(table_h - 22 - 34 - (64 if v.X is not None else 0), 120, 210))
 
     # risk curve over every reachable score
     risk = v.risk
@@ -354,7 +361,7 @@ def gam_body(vp, cols=3, max_panels=24):
         by_f.setdefault(t.feature, []).append(t)
     feats = sorted(by_f, key=lambda f: -float(np.std(sum(t.contribution(v.X) for t in by_f[f])))
                    if v.X is not None else -sum(v.importance(t) for t in by_f[f]))[:max_panels]
-    pw, ph, gx, gy = 250, 112, 16, 18
+    pw, ph, gx, gy = 250, 98, 16, 14
     cols = min(cols, max(1, len(feats)))
     W = cols * pw + (cols - 1) * gx + 2 * M
     grids, curves = {}, {}
@@ -376,15 +383,15 @@ def gam_body(vp, cols=3, max_panels=24):
     out, meta = [], []
     for k, f in enumerate(feats):
         r, c = divmod(k, cols)
-        ox, oy = c * (pw + gx), r * (ph + gy + 40)
+        ox, oy = c * (pw + gx), r * (ph + gy + 32)
         lo, hi, xs = grids[f]
         ys = curves[f]
         imp = float(np.std(sum(t.contribution(v.X) for t in by_f[f]))) if v.X is not None else float(np.ptp(ys))
         g = [f'<g class="panel" data-f="{f}" transform="translate({ox},{oy})">']
-        g.append(f'<rect width="{pw}" height="{ph + 40}" rx="10" filter="url(#{vp.uid}-sh)" style="{_st(P("card"), P("ring"), 1)}"/>')
+        g.append(f'<rect width="{pw}" height="{ph + 32}" rx="10" filter="url(#{vp.uid}-sh)" style="{_st(P("card"), P("ring"), 1)}"/>')
         g.append(_text(12, 20, truncate(v.feature_names[f], 12.5, pw - 110, True), 12.5, P("ink"), 600))
         g.append(_text(pw - 12, 20, f"±{fmt(imp, 2)} typical", 10.5, P("muted"), anchor="end", extra="font-variant-numeric:tabular-nums"))
-        x0, x1, y0, y1 = 12, pw - 12, 32, 32 + ph - 40
+        x0, x1, y0, y1 = 12, pw - 12, 28, 28 + ph - 40
         sx = lambda q: x0 + (q - lo) / (hi - lo) * (x1 - x0)
         sy = lambda q: y0 + (y1 - y0) / 2 - q / ymax * (y1 - y0) / 2
         zero = sy(0)
@@ -396,7 +403,7 @@ def gam_body(vp, cols=3, max_panels=24):
         g.append(f'<line x1="{x0}" x2="{x1}" y1="{_n(zero)}" y2="{_n(zero)}" style="{_st(stroke=P("axis"), sw=1)}"/>')
         line = "M" + " L".join(f"{_n(sx(a))},{_n(sy(b))}" for a, b in zip(xs, ys))
         g.append(f'<path d="{line}" style="{_st("none", P("ink"), 2, extra="stroke-linejoin:round")}"/>')
-        g.append(_text(x0, y0 + 2, signed(ymax, 2), 9.5, P("muted")))
+        g.append(_text(x0, y0 + 7, signed(ymax, 2), 9.5, P("muted")))
         g.append(_text(x0, y1 + 1, signed(-ymax, 2), 9.5, P("muted")))
         # data distribution strip
         if v.X is not None:
@@ -408,8 +415,8 @@ def gam_body(vp, cols=3, max_panels=24):
                 if cnt:
                     hh = cnt / top * 14
                     g.append(f'<rect x="{_n(x0 + j * bw + 0.5)}" y="{_n(y1 + 22 - hh)}" width="{_n(bw - 1)}" height="{_n(hh)}" style="{_st(P("axis"))}"/>')
-        g.append(_text(x0, ph + 30, fmt(lo, sig), 10, P("muted")))
-        g.append(_text(x1, ph + 30, fmt(hi, sig), 10, P("muted"), anchor="end"))
+        g.append(_text(x0, ph + 24, fmt(lo, sig), 10, P("muted")))
+        g.append(_text(x1, ph + 24, fmt(hi, sig), 10, P("muted"), anchor="end"))
         if vp.x is not None:
             xv = float(np.clip(vp.x[f], lo, hi))
             yv = float(np.interp(xv, xs, ys))
@@ -419,7 +426,7 @@ def gam_body(vp, cols=3, max_panels=24):
         out += g
         meta.append(dict(f=int(f), ox=ox, oy=oy, x0=x0, x1=x1, y0=y0, y1=y1, lo=float(lo), hi=float(hi), ymax=float(ymax)))
     rows = (len(feats) + cols - 1) // cols
-    H = rows * (ph + gy + 40) - gy
+    H = rows * (ph + gy + 32) - gy
     y = H + 12
     if v.note:
         out.append(_text(0, y + 12, v.note, 11.5, P("ink2")))

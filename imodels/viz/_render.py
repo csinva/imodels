@@ -347,16 +347,26 @@ class Artist:
         if truncated:
             footer = f"{fmt_count(node.n)} samples  ·  +{info.n_descendants(node.id)} nodes"
         fsize = 10 if compact else 10.5
+        on_path = self.x is not None and self._on_path(node.id)
+        has_chart = node.simple and self.has_data and node.idx is not None and len(node.idx)
+        # the sample count sits in the title row (one line shorter) unless that row holds something else
+        count = f"n={fmt_count(node.n)}" if (node.n and not eyebrow and not truncated
+                                              and not (on_path and not has_chart and node.simple)) else ""
+        if count:
+            footer = ""
+        cw = text_width(count, fsize) + 8 if count else 0
         base_w = 92 if compact else CHART_W + 2 * PAD
-        w = max(base_w, text_width(name, tsize, True) + 2 * PAD + 2 + (text_width(eyebrow, 9.5, True) + 12 if eyebrow else 0),
-                text_width(footer, fsize) + 2 * PAD,
+        w = max(base_w, text_width(name, tsize, True) + 2 * PAD + 2 + cw + (text_width(eyebrow, 9.5, True) + 12 if eyebrow else 0),
+                text_width(footer, fsize) + 2 * PAD if footer else 0,
                 *[text_width(l, 11.5) + 2 * PAD for l in lines])
         w = min(w, MAX_CARD_W if not compact else 180)
         inner = w - 2 * PAD
         body, chart = [], None
         y = PAD
-        on_path = self.x is not None and self._on_path(node.id)
-        title = truncate(name, tsize, inner, True)
+        title = truncate(name, tsize, inner - cw, True)
+        if count:
+            body.append(_text(w - PAD, y + tsize - 2.5, count, fsize, P("muted"), anchor="end",
+                              extra="font-variant-numeric:tabular-nums"))
         if eyebrow:
             ew = text_width(eyebrow, 9.5, True) + 8
             title = truncate(name, tsize, inner - ew - 4, True)
@@ -397,8 +407,11 @@ class Artist:
             else:
                 body.append(self._value_track(PAD + 4.5, y + 4.5, inner - 9, node.counts[0]))
                 y += 9 + 9
-        body.append(_text(PAD, y + fsize - 1, truncate(footer, fsize, inner), fsize, P("muted"), extra="font-variant-numeric:tabular-nums"))
-        y += fsize + 2
+        if footer:
+            body.append(_text(PAD, y + fsize - 1, truncate(footer, fsize, inner), fsize, P("muted"), extra="font-variant-numeric:tabular-nums"))
+            y += fsize + 2
+        else:
+            y -= 4
         if on_path and chart is None and node.simple:
             v = f"x = {fmt(self.x[node.feature], self.sig)}"
             body.append(_text(w - PAD, PAD + tsize - 2.5, v, 10.5, P("hl"), 700, "end"))
@@ -629,14 +642,19 @@ class Figure:
         """Title, subtitle and legend. The legend sits on the subtitle's line when there is room."""
         P, info = self.P, self.info
         parts, y = [], 0
+        sub = self.subtitle if self.subtitle is not None else info.summary()
+        sub_top, sub_x = y, 0.0
         if self.title:
             parts.append(_text(0, 18, self.title, 18, P("ink"), 650))
-            y = 26
-        sub = self.subtitle if self.subtitle is not None else info.summary()
-        sub_top = y
+            tw = text_width(self.title, 18, True) + 18
+            if sub and tw + text_width(sub, 12) <= width:  # subtitle on the title's line
+                sub_top, sub_x = 5, tw
+            else:
+                y = 26
+                sub_top = y
         if sub:
-            parts.append(_text(0, y + 13, sub, 12, P("ink2")))
-            y += 19
+            parts.append(_text(sub_x, sub_top + 13, sub, 12, P("ink2")))
+            y = max(y, sub_top + 19) if sub_x == 0 else 26
         if self.legend:
             note = {"sum": "leaf values add up to the log-odds", "mean": "the trees' predictions are averaged"}.get(info.combine)
             if info.is_clf:
@@ -646,8 +664,8 @@ class Figure:
                 lo, hi = info.value_range
                 label = "leaf value, added across trees" if info.combine == "sum" else f"predicted {info.target_name}"
                 leg_w = text_width(label, 11.5) + 10 + text_width(fmt(lo), 10.5) + 152 + text_width(fmt(hi), 10.5)
-            inline = bool(sub) and text_width(sub, 12) + 28 + leg_w <= width
-            x0, ly = (text_width(sub, 12) + 28, sub_top + 3) if inline else (0.0, y + 3)
+            inline = bool(sub) and sub_x + text_width(sub, 12) + 28 + leg_w <= width
+            x0, ly = (sub_x + text_width(sub, 12) + 28, sub_top + 3) if inline else (0.0, y + 3)
             if info.is_clf:
                 x = x0
                 for k, name in enumerate(info.class_names):

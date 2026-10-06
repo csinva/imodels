@@ -4,8 +4,11 @@ Each example's code string is executed verbatim, so the code shown under a figur
 produced it. Figures go to docs/viz_gallery/{static,interactive}; the article body goes to
 docs/pages/viz.html, which build_pages.py wraps in the site shell. Run from docs/:
 
-    uv run python pages/viz_gallery.py               # figures, interactive pages and the article
-    uv run python pages/viz_gallery.py --post-only   # only the article, from the existing figures
+    uv run python pages/viz_gallery.py                             # figures and interactive pages only
+    uv run python pages/viz_gallery.py --write-post                # also regenerate the article
+    uv run python pages/viz_gallery.py --post-only --write-post    # only the article
+
+The article (docs/pages/viz.html) is edited by hand: --write-post overwrites those edits.
     uv run python build_pages.py
 """
 
@@ -899,7 +902,9 @@ def write_post():
 
 
 if __name__ == "__main__":
-    if "--post-only" not in sys.argv:  # --post-only: rewrite the article from the existing figures
+    # docs/pages/viz.html is edited by hand, so it is only regenerated on request (--write-post)
+    if "--post-only" not in sys.argv:
         run_examples()
-    write_post()
-    print("wrote", os.path.join(HERE, "viz.html"))
+    if "--write-post" in sys.argv:
+        write_post()
+        print("wrote", os.path.join(HERE, "viz.html"))
