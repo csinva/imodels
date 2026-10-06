@@ -32,7 +32,7 @@ def _term_tip(v, t, sig):
     return f"<div class='tt-h'><span class='tt-k'>{t.kind}</span> <b>{head}</b></div><table>{body}</table>"
 
 
-def interactive_view(v, *, title=None, subtitle=None, theme="auto", precision=3, max_samples=400, height=720):
+def interactive_view(v, *, title=None, subtitle=None, theme="light", precision=3, max_samples=400, height=720):
     P = Paint("light", use_vars=True)
     uid = new_uid()
     vp = ViewPainter(v, P, precision, uid)

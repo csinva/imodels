@@ -106,7 +106,7 @@ class InteractiveTree:
 
 
 def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-                title=None, subtitle=None, theme="auto", orientation="TB", style="auto",
+                title=None, subtitle=None, theme="light", orientation="TB", style="auto",
                 initial_depth=None, precision=3, max_samples=400, simple="auto", output=0, height=720,
                 max_trees=None):
     """Build an interactive, self-contained HTML view of a fitted sklearn decision tree.
@@ -114,7 +114,7 @@ def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, 
     Click a split to collapse or expand it, drag to pan, scroll to zoom, hover for the full
     decision rule, and use the Predict panel to route a custom or sampled input through the tree.
 
-    theme : "auto" (follows the viewer's OS), "light" or "dark".
+    theme : "light" (default), "dark", or "auto" to follow the viewer's OS. The page has a toggle either way.
     initial_depth : levels expanded on load (default: all if the tree has <= 63 nodes, else 3).
     max_samples : rows of X embedded for the "random sample" button (0 to embed none).
     simple : start in simple mode (plain boxes filled by class proportions). "auto" (default) does so
