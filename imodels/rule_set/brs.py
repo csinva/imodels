@@ -191,9 +191,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.rules_ = maps[index][-1][3]
         return self
 
-    def __str__(self):
-        return ' '.join(str(r) for r in self.rules_)
-
     def predict(self, X):
         check_is_fitted(self)
         if isinstance(X, np.ndarray):

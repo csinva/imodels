@@ -10,7 +10,20 @@ it, and likewise for ``apply``.
 """
 
 
-class RulesMixin:
+class TextMixin:
+    """Prints a fitted model as readable text (see imodels.viz.text): its tree, rules, points or
+    shape functions, with the numbers that make each prediction. Unfitted models, and models
+    imodels.viz cannot read, print their parameters as before."""
+
+    def __str__(self):
+        try:
+            from imodels.viz import text
+            return text(self)
+        except Exception:
+            return super().__str__()
+
+
+class RulesMixin(TextMixin):
     """Adds ``get_rules()`` to a model whose rules imodels.get_rules can extract."""
 
     def get_rules(self, feature_names=None):

@@ -1,3 +1,4 @@
+from imodels.util.introspection import TextMixin
 from copy import deepcopy
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -12,17 +13,8 @@ from sklearn.base import RegressorMixin, ClassifierMixin
 from sklearn.utils.validation import check_is_fitted
 
 
-class MarginalShrinkageLinearModel(BaseEstimator):
+class MarginalShrinkageLinearModel(TextMixin, BaseEstimator):
     """Linear model that shrinks towards the marginal effects of each feature."""
-
-    def __str__(self):
-        return (
-            repr(self)
-            .replace("MarginalShrinkageLinearModel", "MSLM")
-            .replace("MarginalShrinkageLinear", "MSL")
-            .replace("Regressor", "Reg")
-            .replace("Classifier", "Clf")
-        )
 
     def __init__(
         self,

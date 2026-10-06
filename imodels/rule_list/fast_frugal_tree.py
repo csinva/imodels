@@ -149,22 +149,3 @@ class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def predict(self, X):
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
-
-    def __str__(self):
-        if not hasattr(self, 'rules_'):
-            return f'{type(self).__name__}(max_depth={self.max_depth})'
-        s = '> ------------------------------\n'
-        s += '> Fast-and-frugal tree\n'
-        s += '> \tEach cue either decides, or passes the case to the next cue\n'
-        s += '> ------------------------------\n'
-        for rule in self.rules_:
-            if 'col' not in rule:
-                s += (f"> else | predict {int(rule['val'])} "
-                      f"({rule['num_pts']} obs)\n")
-                continue
-            comparison = '<=' if rule['flip'] else '>'
-            s += (f"> if {rule['col']} {comparison} {rule['cutoff']:.3g} | "
-                  f"predict {int(rule['val_right'])} "
-                  f"({rule['num_pts_right']} obs)\n")
-        s += '> ------------------------------\n'
-        return s

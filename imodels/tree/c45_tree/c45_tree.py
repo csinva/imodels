@@ -229,10 +229,6 @@ class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
             normalized = scores / totals
         return np.where(totals > 0, normalized, 1 / scores.shape[1])
 
-    def __str__(self):
-        check_is_fitted(self, ['tree_'])
-        return self.dom_.toprettyxml(newl="\r\n")
-
     def grow_tree(self, X_t: List[list], y_str: List[str], parent, attrs_names):
         """
         Parameters

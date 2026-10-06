@@ -140,7 +140,8 @@ def test_str_with_ensemble_estimator():
 
     # single trees still print the tree itself
     single = HSTreeRegressor(DecisionTreeRegressor(max_leaf_nodes=3)).fit(X, y)
-    assert '|---' in str(single)
+    printed = str(single)
+    assert ' ?' in printed and '\u251c\u2500' in printed  # the tree, as text
 
     # unfitted models still print their parameters
     assert 'reg_param' in str(HSTreeRegressor(RandomForestRegressor()))

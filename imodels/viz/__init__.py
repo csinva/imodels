@@ -35,5 +35,6 @@ every tree-based imodels model drawable by any tool that reads scikit-learn tree
 
 from ._interactive import InteractiveTree, interactive
 from ._static import TreeFigure, draw
+from ._textview import text
 
-__all__ = ["draw", "interactive", "TreeFigure", "InteractiveTree"]
+__all__ = ["draw", "interactive", "text", "TreeFigure", "InteractiveTree"]

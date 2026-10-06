@@ -23,6 +23,9 @@ def _names(model, X, feature_names, n=None):
         return [str(f) for f in feature_names]
     if X is not None and hasattr(X, "columns"):
         return [str(c) for c in X.columns]
+    fd = getattr(model, "feature_dict_", None)  # imodels' record of names passed to fit
+    if fd and not all(str(v).startswith("X_") for v in fd.values()):
+        return [str(v) for v in fd.values()]
     for attr in ("feature_names_in_", "feature_names_", "feature_names"):
         v = getattr(model, attr, None)
         if v is not None and len(v) and not str(v[0]).startswith("X_"):
@@ -91,8 +94,12 @@ def _exported(m, X, y, fn, cn, tn):
         if info is None:
             info = extract(est, X, y, names, cn, tn)
     info.model_name = name
-    if hasattr(m, "reg_param") and getattr(m, "reg_param", None) is not None:
+    if name.startswith("HS") and getattr(m, "reg_param", None) is not None:
         info.model_name = f"{name} (shrinkage {m.reg_param:g})"
+    if X is None and name in ("C45TreeClassifier", "HSC45TreeClassifier", "HSC45TreeClassifierCV"):
+        info.counts_known = False  # C4.5 stores no sample counts: without data they are placeholders
+    if not isinstance(est, list) and not hasattr(est, "tree_"):  # shrinkage of a forest or boosting
+        info.model_name += f" of {type(est).__name__}"
     return info
 
 

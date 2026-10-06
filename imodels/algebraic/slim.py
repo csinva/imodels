@@ -8,6 +8,8 @@ with integer coefficients in w
 Requires installation of a solver for mixed-integer linear programs, e.g. gurobi, mosek, or cplex
 '''
 
+from imodels.util.introspection import TextMixin
+from imodels.util.introspection import TextMixin
 import warnings
 
 import numpy as np
@@ -39,7 +41,7 @@ def _warn_if_rounding_collapsed(coef, rounded):
         )
 
 
-class SLIMRegressor(RegressorMixin, BaseEstimator):
+class SLIMRegressor(TextMixin, RegressorMixin, BaseEstimator):
     '''Sparse integer linear model
     Params
     ------
@@ -118,7 +120,7 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
         return self.model_.predict(X)
 
 
-class SLIMClassifier(ClassifierMixin, BaseEstimator):
+class SLIMClassifier(TextMixin, ClassifierMixin, BaseEstimator):
 
     def __init__(self, alpha=1):
         '''Model is initialized during fitting
