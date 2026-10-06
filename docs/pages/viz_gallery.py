@@ -451,10 +451,7 @@ POST = """<section id="section-intro">
                         paper or slide, and as a single offline HTML page where you can fold the model, run a sample
                         through it and ask what would change its prediction. It covers the models in <code>imodels</code>
                         (trees, sums of trees, rule lists, rule sets, scoring systems and additive models) and
-                        scikit-learn's trees, forests, boosting and linear models, __NMODELS__+ model classes in all.
-                        Every view is tested to reproduce its model's <code>predict</code> / <code>predict_proba</code>
-                        to machine precision, so the figure shows what the model computes.
-                        Each of the __NFIGS__ figures below was made by the one call shown under it.</p>
+                        scikit-learn's trees, forests, boosting and linear models, __NMODELS__+ model classes in all.</p>
 
                     <nav class="toc-main">
                       <a href="#quickstart"><span>1</span> Quickstart</a>
