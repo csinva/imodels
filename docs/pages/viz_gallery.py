@@ -556,7 +556,8 @@ X, y = load_breast_cancer(return_X_y=True, as_frame=True)
 model = FIGSClassifier(max_rules=8).fit(X, y)
 
 viz.draw(model, X, y).save("figs.svg")             # static: .svg .png .pdf .html
-viz.interactive(model, X, y).save("figs.html")     # one offline page; also renders inline in Jupyter</code></pre>
+viz.interactive(model, X, y).save("figs.html")     # one offline page; also renders inline in Jupyter
+print(model)                                       # the model as readable text</code></pre>
 
                     <p>Both calls take the fitted model and, optionally, the training data. With data, every split shows
                         the distribution of its feature and every leaf its class mix or target range; without it, the
