@@ -5,10 +5,10 @@ import numpy as np
 from ._layout import tidy
 from ._text import FONT_STACK, esc, fmt, fmt_count, text_width, truncate
 
-PAD = 12
+PAD = 10
 RADIUS = 10
-CHART_W = 176
-CHART_H = 52
+CHART_W = 160
+CHART_H = 44
 BAND = 120.0  # ribbon width (px) carrying all root samples
 MAX_CARD_W = 240
 
@@ -385,7 +385,7 @@ class Artist:
             chart = dict(x0=PAD, x1=PAD + inner, y0=y, y1=y + CHART_H, lo=lo, hi=hi)
             if on_path:
                 body.append(self._marker(PAD, y, inner, CHART_H, lo, hi, self.x[node.feature]))
-            y += CHART_H + 26
+            y += CHART_H + 23
         else:
             y += 4
             if info.is_clf:
@@ -423,10 +423,10 @@ class Artist:
                 label = "+" + label  # additive contribution
             sub = f"{fmt_count(node.n)} samples" if node.n else ""
         dot = 9
-        w = max(96 if compact else 132, text_width(label, tsize, True) + 2 * PAD + dot + 6, text_width(sub, 11) + 2 * PAD)
+        w = max(90 if compact else 116, text_width(label, tsize, True) + 2 * PAD + dot + 6, text_width(sub, 11) + 2 * PAD)
         w = min(w, MAX_CARD_W)
         inner = w - 2 * PAD
-        y = PAD + 4
+        y = PAD + 2
         body = [f'<circle cx="{_n(PAD + 4.5)}" cy="{_n(y + tsize / 2 - 0.5)}" r="4.5" style="{_st(self.node_color(node))}"/>',
                 _text(PAD + dot + 6, y + tsize - 2.5, truncate(label, tsize, inner - dot - 6, True), tsize, P("ink"), 600)]
         y += tsize + 5
@@ -558,12 +558,12 @@ class Figure:
         breadth = {n: (c["h"] if H else c["w"]) for n, c in cards.items()}
         dsize = {n: (c["w"] if H else c["h"]) for n, c in cards.items()}
         depth = {n: info.nodes[n].depth for n in vis}
-        gap, lvl = (22, 120) if H else (20, 64)
+        gap, lvl = (16, 96) if H else (14, 50)
         roots = info.shown_roots or info.roots
         multi = len(info.roots) > 1
         trees = [tidy(r, kids, breadth, depth, dsize, gap=gap, level_gap=lvl) for r in roots]
         per_row = 1 if H else min(3, len(roots))
-        label_h = 30 if multi else 0
+        label_h = 24 if multi else 0
         boxes, glyphs = {}, []
         row_top, tot_w, tot_h = 0.0, 0.0, 0.0
         for start in range(0, len(roots), per_row):
@@ -572,7 +572,7 @@ class Figure:
             for k in row:
                 r, (pos, top, tb, td) = roots[k], trees[k]
                 if k != row[0] and info.combine == "sum":
-                    glyphs.append((off - 36, row_top + label_h + cards[r]["h"] / 2 + 9, "+", 26))
+                    glyphs.append((off - 22, row_top + label_h + cards[r]["h"] / 2 + 9, "+", 26))
                 for n in pos:
                     c = cards[n]
                     if H:
@@ -582,11 +582,11 @@ class Figure:
                 if multi:
                     lx = off + tb / 2 if not H else 0
                     glyphs.append((lx, row_top + 14, f"tree {info.roots.index(r) + 1} of {len(info.roots)}", 11))
-                off += (td if H else tb) + 72
+                off += (td if H else tb) + 44
             row_d = max((trees[k][2] if H else trees[k][3]) for k in row)
-            tot_w = max(tot_w, off - 72)
-            row_top += label_h + row_d + 56
-            tot_h = row_top - 56
+            tot_w = max(tot_w, off - 44)
+            row_top += label_h + row_d + 40
+            tot_h = row_top - 40
         horiz = {n: H for n in boxes}
         w, h = (max(t[3] for t in trees), tot_h) if H else (tot_w, tot_h)
         return boxes, horiz, glyphs, w, h
@@ -605,7 +605,7 @@ class Figure:
             chain[-1] = (nid, side)
             nid = main
         col_w = max(cards[c if isinstance(c, int) else c[0]]["w"] for c in chain)
-        side_x = col_w + 110  # rules are centered in a column; outcomes sit to the right
+        side_x = col_w + 84  # rules are centered in a column; outcomes sit to the right
         y, side_w = 0.0, 0.0
         for item in chain:
             nid, side = item if isinstance(item, tuple) else (item, None)
@@ -619,8 +619,8 @@ class Figure:
                 horiz[side] = True
                 row_h = max(row_h, s["h"])
                 side_w = max(side_w, s["w"])
-            y += row_h + 62
-        return boxes, horiz, [], side_x + side_w if side_w else col_w, y - 62
+            y += row_h + 46
+        return boxes, horiz, [], side_x + side_w if side_w else col_w, y - 46
 
     def header(self, width):
         P, info = self.P, self.info
@@ -678,7 +678,7 @@ class Figure:
         if info.layout == "cascade":  # flows turn sideways into outcome cards: keep them thinner than a card
             band = min(band, 0.8 * min(c["h"] for c in cards.values()))
         boxes, horiz, plus, tree_w, tree_h = self.layout(vis, kids, cards)
-        M = 28
+        M = 18
         head, head_h = self.header(max(tree_w, 480))
         W = max(tree_w, 520 if head_h else 0) + 2 * M
         Ht = tree_h + head_h + 2 * M + 10

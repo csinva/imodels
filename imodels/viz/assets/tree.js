@@ -8,7 +8,7 @@
   const svg = document.getElementById("canvas"), vp = document.getElementById("vp");
   const gRib = document.getElementById("g-rib"), gNode = document.getElementById("g-node"), gLab = document.getElementById("g-lab");
   const stage = document.getElementById("stage");
-  const GAP = 20, LEVEL_TB = 64, LEVEL_LR = 120, DUR = 380;
+  const GAP = 14, LEVEL_TB = 50, LEVEL_LR = 96, DUR = 380;
   let orient = D.orientation === "LR" ? "LR" : "TB";
   let collapsed = new Set(), view = {k: 1, x: 0, y: 0}, cur = {}, path = new Set();
   const els = {}, ribs = {}, pills = {};
@@ -155,14 +155,14 @@
       chain.push([id, side]);
       id = side === n.l ? n.r : n.l;
     }
-    const colW = Math.max(...chain.map(([i]) => N[i].w)), sx = colW + 110;
+    const colW = Math.max(...chain.map(([i]) => N[i].w)), sx = colW + 84;
     let y = 0;
     for (const [i, sd] of chain) {
       const n = N[i];
       let rh = n.h;
       out[i] = [(colW - n.w) / 2, y, n.w, n.h];
       if (sd != null) { const m = N[sd]; out[sd] = [sx, m.h < n.h ? y + (n.h - m.h) / 2 : y, m.w, m.h]; rh = Math.max(rh, m.h); }
-      y += rh + 62;
+      y += rh + 46;
     }
     return out;
   }
@@ -173,9 +173,9 @@
     let off = 0;
     SHOWN.forEach((r, k) => {
       const [boxes, extent] = tidyFrom(r, H);
-      if (k) plusAt.push(H ? [N[r].w / 2, off - 36] : [off - 36, N[r].h / 2]);
+      if (k) plusAt.push(H ? [N[r].w / 2, off - 22] : [off - 22, N[r].h / 2]);
       for (const id in boxes) { const b = boxes[id]; out[id] = H ? [b[0], b[1] + off, b[2], b[3]] : [b[0] + off, b[1], b[2], b[3]]; }
-      off += extent + 72;
+      off += extent + 44;
     });
     return out;
   }

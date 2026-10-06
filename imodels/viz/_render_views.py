@@ -5,7 +5,7 @@ import numpy as np
 from ._render import _n, _st, _text, _top_round_bar, defs
 from ._text import FONT_STACK, esc, fmt, fmt_count, text_width, truncate
 
-M = 28  # outer margin
+M = 18  # outer margin
 
 
 def signed(v, sig=3):
@@ -177,7 +177,7 @@ def ruleset_body(vp, max_rows=30):
         # row content is drawn at local coordinates; the group's transform places it
         _, h = vp.chips(c_rule, 10, [v.cond_text(f, op, val, sig) for f, op, val in t.conds] if t.kind == "rule"
                         else ["x"], rule_w)
-        rh = max(h, 22) + 20
+        rh = max(h, 22) + 12
         kind = "term rule" if t.kind == "rule" else "term"
         row = [f'<g class="{kind}" data-t="{v.terms.index(t)}" data-rank="{rank}" data-y="{_n(y)}" data-h="{_n(rh)}" '
                f'transform="translate(0,{_n(y)})" style="transform:translate(0px,{_n(y)}px)">',
@@ -349,7 +349,7 @@ def gam_body(vp, cols=3, max_panels=24):
         by_f.setdefault(t.feature, []).append(t)
     feats = sorted(by_f, key=lambda f: -float(np.std(sum(t.contribution(v.X) for t in by_f[f])))
                    if v.X is not None else -sum(v.importance(t) for t in by_f[f]))[:max_panels]
-    pw, ph, gx, gy = 280, 150, 26, 34
+    pw, ph, gx, gy = 250, 128, 16, 24
     cols = min(cols, max(1, len(feats)))
     W = cols * pw + (cols - 1) * gx + 2 * M
     grids, curves = {}, {}
