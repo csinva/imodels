@@ -33,7 +33,7 @@ class TestFIGS:
         base_models = [('figs', FIGSRegressor()),
                        ('random_forest', DecisionTreeRegressor())]
         comb_model = VotingRegressor(estimators=base_models,
-                                     n_jobs=10,
+                                     n_jobs=2,
                                      verbose=2)
         comb_model.fit(self.X, self.y_reg)
 

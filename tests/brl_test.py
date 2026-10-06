@@ -26,7 +26,9 @@ class TestBRL(unittest.TestCase):
                       [0, 1, 1, 1, 1],
                       [1, 0, 1, 1, 1]])
         y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
-        M = BayesianRuleListClassifier(minsupport=0.02, maxcardinality=1)
+        # two short chains: the defaults (3 chains of 50k iterations) take ~3 s
+        M = BayesianRuleListClassifier(minsupport=0.02, maxcardinality=1,
+                                       max_iter=5000, n_chains=2)
         feat = ['ft1', 'ft2', 'ft3', 'ft4', 'ft5']
         M.fit(X, y, feature_names=feat)
         assert (np.array([M.predict(np.array([row]), threshold=0.5)

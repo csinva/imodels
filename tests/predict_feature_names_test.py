@@ -7,6 +7,7 @@ sklearn raises in that case; so should imodels.
 
 import contextlib
 import io
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,18 @@ MODELS = [m for m in imodels.ESTIMATORS if m.__name__ not in EXCLUDED_MODELS]
 IDS = [m.__name__ for m in MODELS]
 
 
+_FITTED = {}
+
+
 def _fit(model_type):
+    """Both tests only predict, so each model is fitted once (and copied per test)."""
+    if model_type not in _FITTED:
+        _FITTED[model_type] = _fit_once(model_type)
+    model, X = _FITTED[model_type]
+    return deepcopy(model), X.copy()
+
+
+def _fit_once(model_type):
     rng = np.random.RandomState(0)
     X = pd.DataFrame(rng.randn(200, 4), columns=FEATURE_NAMES)
     if model_type.__name__ in BINARY_INPUT_MODELS:
