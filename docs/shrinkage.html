@@ -95,9 +95,8 @@ aria-label="View source on GitHub" title="GitHub">
 
                     <pre>
     <code>
-from imodels import HSTreeClassifierCV, get_clean_dataset
+from imodels import HSTreeClassifierCV, get_clean_dataset, viz
 from sklearn.model_selection import train_test_split
-from sklearn.tree import plot_tree
 
 # prepare data (in this a sample clinical dataset)
 X, y, feat_names = get_clean_dataset('csi_pecarn_pred')
@@ -106,12 +105,12 @@ X, y, test_size=0.33, random_state=42)
 
 # fit the model
 model = HSTreeClassifierCV(max_leaf_nodes=7)  # initialize a model
-model.fit(X_train, y_train)   # fit model
+model.fit(X_train, y_train, feature_names=feat_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 
 # visualize the model
-plot_tree(model.estimator_, feature_names=feat_names)
+viz.draw(model, X_train, y_train, class_names=['no CSI', 'CSI'], simple=True).save('out.svg')
         </code>
 </pre>
 
@@ -124,8 +123,8 @@ plot_tree(model.estimator_, feature_names=feat_names)
                     <span class="fig-anchor" id="fig2"></span>
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
-                                src="https://demos.csinva.io/shrinkage/shrinkage_csi_model.svg?sanitize=True"
-                                width="100%"></a></p>
+                                src="img/shrinkage_csi_model.svg"
+                                width="70%"></a></p>
                     <p class="caption"><b>Fig 2.</b> Simple model learned by HS for predicting risk of cervical spinal injury.</p>
 
                     <h2 id="synthetic">3. Examples with HS on synthetic data</h2>
