@@ -9,9 +9,9 @@ color-vision deficiency (adjacent-pair CVD delta E >= 8 in both modes).
 import numpy as np
 
 CHROME = {
-    # token: (light, dark)
-    "page": ("#f9f9f7", "#0d0d0d"),
-    "surface": ("#fcfcfb", "#1a1a19"),
+    # token: (light, dark); "page" tints hovered and pinned rows, "surface" is the background
+    "page": ("#f6f6f3", "#0d0d0d"),
+    "surface": ("#ffffff", "#1a1a19"),
     "card": ("#ffffff", "#222220"),
     "ink": ("#0b0b0b", "#ffffff"),
     "ink2": ("#52514e", "#c3c2b7"),

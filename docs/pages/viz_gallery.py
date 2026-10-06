@@ -443,7 +443,7 @@ POST = """<section id="section-intro">
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <h1 style="padding-bottom: 0px;">imodels.viz: figures you can read, pages you can explore</h1>
                     <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; October 2026</h3>
-                    <p class="post-links"><a href="viz/index.html">🗂 Doc</a>, <a href="https://github.com/csinva/imodels/tree/master/imodels/viz">💻 Code</a>, <a href="#gallery">🖼 Gallery</a></p>
+                    <p class="post-links"><a href="viz/index.html">🗂 Doc</a>, <a href="https://github.com/csinva/imodels/tree/master/imodels/viz">💻 Code</a></p>
                     <hr>
 
                     <p class="abstract">An interpretable model is only as useful as the picture you can make of it.
@@ -480,7 +480,7 @@ POST = """<section id="section-intro">
                         transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; min-width: 0; }
                       .vz-card[hidden] { display: none; }
                       .vz-card:hover { transform: translateY(-2px); border-color: #cfd6db; box-shadow: 0 2px 4px rgba(27,31,35,.06), 0 12px 28px rgba(27,31,35,.10); }
-                      .vz-thumb { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: #fcfcfb;
+                      .vz-thumb { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: #ffffff;
                         border-bottom: 1px solid var(--line-soft); cursor: zoom-in; }
                       .vz-card.dark .vz-thumb { background: #1a1a19; }
                       .vz-thumb img { position: absolute; max-width: none; height: auto; transition: transform .25s ease; transform-origin: 50% 0; }
@@ -514,7 +514,7 @@ POST = """<section id="section-intro">
                       .vz-lb-nav button { font: inherit; width: 2.1rem; height: 2.1rem; border-radius: 8px; border: 1px solid var(--line);
                         background: var(--surface); color: var(--ink-soft); cursor: pointer; }
                       .vz-lb-nav button:hover { border-color: var(--accent); color: var(--accent); }
-                      .vz-lb-fig { overflow: auto; background: #fcfcfb; padding: 1rem; text-align: center; cursor: zoom-in; flex: 1 1 auto; min-height: 12rem; }
+                      .vz-lb-fig { overflow: auto; background: #ffffff; padding: 1rem; text-align: center; cursor: zoom-in; flex: 1 1 auto; min-height: 12rem; }
                       .vz-lb-fig.dark { background: #1a1a19; }
                       .vz-lb-fig img { max-width: 100%; max-height: 62vh; }
                       .vz-lb-fig.zoomed { cursor: zoom-out; text-align: left; }
@@ -538,7 +538,7 @@ POST = """<section id="section-intro">
                       .vz-chip.im:before, .vz-key i.im { background: var(--cat-rule-set); }
                       .vz-key { color: var(--muted); font-size: 0.85rem; }
                       .vz-key i { margin: 0 0.3rem 0 0.7rem; }
-                      .vz-cmp { margin: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fcfcfb; display: flex; flex-direction: column; }
+                      .vz-cmp { margin: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #ffffff; display: flex; flex-direction: column; }
                       .vz-cmp a { display: flex; align-items: center; justify-content: center; padding: 0.8rem; flex: 1; }
                       .vz-cmp img { max-width: 100%; max-height: 24rem; }
                       .vz-cmp figcaption { padding: 0.6rem 0.9rem; border-top: 1px solid var(--line-soft); background: var(--surface);
