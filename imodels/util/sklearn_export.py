@@ -137,12 +137,18 @@ def _figs(m):
         def add(nd):
             me = len(rows)
             rows.append(None)
-            val = np.asarray(nd.value, dtype=float).ravel()
             if nd.left is None or nd.right is None:
-                rows[me] = (-1, -1, -2, -2.0, val, nd)
+                rows[me] = (-1, -1, -2, -2.0, np.asarray(nd.value, dtype=float).ravel(), nd)
             else:
                 lft = add(nd.left)
                 rgt = add(nd.right)
+                val = None if nd.value is None else np.asarray(nd.value, dtype=float).ravel()
+                if val is None or val.size != rows[lft][4].size or not np.all(np.isfinite(val)):
+                    # FIGS leaves the root of every tree after the first without a value; inner values
+                    # never reach a prediction, so use the children's sample-weighted average
+                    wl, wr = (float(getattr(c, "n_samples_", 0) or 0) for c in (nd.left, nd.right))
+                    wl, wr = (wl, wr) if wl + wr > 0 else (1.0, 1.0)
+                    val = (rows[lft][4] * wl + rows[rgt][4] * wr) / (wl + wr)
                 rows[me] = (lft, rgt, int(nd.feature), _f32_le(nd.threshold), val, nd)
             return me
 

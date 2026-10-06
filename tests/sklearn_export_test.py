@@ -20,6 +20,8 @@ from imodels import to_sklearn
 cancer = load_breast_cancer(return_X_y=True, as_frame=True)
 diabetes = load_diabetes(return_X_y=True, as_frame=True)
 iris = load_iris(return_X_y=True, as_frame=True)
+_X, _y, _names = imodels.get_clean_dataset("csi_pecarn_pred")
+csi = (_X, _y)
 
 CASES = {
     "GreedyTreeClassifier": (lambda: imodels.GreedyTreeClassifier(max_depth=3), cancer),
@@ -35,6 +37,8 @@ CASES = {
     "FIGSClassifier": (lambda: imodels.FIGSClassifier(max_rules=10), cancer),
     "FIGSClassifier_multiclass": (lambda: imodels.FIGSClassifier(max_rules=10), iris),
     "FIGSRegressor": (lambda: imodels.FIGSRegressor(max_rules=10), diabetes),
+    # several trees on 0/1 features: FIGS leaves later trees' roots without a value
+    "FIGSClassifier_csi": (lambda: imodels.FIGSClassifier(max_rules=4), csi),
     "IRFClassifier": (lambda: imodels.IRFClassifier(n_estimators=10, max_depth=4, random_state=0), cancer),
     "IRFRegressor": (lambda: imodels.IRFRegressor(n_estimators=10, max_depth=4, random_state=0), diabetes),
 }
