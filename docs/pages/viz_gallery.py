@@ -140,7 +140,7 @@ X, y = d.data, d.target
 clf = DecisionTreeClassifier(random_state=0).fit(X, y)   # unrestricted depth
 fig = viz.draw(clf, X, y, class_names=d.target_names, max_depth=2, title="Breast cancer diagnosis")
 """, interactive="viz.interactive(clf, X, y, class_names=d.target_names, title='Breast cancer diagnosis (full tree)')"),
-    dict(slug="digits_compact", crop=1300, focus=(0.5, 0), title="Many classes, compact style",
+    dict(slug="digits_compact", crop=1300, title="Many classes, compact style",
          note="Trees with more than 24 leaves switch to compact cards automatically. Ten classes use the "
               "eight validated hues plus four extras, so the legend carries identity.",
          code="""
@@ -789,9 +789,12 @@ def _thumb_style(path, focus, crop=None):
 
 
 def _default_focus(ex):
-    """Trees crop around their root (top center); tables and panels from their labels (top left)."""
+    """Single trees (drawn left to right) crop around their root at the left middle; rule lists
+    around their first rule (top center); tables and panels from their labels (top left)."""
     table = ex["group"] in ("sets", "scores", "additive") or ex["slug"] in ("sk_logreg", "sk_isotonic")
-    return (0.0, 0.0) if table else (0.5, 0.0)
+    if table:
+        return (0.0, 0.0)
+    return (0.0, 0.45) if ex["group"] in ("sktrees", "trees") else (0.5, 0.0)
 
 
 def _model_class(code):

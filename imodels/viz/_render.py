@@ -535,6 +535,14 @@ def cn_share(info, p, c):
     return cn.weight / pn.weight if pn.weight else 0.0
 
 
+def resolve_orientation(orientation, info):
+    """"auto": a single tree left to right, several trees (or a rule list) top to bottom."""
+    o = (orientation or "auto").upper()
+    if o == "AUTO":
+        return "LR" if info.layout == "tree" and len(info.roots) == 1 else "TB"
+    return o
+
+
 class Figure:
     """Lays out visible nodes and composes the full static SVG."""
 

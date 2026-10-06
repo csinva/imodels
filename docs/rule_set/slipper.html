@@ -56,14 +56,18 @@ from imodels.util.arguments import check_binary_target, check_two_classes
 
 
 class SlipperClassifier(BoostedRulesClassifier):
+    &#34;&#34;&#34;SLIPPER: boosted rules, as described in A Simple, Fast, and Effective Rule Learner
+    (Cohen and Singer, 1999).
+
+    Parameters
+    ----------
+    n_estimators : int, default=10
+        Number of boosting rounds (rules).
+    **kwargs
+        Passed on to BoostedRulesClassifier.
+    &#34;&#34;&#34;
+
     def __init__(self, n_estimators=10, **kwargs):
-        &#39;&#39;&#39;
-        An estimator that supports building rules as described in
-        A Simple, Fast, and Effective Rule Learner (1999).
-        Parameters
-        ----------
-        n_estimators
-        &#39;&#39;&#39;
         super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
 
     def fit(self, X, y, feature_names=None, **kwargs):
@@ -88,32 +92,32 @@ class SlipperClassifier(BoostedRulesClassifier):
 <span>(</span><span>n_estimators=10, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.</p>
-<h2 id="params">Params</h2>
-<p>estimator: object with fit and predict methods
-Defaults to DecisionTreeClassifier with AdaBoost.
-For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p>
-<p>An estimator that supports building rules as described in
-A Simple, Fast, and Effective Rule Learner (1999).
-Parameters</p>
-<hr>
+<div class="desc"><p>SLIPPER: boosted rules, as described in A Simple, Fast, and Effective Rule Learner
+(Cohen and Singer, 1999).</p>
+<h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>n_estimators</code></strong></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of boosting rounds (rules).</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Passed on to BoostedRulesClassifier.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SlipperClassifier(BoostedRulesClassifier):
+    &#34;&#34;&#34;SLIPPER: boosted rules, as described in A Simple, Fast, and Effective Rule Learner
+    (Cohen and Singer, 1999).
+
+    Parameters
+    ----------
+    n_estimators : int, default=10
+        Number of boosting rounds (rules).
+    **kwargs
+        Passed on to BoostedRulesClassifier.
+    &#34;&#34;&#34;
+
     def __init__(self, n_estimators=10, **kwargs):
-        &#39;&#39;&#39;
-        An estimator that supports building rules as described in
-        A Simple, Fast, and Effective Rule Learner (1999).
-        Parameters
-        ----------
-        n_estimators
-        &#39;&#39;&#39;
         super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
 
     def fit(self, X, y, feature_names=None, **kwargs):
@@ -128,6 +132,7 @@ Parameters</p>
 <li><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.ensemble._weight_boosting.AdaBoostClassifier</li>
 <li>sklearn.utils._metadata_requests._RoutingNotSupportedMixin</li>
@@ -146,8 +151,6 @@ Parameters</p>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>

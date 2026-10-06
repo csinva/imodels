@@ -171,8 +171,12 @@ def get_clean_dataset(
     y: np.ndarray
         outcome
     feature_names: list
-    (if passing test_size, will return more outputs)
-    (if multitask dataset, will return target_col_names as well)
+        feature names
+    X_test, y_test : np.ndarray
+        only when ``test_size`` is given: the test split (X and y above are then the
+        training split)
+    target_col_names : list
+        only for multitask datasets (with ``return_target_col_names=True``)
 
     Example
     -------
@@ -451,10 +455,13 @@ Otherwise, unique dataset identifier (see <a href="https://github.com/csinva/imo
 <dt><strong><code>y</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>outcome</dd>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code></dt>
-<dd>&nbsp;</dd>
+<dd>feature names</dd>
+<dt><strong><code>X_test</code></strong>, <strong><code>y_test</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>only when <code>test_size</code> is given: the test split (X and y above are then the
+training split)</dd>
+<dt><strong><code>target_col_names</code></strong> :&ensp;<code>list</code></dt>
+<dd>only for multitask datasets (with <code>return_target_col_names=True</code>)</dd>
 </dl>
-<p>(if passing test_size, will return more outputs)
-(if multitask dataset, will return target_col_names as well)</p>
 <h2 id="example">Example</h2>
 <pre><code># download compas dataset from imodels
 X, y, feature_names = imodels.get_clean_dataset('compas_two_year_clean', data_source='imodels')
@@ -511,8 +518,12 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
     y: np.ndarray
         outcome
     feature_names: list
-    (if passing test_size, will return more outputs)
-    (if multitask dataset, will return target_col_names as well)
+        feature names
+    X_test, y_test : np.ndarray
+        only when ``test_size`` is given: the test split (X and y above are then the
+        training split)
+    target_col_names : list
+        only for multitask datasets (with ``return_target_col_names=True``)
 
     Example
     -------

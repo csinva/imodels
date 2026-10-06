@@ -6,7 +6,7 @@ import numpy as np
 
 from ._adapt import to_view
 from ._views import AdditiveView
-from ._render import Artist, Figure
+from ._render import Artist, Figure, resolve_orientation
 from ._text import new_uid, fmt
 from ._theme import Paint
 
@@ -101,7 +101,7 @@ class TreeFigure:
 
 
 def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-         x=None, max_depth=None, orientation="TB", theme="light", style="auto", title=None,
+         x=None, max_depth=None, orientation="auto", theme="light", style="auto", title=None,
          subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None):
     """Draw a fitted model as a static figure.
 
@@ -129,8 +129,9 @@ def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_
         A single sample whose path through the model is highlighted.
     max_depth : int, optional
         Draw only the top ``max_depth`` levels; deeper subtrees are drawn as stacked cards.
-    orientation : {"TB", "LR"}, default="TB"
-        Top to bottom, or left to right.
+    orientation : {"auto", "LR", "TB"}, default="auto"
+        Left to right, or top to bottom. "auto" lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
     theme : {"light", "dark"}, default="light"
         Color theme.
     style : {"auto", "detailed", "compact"}, default="auto"
@@ -175,6 +176,6 @@ def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_
         path = instance_path(info, x)
         pred = prediction_text(info, path[-1], precision)
     artist.set_path(path)
-    fig = Figure(info, artist, P, orientation=orientation, max_depth=max_depth, title=title,
+    fig = Figure(info, artist, P, orientation=resolve_orientation(orientation, info), max_depth=max_depth, title=title,
                  subtitle=subtitle, legend=legend, background=background, prediction=pred)
     return TreeFigure(fig.svg())

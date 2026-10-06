@@ -74,7 +74,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.progress import progress_iter
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_two_classes
 
 
 class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
@@ -92,8 +92,8 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                  alpha_l=None, beta_l=None,
                  discretization_method=&#39;randomforest&#39;, random_state=0):
         &#39;&#39;&#39;
-        Params
-        ------
+        Parameters
+        ----------
         n_rules
             number of rules to be used in SA_patternbased and also the output of generate_rules
         supp
@@ -153,6 +153,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.attr_names = []
 
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        check_two_classes(self, y)
         np.random.seed(self.random_state)
 
         # convert to pandas DataFrame
@@ -243,9 +244,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.rules_ = maps[index][-1][3]
         return self
 
-    def __str__(self):
-        return &#39; &#39;.join(str(r) for r in self.rules_)
-
     def predict(self, X):
         check_is_fitted(self)
         if isinstance(X, np.ndarray):
@@ -325,8 +323,12 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             list(itertools.chain.from_iterable([[
                 item_ind_dict[x] for x in rule]
                 for rule in self.rules_])))
+        if not self.rules_:
+            raise ValueError(
+                f&#34;{type(self).__name__} found no candidate rules with supp={self.supp} and &#34;
+                f&#34;maxlen={self.maxlen}; lower supp or raise maxlen&#34;)
         len_rules = [len(rule) for rule in self.rules_]
-        indptr = list(_accumulate(len_rules))
+        indptr = list(itertools.accumulate(len_rules))
         indptr.insert(0, 0)
         indptr = np.array(indptr)
         data = np.ones(len(indices))
@@ -485,12 +487,7 @@ def _accumulate(iterable, func=operator.add):
     Ex. _accumulate([1,2,3,4,5]) --&gt; 1 3 6 10 15
     Ex. _accumulate([1,2,3,4,5], operator.mul) --&gt; 1 2 6 24 120
     &#39;&#39;&#39;
-    it = iter(iterable)
-    total = next(it)
-    yield total
-    for element in it:
-        total = func(total, element)
-        yield total
+    return itertools.accumulate(iterable, func)
 
 
 def _find_lt(a, x):
@@ -542,6 +539,10 @@ def _extract_rules(tree, feature_names):
     right = tree.tree_.children_right
     features = [feature_names[i] for i in tree.tree_.feature]
 
+    # a tree that never split is a single leaf, which gives no rule (and has no parent to recurse to)
+    if left[0] == -1:
+        return []
+
     # get ids of child nodes
     idx = np.argwhere(left == -1)[:, 0]
 
@@ -589,30 +590,38 @@ def _extract_rules(tree, feature_names):
 Generates patterns that satisfy the minimum support and maximum length and then select the Nrules rules that have the highest entropy.
 In function SA_patternbased, each local maximum is stored in maps and the best BOA is returned.
 Remember here the BOA contains only the index of selected rules from Nrules self.rules_</p>
-<h2 id="params">Params</h2>
-<p>n_rules
-number of rules to be used in SA_patternbased and also the output of generate_rules
-supp
-The higher this supp, the 'larger' a pattern is. 5% is a generally good number
-maxlen
-maximum length of a pattern
-num_iterations
-number of iterations in each chain
-num_chains
-number of chains in the simulated annealing search algorithm
-q
-alpha_pos
-$
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_rules</code></strong></dt>
+<dd>number of rules to be used in SA_patternbased and also the output of generate_rules</dd>
+<dt><strong><code>supp</code></strong></dt>
+<dd>The higher this supp, the 'larger' a pattern is. 5% is a generally good number</dd>
+<dt><strong><code>maxlen</code></strong></dt>
+<dd>maximum length of a pattern</dd>
+<dt><strong><code>num_iterations</code></strong></dt>
+<dd>number of iterations in each chain</dd>
+<dt><strong><code>num_chains</code></strong></dt>
+<dd>number of chains in the simulated annealing search algorithm</dd>
+<dt><strong><code>q</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha_pos</code></strong></dt>
+<dd>$
 ho = alpha/(alpha+beta)$. Make sure $
 ho$ is close to one when choosing alpha and beta
-The alpha and beta parameters alter the prior distributions for different rules
-beta_pos
-alpha_neg
-beta_neg
-alpha_l
-beta_l
-discretization_method
-discretization method</p></div>
+The alpha and beta parameters alter the prior distributions for different rules</dd>
+<dt><strong><code>beta_pos</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha_neg</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>beta_neg</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha_l</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>beta_l</code></strong></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>discretization_method</code></strong></dt>
+<dd>discretization method</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -632,8 +641,8 @@ discretization method</p></div>
                  alpha_l=None, beta_l=None,
                  discretization_method=&#39;randomforest&#39;, random_state=0):
         &#39;&#39;&#39;
-        Params
-        ------
+        Parameters
+        ----------
         n_rules
             number of rules to be used in SA_patternbased and also the output of generate_rules
         supp
@@ -693,6 +702,7 @@ discretization method</p></div>
         self.attr_names = []
 
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        check_two_classes(self, y)
         np.random.seed(self.random_state)
 
         # convert to pandas DataFrame
@@ -783,9 +793,6 @@ discretization method</p></div>
         self.rules_ = maps[index][-1][3]
         return self
 
-    def __str__(self):
-        return &#39; &#39;.join(str(r) for r in self.rules_)
-
     def predict(self, X):
         check_is_fitted(self)
         if isinstance(X, np.ndarray):
@@ -865,8 +872,12 @@ discretization method</p></div>
             list(itertools.chain.from_iterable([[
                 item_ind_dict[x] for x in rule]
                 for rule in self.rules_])))
+        if not self.rules_:
+            raise ValueError(
+                f&#34;{type(self).__name__} found no candidate rules with supp={self.supp} and &#34;
+                f&#34;maxlen={self.maxlen}; lower supp or raise maxlen&#34;)
         len_rules = [len(rule) for rule in self.rules_]
-        indptr = list(_accumulate(len_rules))
+        indptr = list(itertools.accumulate(len_rules))
         indptr.insert(0, 0)
         indptr = np.array(indptr)
         data = np.ones(len(indices))
@@ -1023,6 +1034,7 @@ discretization method</p></div>
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
@@ -1068,6 +1080,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     self.attr_names = []
 
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    check_two_classes(self, y)
     np.random.seed(self.random_state)
 
     # convert to pandas DataFrame
@@ -1195,208 +1208,6 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     raise Exception(&#39;BOA does not support predicted probabilities.&#39;)</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$', init: bool | str | None = '$UNCHANGED$', verbose: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
-<dt><strong><code>init</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>init</code> parameter in <code>fit</code>.</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>verbose</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
 </details>
 </dd>
 </dl>

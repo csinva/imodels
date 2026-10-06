@@ -70,9 +70,9 @@ interactive(model, X, y).save(&quot;figs.html&quot;)        # interactive page, 
 <p>Both functions show inline in Jupyter. See the <a href="https://csinva.io/imodels/viz.html">gallery post</a>
 for examples of every kind of model.</p>
 <p>Tree-based imodels models (the trees above, FIGS and IRF) are drawn through their exact scikit-learn
-export, <code>imodels.to_sklearn</code>, so this package only reads scikit-learn trees. The same export makes
+export, <code><a title="imodels.to_sklearn" href="../index.html#imodels.to_sklearn">to_sklearn()</a></code>, so this package only reads scikit-learn trees. The same export makes
 every tree-based imodels model drawable by any tool that reads scikit-learn trees, such as
-<a href="https://github.com/parrt/dtreeviz">dtreeviz</a> (<code>dtreeviz.model(imodels.to_sklearn(model), X, y)</code>) or
+<a href="https://github.com/parrt/dtreeviz">dtreeviz</a> (<code>dtreeviz.model(<a title="imodels.to_sklearn" href="../index.html#imodels.to_sklearn">to_sklearn()</a>(model), X, y)</code>) or
 <code>sklearn.tree.plot_tree</code>.</p>
 <details class="source">
 <summary>
@@ -128,7 +128,7 @@ __all__ = [&#34;draw&#34;, &#34;interactive&#34;, &#34;text&#34;, &#34;TreeFigur
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.viz.draw"><code class="name flex">
-<span>def <span class="ident">draw</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, x=None, max_depth=None, orientation='TB', theme='light', style='auto', title=None, subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None)</span>
+<span>def <span class="ident">draw</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, x=None, max_depth=None, orientation='auto', theme='light', style='auto', title=None, subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Draw a fitted model as a static figure.</p>
@@ -155,8 +155,9 @@ rules show their coverage, and thresholds on binary or integer features read nat
 <dd>A single sample whose path through the model is highlighted.</dd>
 <dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Draw only the top <code>max_depth</code> levels; deeper subtrees are drawn as stacked cards.</dd>
-<dt><strong><code>orientation</code></strong> :&ensp;<code>{"TB", "LR"}</code>, default=<code>"TB"</code></dt>
-<dd>Top to bottom, or left to right.</dd>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>{"auto", "LR", "TB"}</code>, default=<code>"auto"</code></dt>
+<dd>Left to right, or top to bottom. "auto" lays a single tree out left to right and
+several trees (forests, boosting, FIGS) top to bottom.</dd>
 <dt><strong><code>theme</code></strong> :&ensp;<code>{"light", "dark"}</code>, default=<code>"light"</code></dt>
 <dd>Color theme.</dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>{"auto", "detailed", "compact"}</code>, default=<code>"auto"</code></dt>
@@ -188,7 +189,7 @@ Predictions always use every tree.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def draw(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-         x=None, max_depth=None, orientation=&#34;TB&#34;, theme=&#34;light&#34;, style=&#34;auto&#34;, title=None,
+         x=None, max_depth=None, orientation=&#34;auto&#34;, theme=&#34;light&#34;, style=&#34;auto&#34;, title=None,
          subtitle=None, legend=True, background=True, precision=3, simple=False, output=0, max_trees=None):
     &#34;&#34;&#34;Draw a fitted model as a static figure.
 
@@ -216,8 +217,9 @@ Predictions always use every tree.</dd>
         A single sample whose path through the model is highlighted.
     max_depth : int, optional
         Draw only the top ``max_depth`` levels; deeper subtrees are drawn as stacked cards.
-    orientation : {&#34;TB&#34;, &#34;LR&#34;}, default=&#34;TB&#34;
-        Top to bottom, or left to right.
+    orientation : {&#34;auto&#34;, &#34;LR&#34;, &#34;TB&#34;}, default=&#34;auto&#34;
+        Left to right, or top to bottom. &#34;auto&#34; lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
     theme : {&#34;light&#34;, &#34;dark&#34;}, default=&#34;light&#34;
         Color theme.
     style : {&#34;auto&#34;, &#34;detailed&#34;, &#34;compact&#34;}, default=&#34;auto&#34;
@@ -262,13 +264,13 @@ Predictions always use every tree.</dd>
         path = instance_path(info, x)
         pred = prediction_text(info, path[-1], precision)
     artist.set_path(path)
-    fig = Figure(info, artist, P, orientation=orientation, max_depth=max_depth, title=title,
+    fig = Figure(info, artist, P, orientation=resolve_orientation(orientation, info), max_depth=max_depth, title=title,
                  subtitle=subtitle, legend=legend, background=background, prediction=pred)
     return TreeFigure(fig.svg())</code></pre>
 </details>
 </dd>
 <dt id="imodels.viz.interactive"><code class="name flex">
-<span>def <span class="ident">interactive</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, title=None, subtitle=None, theme='light', orientation='TB', style='auto', initial_depth=None, precision=3, max_samples=400, simple='auto', output=0, height=720, max_trees=None)</span>
+<span>def <span class="ident">interactive</span></span>(<span>model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None, title=None, subtitle=None, theme='light', orientation='auto', style='auto', initial_depth=None, precision=3, max_samples=400, simple='auto', output=0, height=720, max_trees=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Build an interactive page for a fitted model: one self-contained HTML file.</p>
@@ -297,8 +299,9 @@ rules show their coverage, and thresholds on binary or integer features read nat
 <dd>Page title, and a subtitle (default: a one-line summary of the model).</dd>
 <dt><strong><code>theme</code></strong> :&ensp;<code>{"light", "dark", "auto"}</code>, default=<code>"light"</code></dt>
 <dd>Color theme; "auto" follows the viewer's OS. The page has a toggle either way.</dd>
-<dt><strong><code>orientation</code></strong> :&ensp;<code>{"TB", "LR"}</code>, default=<code>"TB"</code></dt>
-<dd>Top to bottom, or left to right.</dd>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>{"auto", "LR", "TB"}</code>, default=<code>"auto"</code></dt>
+<dd>Left to right, or top to bottom. "auto" lays a single tree out left to right and
+several trees (forests, boosting, FIGS) top to bottom.</dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>{"auto", "detailed", "compact"}</code>, default=<code>"auto"</code></dt>
 <dd>Card style for trees.</dd>
 <dt><strong><code>initial_depth</code></strong> :&ensp;<code>int</code>, optional</dt>
@@ -328,7 +331,7 @@ Predictions always use every tree.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-                title=None, subtitle=None, theme=&#34;light&#34;, orientation=&#34;TB&#34;, style=&#34;auto&#34;,
+                title=None, subtitle=None, theme=&#34;light&#34;, orientation=&#34;auto&#34;, style=&#34;auto&#34;,
                 initial_depth=None, precision=3, max_samples=400, simple=&#34;auto&#34;, output=0, height=720,
                 max_trees=None):
     &#34;&#34;&#34;Build an interactive page for a fitted model: one self-contained HTML file.
@@ -359,8 +362,9 @@ Predictions always use every tree.</dd>
         Page title, and a subtitle (default: a one-line summary of the model).
     theme : {&#34;light&#34;, &#34;dark&#34;, &#34;auto&#34;}, default=&#34;light&#34;
         Color theme; &#34;auto&#34; follows the viewer&#39;s OS. The page has a toggle either way.
-    orientation : {&#34;TB&#34;, &#34;LR&#34;}, default=&#34;TB&#34;
-        Top to bottom, or left to right.
+    orientation : {&#34;auto&#34;, &#34;LR&#34;, &#34;TB&#34;}, default=&#34;auto&#34;
+        Left to right, or top to bottom. &#34;auto&#34; lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
     style : {&#34;auto&#34;, &#34;detailed&#34;, &#34;compact&#34;}, default=&#34;auto&#34;
         Card style for trees.
     initial_depth : int, optional
@@ -503,7 +507,7 @@ Predictions always use every tree.</dd>
         nodes=nodes, feats=feats, samples=samples, task=info.task,
         classes=[dict(name=n, col=P.cls(k)) for k, n in enumerate(info.class_names or [])],
         legend=legend, impNote=imp_note, fileName=info.model_name,
-        target=info.target_name, orientation=orientation.upper(),
+        target=info.target_name, orientation=resolve_orientation(orientation, info),
         initialDepth=initial_depth if initial_depth is not None else (99 if len(nodes) &lt;= 63 else 3),
         maxDepth=info.max_depth, simple=bool(info.n_leaves &gt; 32 if simple == &#34;auto&#34; else simple),
         defs=defs(uid, P), sig=precision, bandMax=BAND,
@@ -846,6 +850,11 @@ PNG and PDF need cairosvg.</dd>
 <ul></ul>
 </div>
 <ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels" href="../index.html">imodels</a></code></li>
+</ul>
+</li>
 <li><h3><a class="post-list-head" href="https://csinva.io/imodels/blog.html" title="All posts">Our favorite methods &rarr;</a></h3>
 <ul class="post-list">
 <li><a href="https://csinva.io/imodels/viz.html" title="Static and interactive figures of fitted models">imodels.viz</a><span class="post-date">Oct '26</span></li>

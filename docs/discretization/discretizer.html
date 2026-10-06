@@ -77,8 +77,8 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
     &#34;&#34;&#34;
     Discretize numeric data into bins. Base class.
 
-    Params
-    ------
+    Parameters
+    ----------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
 
@@ -342,8 +342,8 @@ class ExtraBasicDiscretizer(TransformerMixin):
     Generates meaningful column names based on bin edges.
     Wraps KBinsDiscretizer from sklearn.
 
-    Params
-    ------
+    Parameters
+    ----------
     dcols : list of strings
         The names of the columns to be discretized.
 
@@ -484,8 +484,8 @@ class BasicDiscretizer(AbstractDiscretizer):
     Discretize numeric data into bins. Provides a wrapper around
     KBinsDiscretizer from sklearn
 
-    Params
-    ------
+    Parameters
+    ----------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
 
@@ -1002,42 +1002,47 @@ class RFDiscretizer(AbstractDiscretizer):
 </code></dt>
 <dd>
 <div class="desc"><p>Discretize numeric data into bins. Base class.</p>
-<h2 id="params">Params</h2>
-<p>n_bins : int or array-like of shape (len(dcols),), default=2
-Number of bins to discretize each feature into.</p>
-<p>dcols : list of strings
-The names of the columns to be discretized; by default,
-discretize all float and int columns in X.</p>
-<p>encode : {‘onehot’, ‘ordinal’}, default=’onehot’
-Method used to encode the transformed result.</p>
-<pre><code>onehot
-    Encode the transformed result with one-hot encoding and
-    return a dense array.
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array-like</code> of <code>shape (len(dcols),)</code>, default=<code>2</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</dd>
+<dt><strong><code>encode</code></strong> :&ensp;<code>{‘onehot’, ‘ordinal’}</code>, default=<code>’onehot’</code></dt>
+<dd>
+<p>Method used to encode the transformed result.</p>
+<p>onehot
+Encode the transformed result with one-hot encoding and
+return a dense array.
 ordinal
-    Return the bin identifier encoded as an integer value.
-</code></pre>
-<p>strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
-Strategy used to define the widths of the bins.</p>
-<pre><code>uniform
-    All bins in each feature have identical widths.
+Return the bin identifier encoded as an integer value.</p>
+</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;<code>{‘uniform’, ‘quantile’, ‘kmeans’}</code>, default=<code>’quantile’</code></dt>
+<dd>
+<p>Strategy used to define the widths of the bins.</p>
+<p>uniform
+All bins in each feature have identical widths.
 quantile
-    All bins in each feature have the same number of points.
+All bins in each feature have the same number of points.
 kmeans
-    Values in each bin have the same nearest center of a 1D
-    k-means cluster.
-</code></pre>
-<p>onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape (len(dcols),), default='if_binary'
-Specifies a methodology to use to drop one of the categories
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</p>
+</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;<code>{‘first’, ‘if_binary’}</code> or <code>a array-like</code> of <code>shape (len(dcols),)</code>, default=<code>'if_binary'</code></dt>
+<dd>
+<p>Specifies a methodology to use to drop one of the categories
 per feature when encode = "onehot".</p>
-<pre><code>None
-    Retain all features (the default).
+<p>None
+Retain all features (the default).
 ‘first’
-    Drop the first y_str in each feature. If only one y_str
-    is present, the feature will be dropped entirely.
+Drop the first y_str in each feature. If only one y_str
+is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first y_str in each feature with two categories.
-    Features with 1 or more than 2 categories are left intact.
-</code></pre></div>
+Drop the first y_str in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</p>
+</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1046,8 +1051,8 @@ per feature when encode = "onehot".</p>
     &#34;&#34;&#34;
     Discretize numeric data into bins. Base class.
 
-    Params
-    ------
+    Parameters
+    ----------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
 
@@ -1325,43 +1330,48 @@ per feature when encode = "onehot".</p>
 <dd>
 <div class="desc"><p>Discretize numeric data into bins. Provides a wrapper around
 KBinsDiscretizer from sklearn</p>
-<h2 id="params">Params</h2>
-<p>n_bins : int or array-like of shape (len(dcols),), default=2
-Number of bins to discretize each feature into.</p>
-<p>dcols : list of strings
-The names of the columns to be discretized; by default,
-discretize all float and int columns in X.</p>
-<p>encode : {'onehot', 'ordinal'}, default='onehot'
-Method used to encode the transformed result.</p>
-<pre><code>onehot
-    Encode the transformed result with one-hot encoding and
-    return a dense array.
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array-like</code> of <code>shape (len(dcols),)</code>, default=<code>2</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</dd>
+<dt><strong><code>encode</code></strong> :&ensp;<code>{'onehot', 'ordinal'}</code>, default=<code>'onehot'</code></dt>
+<dd>
+<p>Method used to encode the transformed result.</p>
+<p>onehot
+Encode the transformed result with one-hot encoding and
+return a dense array.
 ordinal
-    Return the bin identifier encoded as an integer value.
-</code></pre>
-<p>strategy : {'uniform', 'quantile', 'kmeans'}, default='quantile'
-Strategy used to define the widths of the bins.</p>
-<pre><code>uniform
-    All bins in each feature have identical widths.
+Return the bin identifier encoded as an integer value.</p>
+</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;<code>{'uniform', 'quantile', 'kmeans'}</code>, default=<code>'quantile'</code></dt>
+<dd>
+<p>Strategy used to define the widths of the bins.</p>
+<p>uniform
+All bins in each feature have identical widths.
 quantile
-    All bins in each feature have the same number of points.
+All bins in each feature have the same number of points.
 kmeans
-    Values in each bin have the same nearest center of a 1D
-    k-means cluster.
-</code></pre>
-<p>onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape
-(len(dcols),), default='if_binary'
-Specifies a methodology to use to drop one of the categories
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</p>
+</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;<code>{‘first’, ‘if_binary’}</code> or <code>a array-like</code> of <code>shape
+(len(dcols),)</code>, default=<code>'if_binary'</code></dt>
+<dd>
+<p>Specifies a methodology to use to drop one of the categories
 per feature when encode = "onehot".</p>
-<pre><code>None
-    Retain all features (the default).
+<p>None
+Retain all features (the default).
 ‘first’
-    Drop the first y_str in each feature. If only one y_str
-    is present, the feature will be dropped entirely.
+Drop the first y_str in each feature. If only one y_str
+is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first y_str in each feature with two categories.
-    Features with 1 or more than 2 categories are left intact.
-</code></pre>
+Drop the first y_str in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</p>
+</dd>
+</dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>discretizer_</code></strong> :&ensp;<code>object</code> of <code>class KBinsDiscretizer()</code></dt>
@@ -1384,8 +1394,8 @@ or no errors in KBinsDiscretizer().</dd>
     Discretize numeric data into bins. Provides a wrapper around
     KBinsDiscretizer from sklearn
 
-    Params
-    ------
+    Parameters
+    ----------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
 
@@ -1703,34 +1713,38 @@ binned space. All other features remain unchanged.</dd>
 <div class="desc"><p>Discretize provided columns into bins and return in one-hot format.
 Generates meaningful column names based on bin edges.
 Wraps KBinsDiscretizer from sklearn.</p>
-<h2 id="params">Params</h2>
-<p>dcols : list of strings
-The names of the columns to be discretized.</p>
-<p>n_bins : int or array-like of shape (len(dcols),), default=4
-Number of bins to discretize each feature into.</p>
-<p>strategy : {'uniform', 'quantile', 'kmeans'}, default='quantile'
-Strategy used to define the widths of the bins.</p>
-<pre><code>uniform
-    All bins in each feature have identical widths.
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized.</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array-like</code> of <code>shape (len(dcols),)</code>, default=<code>4</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;<code>{'uniform', 'quantile', 'kmeans'}</code>, default=<code>'quantile'</code></dt>
+<dd>
+<p>Strategy used to define the widths of the bins.</p>
+<p>uniform
+All bins in each feature have identical widths.
 quantile
-    All bins in each feature have the same number of points.
+All bins in each feature have the same number of points.
 kmeans
-    Values in each bin have the same nearest center of a 1D
-    k-means cluster.
-</code></pre>
-<p>onehot_drop : {'first', 'if_binary'} or a array-like of shape
-(len(dcols),), default='if_binary'
-Specifies a methodology to use to drop one of the categories
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</p>
+</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;<code>{'first', 'if_binary'}</code> or <code>a array-like</code> of <code>shape
+(len(dcols),)</code>, default=<code>'if_binary'</code></dt>
+<dd>
+<p>Specifies a methodology to use to drop one of the categories
 per feature when encode = "onehot".</p>
-<pre><code>None
-    Retain all features (the default).
+<p>None
+Retain all features (the default).
 'first'
-    Drop the first y_str in each feature. If only one y_str
-    is present, the feature will be dropped entirely.
+Drop the first y_str in each feature. If only one y_str
+is present, the feature will be dropped entirely.
 'if_binary'
-    Drop the first y_str in each feature with two categories.
-    Features with 1 or more than 2 categories are left intact.
-</code></pre>
+Drop the first y_str in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</p>
+</dd>
+</dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>discretizer_</code></strong> :&ensp;<code>object</code> of <code>class KBinsDiscretizer()</code></dt>
@@ -1747,8 +1761,8 @@ per feature when encode = "onehot".</p>
     Generates meaningful column names based on bin edges.
     Wraps KBinsDiscretizer from sklearn.
 
-    Params
-    ------
+    Parameters
+    ----------
     dcols : list of strings
         The names of the columns to be discretized.
 

@@ -496,17 +496,19 @@ def lowrank_ridge(X, Y, alpha, r):
     &#34;&#34;&#34;
     Perform ridge regression with many inputs and outputs using a rank-r approximation.
 
-    Parameters:
+    Parameters
+    ----------
     X : numpy.ndarray
         Input features matrix of shape (n_samples, n_features).
     Y : numpy.ndarray
         Output targets matrix of shape (n_samples, n_outputs).
     alpha : float
-        Regularization parameter (alphaa).
+        Regularization parameter (alpha).
     r : int
         Rank for the truncated SVD.
 
-    Returns:
+    Returns
+    -------
     B : numpy.ndarray
         Coefficient matrix of shape (n_features, n_outputs).
     &#34;&#34;&#34;
@@ -1030,18 +1032,22 @@ for each of A alphas, M voxels, and B bootstrap samples.</dd>
 </code></dt>
 <dd>
 <div class="desc"><p>Perform ridge regression with many inputs and outputs using a rank-r approximation.</p>
-<p>Parameters:
-X : numpy.ndarray
-Input features matrix of shape (n_samples, n_features).
-Y : numpy.ndarray
-Output targets matrix of shape (n_samples, n_outputs).
-alpha : float
-Regularization parameter (alphaa).
-r : int
-Rank for the truncated SVD.</p>
-<p>Returns:
-B : numpy.ndarray
-Coefficient matrix of shape (n_features, n_outputs).</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>numpy.ndarray</code></dt>
+<dd>Input features matrix of shape (n_samples, n_features).</dd>
+<dt><strong><code>Y</code></strong> :&ensp;<code>numpy.ndarray</code></dt>
+<dd>Output targets matrix of shape (n_samples, n_outputs).</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code></dt>
+<dd>Regularization parameter (alpha).</dd>
+<dt><strong><code>r</code></strong> :&ensp;<code>int</code></dt>
+<dd>Rank for the truncated SVD.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>B</code></strong> :&ensp;<code>numpy.ndarray</code></dt>
+<dd>Coefficient matrix of shape (n_features, n_outputs).</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1050,17 +1056,19 @@ Coefficient matrix of shape (n_features, n_outputs).</p></div>
     &#34;&#34;&#34;
     Perform ridge regression with many inputs and outputs using a rank-r approximation.
 
-    Parameters:
+    Parameters
+    ----------
     X : numpy.ndarray
         Input features matrix of shape (n_samples, n_features).
     Y : numpy.ndarray
         Output targets matrix of shape (n_samples, n_outputs).
     alpha : float
-        Regularization parameter (alphaa).
+        Regularization parameter (alpha).
     r : int
         Rank for the truncated SVD.
 
-    Returns:
+    Returns
+    -------
     B : numpy.ndarray
         Coefficient matrix of shape (n_features, n_outputs).
     &#34;&#34;&#34;

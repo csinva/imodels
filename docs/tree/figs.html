@@ -177,8 +177,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         n_jobs: int = None,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         max_rules: int
             Max total number of rules across all trees
         max_trees: int
@@ -264,8 +264,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         depth=None,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         compare_nodes_with_sample_weight: Deprecated
             If this is set to true and sample_weight is passed, use sample_weight to compare nodes
             Otherwise, use sample_weight only for picking a split given a particular node
@@ -373,8 +373,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         categorical_features=None,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
@@ -690,32 +690,6 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             + self._tree_to_str_with_data(X[~left],
                                           y[~left], root.right, pprefix)
         )
-
-    def __str__(self):
-        if not hasattr(self, &#34;trees_&#34;):
-            s = self.__class__.__name__
-            s += &#34;(&#34;
-            s += &#34;max_rules=&#34;
-            s += repr(self.max_rules)
-            s += &#34;, &#34;
-            s += &#34;max_trees=&#34;
-            s += repr(self.max_trees)
-            s += &#34;, &#34;
-            s += &#34;max_depth=&#34;
-            s += repr(self.max_depth)
-            s += &#34;)&#34;
-            return s
-        else:
-            s = &#34;&gt; ------------------------------\n&#34;
-            s += &#34;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#34;
-            s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
-            s += &#34;&gt; \tFor classifiers, a softmax function is then applied to the sum.\n&#34;
-            s += &#34;&gt; ------------------------------\n&#34;
-            s += &#34;\n\t+\n&#34;.join([self._tree_to_str(t) for t in self.trees_])
-            if hasattr(self, &#34;feature_names_&#34;) and self.feature_names_ is not None:
-                for i in range(len(self.feature_names_))[::-1]:
-                    s = s.replace(f&#34;X_{i}&#34;, self.feature_names_[i])
-            return s
 
     def print_tree(self, X, y, feature_names=None):
         s = &#34;------------\n&#34; + &#34;\n\t+\n&#34;.join(
@@ -1109,30 +1083,32 @@ Specifically, FIGS generalizes CART to simultaneously grow a flexible number of 
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
 Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 <a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p>
-<h2 id="params">Params</h2>
-<p>max_rules: int
-Max total number of rules across all trees
-max_trees: int
-Max total number of trees
-min_impurity_decrease: float
-A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
-max_features
-The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
-n_jobs: int, default=None
-Number of threads used to evaluate candidate splits, which are
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>max_rules</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max total number of rules across all trees</dd>
+<dt><strong><code>max_trees</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max total number of trees</dd>
+<dt><strong><code>min_impurity_decrease</code></strong> :&ensp;<code>float</code></dt>
+<dd>A node will be split if this split induces a decrease of the impurity greater than or equal to this value.</dd>
+<dt><strong><code>max_features</code></strong></dt>
+<dd>The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
+<dd>Number of threads used to evaluate candidate splits, which are
 independent of one another. None means 1; -1 uses all processors.
 Only helps once there are several candidates to compare, i.e. on
-larger datasets or deeper models.
-verbose: int, default=0
-Controls progress reporting while fitting. 0 is silent; 1 reports each
+larger datasets or deeper models.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Controls progress reporting while fitting. 0 is silent; 1 reports each
 rule as it is added, with the running total; 2 also prints the model
-after every rule. Can be overridden per call via fit(verbose=&hellip;).
-class_weight: dict, list of dict or "balanced", default=None
-Classification only. Weights associated with classes, in the form
+after every rule. Can be overridden per call via fit(verbose=&hellip;).</dd>
+<dt><strong><code>class_weight</code></strong> :&ensp;<code>dict, list</code> of <code>dict</code> or <code>"balanced"</code>, default=<code>None</code></dt>
+<dd>Classification only. Weights associated with classes, in the form
 {class_label: weight}. "balanced" weights each class by
 n_samples / (n_classes * np.bincount(y)), so that rare classes count
 as much as common ones. Combined multiplicatively with sample_weight
-when both are given.</p></div>
+when both are given.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1159,8 +1135,8 @@ when both are given.</p></div>
         n_jobs: int = None,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         max_rules: int
             Max total number of rules across all trees
         max_trees: int
@@ -1246,8 +1222,8 @@ when both are given.</p></div>
         depth=None,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         compare_nodes_with_sample_weight: Deprecated
             If this is set to true and sample_weight is passed, use sample_weight to compare nodes
             Otherwise, use sample_weight only for picking a split given a particular node
@@ -1355,8 +1331,8 @@ when both are given.</p></div>
         categorical_features=None,
     ):
         &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
@@ -1673,32 +1649,6 @@ when both are given.</p></div>
                                           y[~left], root.right, pprefix)
         )
 
-    def __str__(self):
-        if not hasattr(self, &#34;trees_&#34;):
-            s = self.__class__.__name__
-            s += &#34;(&#34;
-            s += &#34;max_rules=&#34;
-            s += repr(self.max_rules)
-            s += &#34;, &#34;
-            s += &#34;max_trees=&#34;
-            s += repr(self.max_trees)
-            s += &#34;, &#34;
-            s += &#34;max_depth=&#34;
-            s += repr(self.max_depth)
-            s += &#34;)&#34;
-            return s
-        else:
-            s = &#34;&gt; ------------------------------\n&#34;
-            s += &#34;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#34;
-            s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
-            s += &#34;&gt; \tFor classifiers, a softmax function is then applied to the sum.\n&#34;
-            s += &#34;&gt; ------------------------------\n&#34;
-            s += &#34;\n\t+\n&#34;.join([self._tree_to_str(t) for t in self.trees_])
-            if hasattr(self, &#34;feature_names_&#34;) and self.feature_names_ is not None:
-                for i in range(len(self.feature_names_))[::-1]:
-                    s = s.replace(f&#34;X_{i}&#34;, self.feature_names_[i])
-            return s
-
     def print_tree(self, X, y, feature_names=None):
         s = &#34;------------\n&#34; + &#34;\n\t+\n&#34;.join(
             [self._tree_to_str_with_data(X, y, t) for t in self.trees_]
@@ -1865,6 +1815,7 @@ when both are given.</p></div>
 <ul class="hlist">
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -1903,11 +1854,13 @@ def feature_importances_(self):
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=None, sample_weight=None, categorical_features=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="params">Params</h2>
-<p>_sample_weight: array-like of shape (n_samples,), default=None
-Sample weights. If None, then samples are equally weighted.
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>_sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
+<dd>Sample weights. If None, then samples are equally weighted.
 Splits that would create child nodes with net zero or negative weight
-are ignored while searching for a split in each node.</p></div>
+are ignored while searching for a split in each node.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1922,8 +1875,8 @@ are ignored while searching for a split in each node.</p></div>
     categorical_features=None,
 ):
     &#34;&#34;&#34;
-    Params
-    ------
+    Parameters
+    ----------
     _sample_weight: array-like of shape (n_samples,), default=None
         Sample weights. If None, then samples are equally weighted.
         Splits that would create child nodes with net zero or negative weight
@@ -2370,315 +2323,6 @@ Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 
     return s</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.figs.FIGS.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a>, *, categorical_features: bool | str | None = '$UNCHANGED$', feature_names: bool | str | None = '$UNCHANGED$', sample_weight: bool | str | None = '$UNCHANGED$', verbose: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>categorical_features</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>categorical_features</code> parameter in <code>fit</code>.</dd>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>verbose</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.figs.FIGS.set_predict_proba_request"><code class="name flex">
-<span>def <span class="ident">set_predict_proba_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a>, *, categorical_features: bool | str | None = '$UNCHANGED$', use_clipped_prediction: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>predict_proba</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>predict_proba</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict_proba</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>categorical_features</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>categorical_features</code> parameter in <code>predict_proba</code>.</dd>
-<dt><strong><code>use_clipped_prediction</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>use_clipped_prediction</code> parameter in <code>predict_proba</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.figs.FIGS.set_predict_request"><code class="name flex">
-<span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a>, *, by_tree: bool | str | None = '$UNCHANGED$', categorical_features: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>predict</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>by_tree</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>by_tree</code> parameter in <code>predict</code>.</dd>
-<dt><strong><code>categorical_features</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>categorical_features</code> parameter in <code>predict</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2802,6 +2446,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -3008,104 +2653,6 @@ possible to update each component of a nested object.</p>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.figs.FIGSCV.set_predict_request"><code class="name flex">
-<span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a>, *, by_tree: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>predict</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>by_tree</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>by_tree</code> parameter in <code>predict</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3150,30 +2697,32 @@ array([1, 1, 1])
 &gt;&gt;&gt; estimator.score(X, y)
 0.66...
 </code></pre>
-<h2 id="params">Params</h2>
-<p>max_rules: int
-Max total number of rules across all trees
-max_trees: int
-Max total number of trees
-min_impurity_decrease: float
-A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
-max_features
-The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
-n_jobs: int, default=None
-Number of threads used to evaluate candidate splits, which are
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>max_rules</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max total number of rules across all trees</dd>
+<dt><strong><code>max_trees</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max total number of trees</dd>
+<dt><strong><code>min_impurity_decrease</code></strong> :&ensp;<code>float</code></dt>
+<dd>A node will be split if this split induces a decrease of the impurity greater than or equal to this value.</dd>
+<dt><strong><code>max_features</code></strong></dt>
+<dd>The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
+<dd>Number of threads used to evaluate candidate splits, which are
 independent of one another. None means 1; -1 uses all processors.
 Only helps once there are several candidates to compare, i.e. on
-larger datasets or deeper models.
-verbose: int, default=0
-Controls progress reporting while fitting. 0 is silent; 1 reports each
+larger datasets or deeper models.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Controls progress reporting while fitting. 0 is silent; 1 reports each
 rule as it is added, with the running total; 2 also prints the model
-after every rule. Can be overridden per call via fit(verbose=&hellip;).
-class_weight: dict, list of dict or "balanced", default=None
-Classification only. Weights associated with classes, in the form
+after every rule. Can be overridden per call via fit(verbose=&hellip;).</dd>
+<dt><strong><code>class_weight</code></strong> :&ensp;<code>dict, list</code> of <code>dict</code> or <code>"balanced"</code>, default=<code>None</code></dt>
+<dd>Classification only. Weights associated with classes, in the form
 {class_label: weight}. "balanced" weights each class by
 n_samples / (n_classes * np.bincount(y)), so that rare classes count
 as much as common ones. Combined multiplicatively with sample_weight
-when both are given.</p></div>
+when both are given.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3206,6 +2755,7 @@ when both are given.</p></div>
 <li><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -3257,104 +2807,6 @@ before falling back to predict_proba.</p></div>
     return proba[:, 1]</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.figs.FIGSClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3365,9 +2817,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_predict_request" href="#imodels.tree.figs.FIGS.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3439,112 +2888,12 @@ array([1, 1, 1])
 <li><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.tree.figs.FIGSClassifierCV.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
@@ -3554,7 +2903,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3592,30 +2940,32 @@ array([0, 0, 0])
 &gt;&gt;&gt; estimator.score(X, y)
 0.0
 </code></pre>
-<h2 id="params">Params</h2>
-<p>max_rules: int
-Max total number of rules across all trees
-max_trees: int
-Max total number of trees
-min_impurity_decrease: float
-A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
-max_features
-The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
-n_jobs: int, default=None
-Number of threads used to evaluate candidate splits, which are
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>max_rules</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max total number of rules across all trees</dd>
+<dt><strong><code>max_trees</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max total number of trees</dd>
+<dt><strong><code>min_impurity_decrease</code></strong> :&ensp;<code>float</code></dt>
+<dd>A node will be split if this split induces a decrease of the impurity greater than or equal to this value.</dd>
+<dt><strong><code>max_features</code></strong></dt>
+<dd>The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
+<dd>Number of threads used to evaluate candidate splits, which are
 independent of one another. None means 1; -1 uses all processors.
 Only helps once there are several candidates to compare, i.e. on
-larger datasets or deeper models.
-verbose: int, default=0
-Controls progress reporting while fitting. 0 is silent; 1 reports each
+larger datasets or deeper models.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Controls progress reporting while fitting. 0 is silent; 1 reports each
 rule as it is added, with the running total; 2 also prints the model
-after every rule. Can be overridden per call via fit(verbose=&hellip;).
-class_weight: dict, list of dict or "balanced", default=None
-Classification only. Weights associated with classes, in the form
+after every rule. Can be overridden per call via fit(verbose=&hellip;).</dd>
+<dt><strong><code>class_weight</code></strong> :&ensp;<code>dict, list</code> of <code>dict</code> or <code>"balanced"</code>, default=<code>None</code></dt>
+<dd>Classification only. Weights associated with classes, in the form
 {class_label: weight}. "balanced" weights each class by
 n_samples / (n_classes * np.bincount(y)), so that rare classes count
 as much as common ones. Combined multiplicatively with sample_weight
-when both are given.</p></div>
+when both are given.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3629,112 +2979,12 @@ when both are given.</p></div>
 <li><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.tree.figs.FIGSRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
@@ -3744,9 +2994,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_predict_request" href="#imodels.tree.figs.FIGS.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3818,112 +3065,12 @@ array([0, 0, 0])
 <li><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></li>
 <li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.tree.figs.FIGSRegressorCV.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
@@ -3933,7 +3080,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 </ul>

@@ -69,7 +69,20 @@ it, and likewise for ``apply``.
 &#34;&#34;&#34;
 
 
-class RulesMixin:
+class TextMixin:
+    &#34;&#34;&#34;Prints a fitted model as readable text (see imodels.viz.text): its tree, rules, points or
+    shape functions, with the numbers that make each prediction. Unfitted models, and models
+    imodels.viz cannot read, print their parameters as before.&#34;&#34;&#34;
+
+    def __str__(self):
+        try:
+            from imodels.viz import text
+            return text(self)
+        except Exception:
+            return super().__str__()
+
+
+class RulesMixin(TextMixin):
     &#34;&#34;&#34;Adds ``get_rules()`` to a model whose rules imodels.get_rules can extract.&#34;&#34;&#34;
 
     def get_rules(self, feature_names=None):
@@ -155,6 +168,7 @@ class RuleInspectionMixin(RulesMixin, LeavesMixin):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.util.introspection.RulesMixin" href="#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.TextMixin" href="#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li><a title="imodels.util.introspection.LeavesMixin" href="#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 </ul>
 <h3>Subclasses</h3>
@@ -194,7 +208,7 @@ class RuleInspectionMixin(RulesMixin, LeavesMixin):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RulesMixin:
+<pre><code class="python">class RulesMixin(TextMixin):
     &#34;&#34;&#34;Adds ``get_rules()`` to a model whose rules imodels.get_rules can extract.&#34;&#34;&#34;
 
     def get_rules(self, feature_names=None):
@@ -202,6 +216,10 @@ class RuleInspectionMixin(RulesMixin, LeavesMixin):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.util.introspection.TextMixin" href="#imodels.util.introspection.TextMixin">TextMixin</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="imodels.rule_list.rule_list.RuleList" href="../rule_list/rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
@@ -229,6 +247,40 @@ class RuleInspectionMixin(RulesMixin, LeavesMixin):
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="imodels.util.introspection.TextMixin"><code class="flex name class">
+<span>class <span class="ident">TextMixin</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints a fitted model as readable text (see imodels.viz.text): its tree, rules, points or
+shape functions, with the numbers that make each prediction. Unfitted models, and models
+imodels.viz cannot read, print their parameters as before.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TextMixin:
+    &#34;&#34;&#34;Prints a fitted model as readable text (see imodels.viz.text): its tree, rules, points or
+    shape functions, with the numbers that make each prediction. Unfitted models, and models
+    imodels.viz cannot read, print their parameters as before.&#34;&#34;&#34;
+
+    def __str__(self):
+        try:
+            from imodels.viz import text
+            return text(self)
+        except Exception:
+            return super().__str__()</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gp_gam.GPGamRegressor" href="../algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
+<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel" href="../algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel">MarginalShrinkageLinearModel</a></li>
+<li><a title="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" href="../algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></li>
+<li><a title="imodels.algebraic.slim.SLIMClassifier" href="../algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></li>
+<li><a title="imodels.algebraic.slim.SLIMRegressor" href="../algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></li>
+<li>imodels.tree.iterative_random_forest.iterative_random_forest._IRFBase</li>
+<li><a title="imodels.util.introspection.RulesMixin" href="#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -262,6 +314,7 @@ class RuleInspectionMixin(RulesMixin, LeavesMixin):
 <li><span class="cat-dot cat-util" title="util"></span><a title="imodels.util.introspection.LeavesMixin" href="#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li><span class="cat-dot cat-util" title="util"></span><a title="imodels.util.introspection.RuleInspectionMixin" href="#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
 <li><span class="cat-dot cat-util" title="util"></span><a title="imodels.util.introspection.RulesMixin" href="#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.util.introspection.TextMixin" href="#imodels.util.introspection.TextMixin">TextMixin</a></li>
 </ul>
 </li>
 </ul>

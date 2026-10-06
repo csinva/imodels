@@ -7,7 +7,7 @@ import numpy as np
 
 from ._adapt import to_view
 from ._extract import TreeInfo, _unwrap
-from ._render import BAND, Artist, defs
+from ._render import BAND, Artist, defs, resolve_orientation
 from ._static import _resolve_style
 from ._text import esc, fmt, fmt_count, new_uid, text_width
 from ._theme import Paint
@@ -127,7 +127,7 @@ class InteractiveTree:
 
 
 def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, target_name=None,
-                title=None, subtitle=None, theme="light", orientation="TB", style="auto",
+                title=None, subtitle=None, theme="light", orientation="auto", style="auto",
                 initial_depth=None, precision=3, max_samples=400, simple="auto", output=0, height=720,
                 max_trees=None):
     """Build an interactive page for a fitted model: one self-contained HTML file.
@@ -158,8 +158,9 @@ def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, 
         Page title, and a subtitle (default: a one-line summary of the model).
     theme : {"light", "dark", "auto"}, default="light"
         Color theme; "auto" follows the viewer's OS. The page has a toggle either way.
-    orientation : {"TB", "LR"}, default="TB"
-        Top to bottom, or left to right.
+    orientation : {"auto", "LR", "TB"}, default="auto"
+        Left to right, or top to bottom. "auto" lays a single tree out left to right and
+        several trees (forests, boosting, FIGS) top to bottom.
     style : {"auto", "detailed", "compact"}, default="auto"
         Card style for trees.
     initial_depth : int, optional
@@ -302,7 +303,7 @@ def interactive(model, X=None, y=None, *, feature_names=None, class_names=None, 
         nodes=nodes, feats=feats, samples=samples, task=info.task,
         classes=[dict(name=n, col=P.cls(k)) for k, n in enumerate(info.class_names or [])],
         legend=legend, impNote=imp_note, fileName=info.model_name,
-        target=info.target_name, orientation=orientation.upper(),
+        target=info.target_name, orientation=resolve_orientation(orientation, info),
         initialDepth=initial_depth if initial_depth is not None else (99 if len(nodes) <= 63 else 3),
         maxDepth=info.max_depth, simple=bool(info.n_leaves > 32 if simple == "auto" else simple),
         defs=defs(uid, P), sig=precision, bandMax=BAND,

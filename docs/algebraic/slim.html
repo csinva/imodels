@@ -64,6 +64,8 @@ with integer coefficients in w
 Requires installation of a solver for mixed-integer linear programs, e.g. gurobi, mosek, or cplex
 &#39;&#39;&#39;
 
+from imodels.util.introspection import TextMixin
+from imodels.util.introspection import TextMixin
 import warnings
 
 import numpy as np
@@ -95,10 +97,10 @@ def _warn_if_rounding_collapsed(coef, rounded):
         )
 
 
-class SLIMRegressor(RegressorMixin, BaseEstimator):
+class SLIMRegressor(TextMixin, RegressorMixin, BaseEstimator):
     &#39;&#39;&#39;Sparse integer linear model
-    Params
-    ------
+    Parameters
+    ----------
     alpha: float
         weight for sparsity penalty
     &#39;&#39;&#39;
@@ -113,8 +115,8 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
         &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization.
         In case the optimization fails, fit lasso and round coefs.
         
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
@@ -174,13 +176,13 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
         return self.model_.predict(X)
 
 
-class SLIMClassifier(ClassifierMixin, BaseEstimator):
+class SLIMClassifier(TextMixin, ClassifierMixin, BaseEstimator):
 
     def __init__(self, alpha=1):
         &#39;&#39;&#39;Model is initialized during fitting
 
-        Params
-        ------
+        Parameters
+        ----------
         alpha: float
             weight for sparsity penalty
         &#39;&#39;&#39;
@@ -193,8 +195,8 @@ class SLIMClassifier(ClassifierMixin, BaseEstimator):
         &#39;&#39;&#39;fit a logistic model with integer coefficient and L1 regularization.
         In case the optimization fails, fit lasso and round coefs.
         
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
@@ -277,49 +279,26 @@ class SLIMClassifier(ClassifierMixin, BaseEstimator):
 <span>(</span><span>alpha=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
-<p>This mixin defines the following functionality:</p>
-<ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
-<li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator, ClassifierMixin
-&gt;&gt;&gt; # Mixin classes should always be on the left-hand side for a correct MRO
-&gt;&gt;&gt; class MyEstimator(ClassifierMixin, BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=1)
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([1, 1, 1])
-&gt;&gt;&gt; estimator.score(X, y)
-0.66...
-</code></pre>
+<div class="desc"><p>Prints a fitted model as readable text (see imodels.viz.text): its tree, rules, points or
+shape functions, with the numbers that make each prediction. Unfitted models, and models
+imodels.viz cannot read, print their parameters as before.</p>
 <p>Model is initialized during fitting</p>
-<h2 id="params">Params</h2>
-<p>alpha: float
-weight for sparsity penalty</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code></dt>
+<dd>weight for sparsity penalty</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SLIMClassifier(ClassifierMixin, BaseEstimator):
+<pre><code class="python">class SLIMClassifier(TextMixin, ClassifierMixin, BaseEstimator):
 
     def __init__(self, alpha=1):
         &#39;&#39;&#39;Model is initialized during fitting
 
-        Params
-        ------
+        Parameters
+        ----------
         alpha: float
             weight for sparsity penalty
         &#39;&#39;&#39;
@@ -332,8 +311,8 @@ weight for sparsity penalty</p></div>
         &#39;&#39;&#39;fit a logistic model with integer coefficient and L1 regularization.
         In case the optimization fails, fit lasso and round coefs.
         
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
@@ -403,6 +382,7 @@ weight for sparsity penalty</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -416,9 +396,11 @@ weight for sparsity penalty</p></div>
 <dd>
 <div class="desc"><p>fit a logistic model with integer coefficient and L1 regularization.
 In case the optimization fails, fit lasso and round coefs.</p>
-<h2 id="params">Params</h2>
-<p>_sample_weight: np.ndarray (n,), optional
-weight for each individual sample</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>_sample_weight</code></strong> :&ensp;<code>np.ndarray (n,)</code>, optional</dt>
+<dd>weight for each individual sample</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -427,8 +409,8 @@ weight for each individual sample</p></div>
     &#39;&#39;&#39;fit a logistic model with integer coefficient and L1 regularization.
     In case the optimization fails, fit lasso and round coefs.
     
-    Params
-    ------
+    Parameters
+    ----------
     _sample_weight: np.ndarray (n,), optional
         weight for each individual sample
     &#39;&#39;&#39;
@@ -509,202 +491,6 @@ weight for each individual sample</p></div>
     return self.model_.predict_proba(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.algebraic.slim.SLIMClassifier.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.slim.SLIMClassifier" href="#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.slim.SLIMClassifier" href="#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.slim.SLIMClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.slim.SLIMClassifier" href="#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.slim.SLIMClassifier" href="#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 <dt id="imodels.algebraic.slim.SLIMRegressor"><code class="flex name class">
@@ -713,18 +499,20 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </code></dt>
 <dd>
 <div class="desc"><p>Sparse integer linear model
-Params</p>
+Parameters</p>
 <hr>
-<p>alpha: float
-weight for sparsity penalty</p></div>
+<dl>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code></dt>
+<dd>weight for sparsity penalty</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SLIMRegressor(RegressorMixin, BaseEstimator):
+<pre><code class="python">class SLIMRegressor(TextMixin, RegressorMixin, BaseEstimator):
     &#39;&#39;&#39;Sparse integer linear model
-    Params
-    ------
+    Parameters
+    ----------
     alpha: float
         weight for sparsity penalty
     &#39;&#39;&#39;
@@ -739,8 +527,8 @@ weight for sparsity penalty</p></div>
         &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization.
         In case the optimization fails, fit lasso and round coefs.
         
-        Params
-        ------
+        Parameters
+        ----------
         _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
@@ -801,6 +589,7 @@ weight for sparsity penalty</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.TextMixin" href="../util/introspection.html#imodels.util.introspection.TextMixin">TextMixin</a></li>
 <li>sklearn.base.RegressorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -814,9 +603,11 @@ weight for sparsity penalty</p></div>
 <dd>
 <div class="desc"><p>fit a linear model with integer coefficient and L1 regularization.
 In case the optimization fails, fit lasso and round coefs.</p>
-<h2 id="params">Params</h2>
-<p>_sample_weight: np.ndarray (n,), optional
-weight for each individual sample</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>_sample_weight</code></strong> :&ensp;<code>np.ndarray (n,)</code>, optional</dt>
+<dd>weight for each individual sample</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -825,8 +616,8 @@ weight for each individual sample</p></div>
     &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization.
     In case the optimization fails, fit lasso and round coefs.
     
-    Params
-    ------
+    Parameters
+    ----------
     _sample_weight: np.ndarray (n,), optional
         weight for each individual sample
     &#39;&#39;&#39;
@@ -886,202 +677,6 @@ weight for each individual sample</p></div>
     check_predict_X(self, X)
     X = check_array(X)
     return self.model_.predict(X)</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.slim.SLIMRegressor.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.slim.SLIMRegressor" href="#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.slim.SLIMRegressor" href="#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.slim.SLIMRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.slim.SLIMRegressor" href="#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.slim.SLIMRegressor" href="#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
 </details>
 </dd>
 </dl>

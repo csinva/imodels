@@ -314,3 +314,24 @@ summary { cursor: pointer; }
 /* the sidebar's "Our favorite methods" heading links to the blog index */
 a.post-list-head { color: inherit; text-decoration: none; }
 a.post-list-head:hover { color: var(--accent); }
+
+/* API pages: tighter spacing than pdoc's defaults. Entries (classes, functions, methods) are
+   <dl><dt>signature</dt><dd>description</dd></dl>; docstring sections inside a description
+   (Parameters, Returns, ...) are .desc h2 headings over a definition list. */
+#content section dl { margin-bottom: 0.8em; }
+#content section dl dl:last-child { margin-bottom: 1em; }
+#content section dd { margin: 0 0 0.6em 1.6em; }
+#content #header-classes + dl > dd { margin-bottom: 1.6em; }
+#content #header-functions + dl > dd { margin-bottom: 1em; }
+#content section dd p { margin: 0.35em 0; }
+#content section dd dd { margin-left: 1.4em; }
+#content section h2.section-title { margin: 1.3em 0 0.5em; }
+#content section dd h3 { margin: 0.9em 0 0.35em; font-size: 1em; }
+#content .desc h2 { margin: 0.9em 0 0.25em; padding-bottom: 0; border-bottom: 0; font-size: 1em; }
+#content .desc dl { margin: 0.2em 0 0.5em; }
+#content .desc dd { margin: 0 0 0.3em 1.4em; }
+#content .desc dd p { margin: 0; }
+#content .desc dt { margin-top: 0.15em; }
+#content section .name { padding: 4px 8px; }
+#content section details.source { margin: 0.25em 0; }
+

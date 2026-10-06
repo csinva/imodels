@@ -85,8 +85,8 @@ class MDLPDiscretizer(object):
             self._data = partition of data with only features of interest and class
             self._cuts = dictionary with cut points for each feature
 
-        Params
-        ------
+        Parameters
+        ----------
         dataset
             pandas dataframe with data to discretize. If None, the cut points
             are computed later by calling fit(X, y).
@@ -862,14 +862,16 @@ self._classes = unique classes in raw_data
 self._class_name = label of class in pandas dataframe
 self._data = partition of data with only features of interest and class
 self._cuts = dictionary with cut points for each feature</p>
-<h2 id="params">Params</h2>
-<p>dataset
-pandas dataframe with data to discretize. If None, the cut points
-are computed later by calling fit(X, y).
-class_label
-name of the column containing class in input dataframe
-features
-if !None, features that the user wants to discretize specifically</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dataset</code></strong></dt>
+<dd>pandas dataframe with data to discretize. If None, the cut points
+are computed later by calling fit(X, y).</dd>
+<dt><strong><code>class_label</code></strong></dt>
+<dd>name of the column containing class in input dataframe</dd>
+<dt><strong><code>features</code></strong></dt>
+<dd>if !None, features that the user wants to discretize specifically</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -886,8 +888,8 @@ if !None, features that the user wants to discretize specifically</p></div>
             self._data = partition of data with only features of interest and class
             self._cuts = dictionary with cut points for each feature
 
-        Params
-        ------
+        Parameters
+        ----------
         dataset
             pandas dataframe with data to discretize. If None, the cut points
             are computed later by calling fit(X, y).
