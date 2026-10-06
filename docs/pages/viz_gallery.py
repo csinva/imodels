@@ -526,10 +526,12 @@ POST = """<section id="section-intro">
                         border-bottom: 1px solid var(--line-soft); font-size: 0.88rem; line-height: 1.55; }
                       .vz-srow b { color: var(--ink); font-weight: 600; }
                       .vz-srow b span { color: var(--muted); font-weight: 400; margin-left: 0.3rem; font-size: 0.8rem; }
-                      .vz-srow code { background: none; padding: 0; font-size: 0.8rem; white-space: nowrap; }
-                      .vz-srow code.sk { color: var(--accent); }
-                      .vz-srow code.im { color: var(--cat-rule-set); }
-                      .vz-srow .sep { color: var(--line); margin: 0 0.25rem; }
+                      .vz-srow code { background: none; padding: 0; font-size: 0.8rem; white-space: nowrap; color: inherit; }
+                      .vz-srow a { text-decoration: none; }
+                      .vz-srow a:hover { text-decoration: underline; }
+                      .vz-srow a.sk { color: var(--accent); }
+                      .vz-srow a.im { color: var(--cat-rule-set); }
+                      .vz-srow .sep { color: var(--muted); opacity: 0.6; margin: 0 0.25rem; }
                       @media (max-width: 640px) { .vz-srow { grid-template-columns: 1fr; } }
                       .vz-support-note { font-size: 0.82rem; color: var(--muted); margin: 0.4rem 0 0; }
                       .vz-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; margin: 1rem 0 0.6rem; }
@@ -780,6 +782,54 @@ def _model_class(code):
     return m.group(1) if m else ""
 
 
+# where each name in SUPPORTED links: imodels API pages (relative to docs/) or scikit-learn's reference
+SKL = "https://scikit-learn.org/stable/modules/generated/sklearn.{}.html"
+IM_LINKS = {
+    "GreedyTree": "tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier",
+    "DecisionTreeCCP": "tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier",
+    "HSTree": "tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier",
+    "TaoTree": "tree/tao.html#imodels.tree.tao.TaoTreeClassifier",
+    "C45Tree": "tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier",
+    "FastSmallTree": "tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier",
+    "FIGS": "tree/figs.html#imodels.tree.figs.FIGSClassifier",
+    "IRF": "tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier",
+    "GreedyRuleList": "rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier",
+    "OneR": "rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier",
+    "FastFrugalTree": "rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier",
+    "BayesianRuleList": "rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier",
+    "RuleFit": "rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier",
+    "FPLasso": "rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier",
+    "SkopeRules": "rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier",
+    "FPSkope": "rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier",
+    "BoostedRules": "rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier",
+    "Slipper": "rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier",
+    "BayesianRuleSet": "rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier",
+    "FastRiskScore": "algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier",
+    "SLIM": "algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier",
+    "TreeGAM": "algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMClassifier",
+    "GPGam": "algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor",
+    "MarginalShrinkageLinear": "algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor",
+}
+SK_MODULE = {
+    "DecisionTreeClassifier": "tree", "DecisionTreeRegressor": "tree", "ExtraTreeClassifier": "tree",
+    "ExtraTreeRegressor": "tree", "RandomForest": "ensemble.RandomForestClassifier", "ExtraTrees": "ensemble.ExtraTreesClassifier",
+    "GradientBoosting": "ensemble.GradientBoostingClassifier", "HistGradientBoosting": "ensemble.HistGradientBoostingClassifier",
+    "LinearRegression": "linear_model", "Ridge": "linear_model", "Lasso": "linear_model", "ElasticNet": "linear_model",
+    "LogisticRegression": "linear_model", "SGD": "linear_model.SGDClassifier", "LinearSVC": "svm", "LinearSVR": "svm",
+    "Huber": "linear_model.HuberRegressor", "RANSAC": "linear_model.RANSACRegressor", "Poisson": "linear_model.PoissonRegressor",
+    "Gamma": "linear_model.GammaRegressor", "Tweedie": "linear_model.TweedieRegressor", "RidgeClassifier": "linear_model",
+    "Perceptron": "linear_model", "IsotonicRegression": "isotonic",
+}
+
+
+def model_url(name, src):
+    if src == IM:
+        return IM_LINKS[name]
+    mod = SK_MODULE[name]
+    return SKL.format(mod if "." in mod else f"{mod}.{name}")
+
+
+
 def write_post():
     groups = [("sktrees", "Decision trees", "scikit-learn decision trees: classification and regression, with and "
                "without data, both themes and orientations.")] + GROUPS
@@ -819,7 +869,8 @@ def write_post():
     mcards = []
     for view, _, models in SUPPORTED:
         names = '<span class="sep">&middot;</span>'.join(
-            f'<code class="{"sk" if src == SK else "im"}" title="{src}">{html.escape(m)}</code>' for m, src in models)
+            '<span class="sep">/</span>'.join(f'<a class="{"sk" if src == SK else "im"}" href="{model_url(part, src)}" title="{src}"><code>{html.escape(part)}</code></a>'
+                       for part in m.split(" / ")) for m, src in models)
         mcards.append(f'<div class="vz-srow"><b>{html.escape(view)}<span>{len(models)}</span></b><div>{names}</div></div>')
     n_models = sum(len(m) for _, _, m in SUPPORTED)
     post = (POST.replace("__CARDS__", "\n".join(cards)).replace("__PILLS__", "".join(pills))
