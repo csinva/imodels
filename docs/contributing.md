@@ -32,6 +32,11 @@ The shared suite then covers the new model automatically. `TestRegistryCoverage`
 
 Tests should not depend on the order they run in. `tests/conftest.py` seeds the global numpy/random state before each test, since some models draw from it (and some reseed it during `fit`).
 
+imodels is not yet on conda-forge (#58). `docs/conda/meta.yaml` holds a recipe
+ready to submit; `docs/conda/make_meta.yaml` describes how to refresh it and open
+the pull request against conda-forge/staged-recipes. Every runtime dependency is
+available on conda-forge.
+
 The model is on [pypi](https://pypi.org/project/imodels/). Packaged following [this tutorial](https://realpython.com/pypi-publish-python-package/). Relevant commands:
 ```bash
 uv build
