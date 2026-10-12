@@ -248,7 +248,8 @@ def to_sklearn(model, X=None):
     Returns
     -------
     DecisionTreeClassifier or DecisionTreeRegressor
-        For single trees. ``predict`` / ``predict_proba`` match the model's.
+        For single trees. ``predict`` / ``predict_proba`` match the model's,
+        including the original class labels for classifiers.
     RandomForestClassifier or RandomForestRegressor
         For IRF.
     list of DecisionTreeRegressor
@@ -291,6 +292,9 @@ def to_sklearn(model, X=None):
         if inner is None or not (is_sklearn_tree(inner) or hasattr(inner, "estimators_")):
             raise TypeError(f"{name} is not a fitted tree-based model that can be exported to scikit-learn.")
         est = copy.deepcopy(inner)  # TaoTree, DecisionTreeCCP, HSTree (shrunk values live in estimator_)
+        if hasattr(model, "classes_") and hasattr(est, "classes_"):
+            # Wrappers may fit their inner estimator on integer-encoded targets.
+            est.classes_ = copy.deepcopy(model.classes_)
         if not is_sklearn_tree(est):  # hierarchical shrinkage of a forest
             if X is not None:
                 for e in est.estimators_:

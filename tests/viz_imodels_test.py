@@ -86,6 +86,16 @@ def test_view_reproduces_predictions(name):
     np.testing.assert_allclose(np.asarray(ours, float), np.asarray(theirs, float), atol=1e-8)
 
 
+@pytest.mark.parametrize("name", ["HSTreeClassifier", "TaoTreeClassifier"])
+def test_tree_view_preserves_string_class_labels(name):
+    make, _ = CASES[name]
+    y = np.where(yb == 0, "malignant", "benign")
+    m = make().fit(Xb, y)
+    view = to_view(m, Xb, y)
+    assert view.class_names == list(m.classes_)
+    ET.fromstring(dti.draw(m, Xb, y).svg)
+
+
 @pytest.mark.parametrize("name", sorted(CASES))
 def test_renders(name):
     m, X, y, _ = fitted(name)
