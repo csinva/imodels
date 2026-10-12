@@ -90,6 +90,57 @@ def test_export_is_a_copy():
     np.testing.assert_array_equal(m.estimator_.tree_.n_node_samples, before)
 
 
+@pytest.mark.parametrize("make", [
+    pytest.param(lambda: imodels.TaoTreeClassifier(
+        n_iters=1, model_args={"max_leaf_nodes": 4, "random_state": 0}), id="tao"),
+    pytest.param(lambda: imodels.HSTreeClassifier(
+        max_leaf_nodes=4, random_state=0), id="hs"),
+    pytest.param(lambda: imodels.HSTreeClassifierCV(
+        max_leaf_nodes=4, cv=2, reg_param_list=[1]), id="hs-cv"),
+    pytest.param(lambda: imodels.HSDecisionTreeCCPClassifierCV(
+        estimator_=DecisionTreeClassifier(max_leaf_nodes=4, random_state=0),
+        desired_complexity=3, cv=2, reg_param_list=[1]), id="hs-ccp-cv"),
+    pytest.param(lambda: imodels.HSTreeClassifier(
+        estimator_=RandomForestClassifier(n_estimators=3, max_depth=3, random_state=0)),
+        id="hs-forest"),
+    pytest.param(lambda: imodels.DecisionTreeCCPClassifier(
+        estimator_=DecisionTreeClassifier(max_leaf_nodes=4, random_state=0),
+        desired_complexity=3), id="ccp"),
+])
+@pytest.mark.parametrize("labels", [
+    [0, 1], [1, 2], [-3, 7], ["blue", "red"], ["birch", "maple", "oak"],
+])
+@pytest.mark.parametrize("recount", [False, True])
+def test_export_preserves_wrapper_class_labels(make, labels, recount):
+    X = np.tile([[0., 0.], [0., 1.], [1., 0.], [1., 1.], [2., 0.], [2., 1.]], (4, 1))
+    y = np.asarray(labels)[X[:, 0].astype(int) % len(labels)]
+    m = make().fit(X, y)
+    inner = m.model if hasattr(m, "model") else m.estimator_
+    inner_classes = inner.classes_.copy()
+    predictions = m.predict(X)
+    exported = to_sklearn(m, X if recount else None)
+
+    np.testing.assert_allclose(exported.predict_proba(X), m.predict_proba(X), atol=1e-12)
+    np.testing.assert_array_equal(exported.predict(X), predictions)
+    np.testing.assert_array_equal(exported.classes_, m.classes_)
+    np.testing.assert_array_equal(inner.classes_, inner_classes)
+    assert not np.shares_memory(exported.classes_, m.classes_)
+    exported.classes_[0] = exported.classes_[-1]
+    np.testing.assert_array_equal(m.predict(X), predictions)
+
+
+@pytest.mark.parametrize("labels", [[-3, 7], ["blue", "red"]])
+def test_export_preserves_prefitted_shrinkage_labels(labels):
+    X = np.arange(8).reshape(-1, 1)
+    y = np.repeat(labels, 4)
+    tree = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)
+    m = imodels.HSTreeClassifier(estimator_=tree)
+    exported = to_sklearn(m, X)
+    np.testing.assert_array_equal(exported.classes_, tree.classes_)
+    np.testing.assert_array_equal(exported.predict(X), m.predict(X))
+    np.testing.assert_allclose(exported.predict_proba(X), m.predict_proba(X))
+
+
 def test_export_text_works():
     m, X, _ = fitted("C45TreeClassifier")
     assert "class" in export_text(to_sklearn(m), feature_names=list(X.columns))
