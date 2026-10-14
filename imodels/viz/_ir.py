@@ -13,7 +13,8 @@ def make_info(specs, *, task, feature_names, model_name, class_names=None, X=Non
     Each spec is a dict with ``left``/``right`` (child ids, -1 for leaves) and either ``conds``
     ([(feature, op, value)], left when all hold) or ``feature``/``threshold`` (left when <=).
     Optional: ``proba`` (class probabilities, classification), ``value`` (regression value or
-    additive leaf contribution), ``n`` (training samples), ``impurity``, ``label``.
+    additive leaf contribution), ``n`` (training samples), ``impurity``, ``label``, ``nan_left``
+    (side a missing value takes at a one-feature split; set before samples are routed).
     With X (and y), samples are routed through the nodes to fill counts and chart data.
     """
     clf = task == "classification"
@@ -47,7 +48,7 @@ def make_info(specs, *, task, feature_names, model_name, class_names=None, X=Non
                           n=int(sp.get("n", 0) or 0), weight=float(sp.get("n", 0) or 0),
                           impurity=float(sp.get("impurity", np.nan)), counts=np.zeros(1),
                           conds=[(int(f), op, float(v)) for f, op, v in conds] if conds else None,
-                          label=sp.get("label")))
+                          label=sp.get("label"), nan_left=sp.get("nan_left")))
 
     info = TreeInfo(nodes=nodes, task=task, class_names=class_names, feature_names=list(feature_names),
                     criterion=criterion, model_name=model_name,

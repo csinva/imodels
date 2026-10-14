@@ -203,7 +203,6 @@ def _ensemble(trees, *, task, combine, names, model_name, class_names, X, y, lin
                      X=X, y=y, roots=roots, combine=combine, link=link, intercept=intercept, target_name=target_name)
     for nd, sp in zip(info.nodes, specs):
         nd.value = sp.get("contrib")
-        nd.nan_left = sp.get("nan_left")
         if task == "classification" and sp.get("proba") is not None and combine == "mean":
             nd.counts = np.asarray(sp["proba"], float) * max(nd.n, 1)  # the tree's own leaf estimate
     info.shown_roots = roots[:max_shown]
