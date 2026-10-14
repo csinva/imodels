@@ -107,3 +107,28 @@ def test_opaque_models_and_pipelines_say_why():
         dti.draw(KNeighborsClassifier().fit(Xb, yb))
     with pytest.raises(NotImplementedError, match="only scaling steps"):
         dti.draw(make_pipeline(PCA(3), lm.LogisticRegression()).fit(Xb, yb))
+
+
+@pytest.mark.parametrize("nan_like", [0, 1])  # missing rows resemble the left (0) or right (1) group
+@pytest.mark.parametrize("make", [
+    lambda: en.HistGradientBoostingClassifier(max_iter=1, max_leaf_nodes=2, min_samples_leaf=1,
+                                              learning_rate=1.0, early_stopping=False),
+    lambda: en.HistGradientBoostingRegressor(max_iter=1, max_leaf_nodes=2, min_samples_leaf=1,
+                                             learning_rate=1.0, early_stopping=False),
+    lambda: en.RandomForestClassifier(n_estimators=2, max_depth=1, bootstrap=False, random_state=0),
+    lambda: en.RandomForestRegressor(n_estimators=2, max_depth=1, bootstrap=False, random_state=0),
+], ids=["hgb_clf", "hgb_reg", "rf_clf", "rf_reg"])
+def test_ensembles_attach_missing_values_to_their_branch(make, nan_like):
+    X = np.array([[0.0], [0.0], [0.0], [1.0], [1.0], [1.0], [np.nan], [np.nan]])
+    y = np.array([0, 0, 0, 1, 1, 1, nan_like, nan_like])
+    m = make().fit(X, y)
+    info = to_view(m, X, y)
+    for r in info.roots:
+        root = info.nodes[r]
+        assert root.nan_left == (nan_like == 0)
+        left, right = info.nodes[root.left], info.nodes[root.right]
+        assert sorted(left.idx.tolist()) == ([0, 1, 2, 6, 7] if nan_like == 0 else [0, 1, 2])
+        assert sorted(right.idx.tolist()) == ([3, 4, 5] if nan_like == 0 else [3, 4, 5, 6, 7])
+        if info.is_clf and isinstance(m, en.HistGradientBoostingClassifier):  # counts come from the data
+            assert left.counts.tolist() == ([5.0, 0.0] if nan_like == 0 else [3.0, 0.0])
+            assert right.counts.tolist() == ([0.0, 3.0] if nan_like == 0 else [0.0, 5.0])
