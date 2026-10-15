@@ -22,11 +22,11 @@ class SimpleDiscretizer:
 
         # X_categorical = X[:, self.is_categorical]
         X_categorical_columns = feature_labels[self.is_categorical]
-        # X_numeric = X[:, ~self.is_categorical]
+        X_numeric = X[:, ~self.is_categorical]
         X_numeric_columns = feature_labels[~self.is_categorical]
 
         self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode='onehot', strategy=self.strategy)
-        # X_numeric_discretized = self.discretizer.fit(X_numeric)
+        self.discretizer.fit(X_numeric)
 
         discretized_featnames = []
         for feat_name, bin_edges in zip(X_numeric_columns, self.discretizer.bin_edges_):
