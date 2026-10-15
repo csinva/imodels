@@ -429,6 +429,9 @@
   <style media="print">${css.print()}</style>
 
   <link rel="stylesheet" href="${_root}style.css">
+  <link rel="icon" href="${_root}favicon.ico" sizes="32x32">
+  <link rel="icon" href="${_root}favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="${_root}apple-touch-icon.png">
 
   % if google_analytics:
     <script>

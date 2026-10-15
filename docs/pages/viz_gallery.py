@@ -413,6 +413,20 @@ SUPPORT_NOTE = ("Scaling pipelines are drawn in raw units. Not supported: models
                 "(kNN, kernel SVMs, MLPs).")
 
 
+# the site icon, linked from docs/viz_gallery/interactive/ back to the docs root
+FAVICON = ('<link rel="icon" href="../../favicon.ico" sizes="32x32">\n'
+           '<link rel="icon" href="../../favicon.svg" type="image/svg+xml">\n'
+           '<link rel="apple-touch-icon" href="../../apple-touch-icon.png">\n')
+
+
+def add_favicon(path):
+    """Give a standalone interactive page the site icon (viz.interactive itself stays icon-free)."""
+    page = open(path, encoding="utf-8").read()
+    if 'rel="icon"' not in page:
+        page = page.replace('<meta charset="utf-8">\n', '<meta charset="utf-8">\n' + FAVICON, 1)
+        open(path, "w", encoding="utf-8").write(page)
+
+
 def run_examples():
     os.makedirs(os.path.join(OUT, "static"), exist_ok=True)
     os.makedirs(os.path.join(OUT, "interactive"), exist_ok=True)
@@ -423,7 +437,9 @@ def run_examples():
         exec(textwrap.dedent(ex["code"]), ns)
         ns["fig"].save(os.path.join(OUT, "static", ex["slug"] + ".svg"))
         if ex.get("interactive"):
-            eval(ex["interactive"], ns).save(os.path.join(OUT, "interactive", ex["slug"] + ".html"))
+            page = os.path.join(OUT, "interactive", ex["slug"] + ".html")
+            eval(ex["interactive"], ns).save(page)
+            add_favicon(page)
         print(f"{ex['slug']:<18} {time.time() - t:5.2f}s")
 
 
