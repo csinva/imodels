@@ -94,5 +94,6 @@ class StableClustering(BaseEstimator, ClusterMixin):
             distances_ = deepcopy(distances[:, i])
             distances_[cluster_assignments != i] = np.inf
             closest_points = np.argsort(distances_)[:n_closest]
+            closest_points = closest_points[cluster_assignments[closest_points] == i]
             preds[closest_points] = i
         return preds
