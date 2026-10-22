@@ -8,13 +8,63 @@ from functools import partial
 
 import numpy as np
 import pytest
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.base import is_regressor
+from sklearn.ensemble import RandomForestRegressor, StackingRegressor, VotingRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import DistilledRegressor
 
 N_SAMPLES = 20
 N_FEATURES = 5
+
+
+def test_distilled_regressor_type():
+    model = DistilledRegressor(DecisionTreeRegressor(), DecisionTreeRegressor())
+    assert is_regressor(model)
+
+
+@pytest.mark.parametrize("ensemble_type", [VotingRegressor, StackingRegressor])
+def test_distilled_regressor_in_ensemble(ensemble_type):
+    X = np.arange(12, dtype=float).reshape(-1, 1)
+    y = 2 * X[:, 0] - 3
+    distilled = DistilledRegressor(
+        DecisionTreeRegressor(random_state=0),
+        DecisionTreeRegressor(random_state=0),
+    )
+    kwargs = {}
+    if ensemble_type is StackingRegressor:
+        kwargs = dict(final_estimator=LinearRegression(), cv=2, passthrough=True)
+    model = ensemble_type([("distilled", distilled)], n_jobs=1, **kwargs)
+
+    model.fit(X, y)
+    np.testing.assert_allclose(model.predict(X), y, atol=1e-12)
+
+
+def test_distilled_regressor_as_student():
+    X = np.arange(12, dtype=float).reshape(-1, 1)
+    y = 2 * X[:, 0] - 3
+    student = DistilledRegressor(
+        DecisionTreeRegressor(random_state=0),
+        DecisionTreeRegressor(random_state=0),
+    )
+    model = DistilledRegressor(DecisionTreeRegressor(random_state=0), student)
+
+    model.fit(X, y)
+    np.testing.assert_allclose(model.predict(X), y)
+
+
+@pytest.mark.parametrize("teacher_type", [DecisionTreeRegressor, DecisionTreeClassifier])
+def test_distilled_regressor_direct_predictions(teacher_type):
+    X = np.arange(12, dtype=float).reshape(-1, 1)
+    y = np.arange(12) % 2
+    teacher = teacher_type(max_depth=2, random_state=0)
+    model = DistilledRegressor(teacher, DecisionTreeRegressor(random_state=0))
+
+    assert model.fit(X, y) is model
+    expected = (teacher.predict(X) if is_regressor(teacher)
+                else teacher.predict_proba(X)[:, 1])
+    np.testing.assert_allclose(model.predict(X), expected)
 
 
 class TestClassRegression:
