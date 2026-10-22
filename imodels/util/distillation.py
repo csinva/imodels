@@ -1,7 +1,7 @@
 from sklearn.base import RegressorMixin, BaseEstimator, is_regressor
 
 
-class DistilledRegressor(BaseEstimator, RegressorMixin):
+class DistilledRegressor(RegressorMixin, BaseEstimator):
     """
     Class to implement distillation. Currently only supports regression.
     Parameters
