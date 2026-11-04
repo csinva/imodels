@@ -329,6 +329,7 @@ def encode_categories(X, features, encoder=None):
     else:
         one_hot_encoder = encoder
         X_one_hot = pd.DataFrame(one_hot_encoder.transform(X_cat))
+    X_one_hot.index = X.index
     X_one_hot.columns = one_hot_encoder.get_feature_names_out(features)
     X_encoded = pd.concat([X_encoded, X_one_hot], axis=1)
     if encoder is not None:
