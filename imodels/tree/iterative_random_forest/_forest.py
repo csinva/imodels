@@ -20,6 +20,8 @@ from joblib import Parallel, delayed
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import check_random_state
 
+from ._interactions import _interaction_terms, _tree_statistics
+
 
 _TASKS = ("classification", "regression")
 
@@ -521,7 +523,41 @@ class _WeightedTree:
         """Return leaf means (regression) or tie-broken leaf classes."""
         return self.leaf_prediction_[self.apply(X)]
 
-    def terminal_paths(self, X=None, sample_weight=None):
+    def _leaf_paths(self, signed=False, feature_groups=None, first_only=True):
+        """Map leaf IDs to feature sets or signed ``(feature, direction)`` sets.
+
+        Left and right branches have directions -1 and +1. When ``first_only``
+        is true, signed paths keep the first direction encountered for each
+        feature, or for each group when ``feature_groups`` is supplied.
+        """
+        paths = {}
+        tasks = [(0, frozenset())]
+        while tasks:
+            node_id, path = tasks.pop()
+            if self.children_left_[node_id] < 0:
+                paths[node_id] = path
+                continue
+            feature = int(self.feature_[node_id])
+            if feature_groups is not None:
+                feature = int(feature_groups[feature])
+            if signed:
+                seen = first_only and ((feature, -1) in path or (feature, 1) in path)
+                left_path = path if seen else path | {(feature, -1)}
+                right_path = path if seen else path | {(feature, 1)}
+            else:
+                left_path = right_path = path | {feature}
+            tasks.append((self.children_right_[node_id], right_path))
+            tasks.append((self.children_left_[node_id], left_path))
+        return paths
+
+    def _path_records(self, paths, masses):
+        """Attach predictions and population masses to a leaf-path mapping."""
+        prediction_type = float if self.task == "regression" else int
+        return [(path, prediction_type(self.leaf_prediction_[node_id]),
+                 float(masses[node_id])) for node_id, path in paths.items()]
+
+    def terminal_paths(self, X=None, sample_weight=None, *, signed=False,
+                       feature_groups=None, first_only=True):
         """Return (feature set, leaf prediction, weighted leaf mass).
 
         The leaf prediction is the tie-broken class index for classification
@@ -530,35 +566,41 @@ class _WeightedTree:
         If X is supplied, route every row through this tree to measure leaf
         population, as required by the iRF path-sampling procedure. Otherwise
         report the inner bootstrap's weighted training population.
+
+        Signed paths use -1 for left and +1 for right branches. By default
+        they retain the first split on each feature (or feature group).
         """
         if X is None:
             masses = self.weighted_n_node_samples_
         else:
             masses = np.bincount(self.apply(X), weights=sample_weight,
                                  minlength=self.node_count_)
-        paths = []
-        tasks = [(0, frozenset())]
-        while tasks:
-            node_id, path = tasks.pop()
-            if self.children_left_[node_id] < 0:
-                prediction = self.leaf_prediction_[node_id]
-                prediction = (float(prediction) if self.task == "regression"
-                              else int(prediction))
-                paths.append((path, prediction, float(masses[node_id])))
-            else:
-                child_path = path | {int(self.feature_[node_id])}
-                tasks.append((self.children_right_[node_id], child_path))
-                tasks.append((self.children_left_[node_id], child_path))
-        return paths
+        paths = self._leaf_paths(signed, feature_groups, first_only)
+        return self._path_records(paths, masses)
 
 
-def _fit_tree_paths(tree, X, y, feature_weights, sample_weight, n_classes):
-    """Fit a tree and return its terminal paths measured on its training rows."""
+def _fit_tree_paths(tree, X, y, feature_weights, sample_weight, n_classes, *,
+                    feature_groups=None, terms=None, target_class=None, row_ids=None,
+                    score_y=None):
+    """Fit a tree; return outer-sample paths and optional signed statistics."""
     tree.fit(X, y, feature_weights, sample_weight, n_classes)
-    return tree.terminal_paths(X, sample_weight=sample_weight)
+    if terms is None:
+        return tree.terminal_paths(X, sample_weight=sample_weight,
+                                   feature_groups=feature_groups)
+
+    leaf_ids = tree.apply(X)
+    paths = tree._leaf_paths(signed=True, feature_groups=feature_groups)
+    masses = np.bincount(leaf_ids, weights=sample_weight, minlength=tree.node_count_)
+    statistics = _tree_statistics(
+        paths, leaf_ids, y if score_y is None else score_y, sample_weight,
+        tree.bootstrap_indices_, row_ids,
+        terms, target_class,
+    )
+    return tree._path_records(paths, masses), statistics
 
 
-def _forest_paths(forests, datasets, n_jobs=None):
+def _forest_paths(forests, datasets, n_jobs=None, *, feature_groups=None,
+                  candidates=None, target_class=None):
     """Fit forests in one pool of workers; yield each forest's terminal paths.
 
     ``datasets`` gives ``(X, y, feature_weights, sample_weight, n_classes)``
@@ -566,22 +608,49 @@ def _forest_paths(forests, datasets, n_jobs=None):
     ``terminal_paths`` on their training rows rather than the trees, and
     results stream back in order, so memory holds about one forest's paths
     at a time. Sharing one pool avoids idle workers between forests.
+
+    With ``candidates`` supplied, return signed paths and mean term
+    statistics for each forest. A sixth dataset entry may give original row
+    IDs, ensuring repeated outer-bootstrap rows cannot leak into evaluation.
+    A seventh may supply binary scoring labels separately from fit targets.
     """
     if not forests:
         return
+    terms = None
+    if candidates is not None:
+        terms = _interaction_terms(candidates)
 
     def tasks():
         for forest, data in zip(forests, datasets):
-            trees, fit_args = forest._prepare(*data)
+            trees, fit_args = forest._prepare(*data[:5])
+            kwargs = dict(feature_groups=feature_groups)
+            if terms is not None:
+                kwargs.update(terms=terms, target_class=target_class,
+                              row_ids=data[5] if len(data) > 5 else np.arange(len(data[0])),
+                              score_y=data[6] if len(data) > 6 else None)
             for tree in trees:
-                yield delayed(_fit_tree_paths)(tree, *fit_args)
+                yield delayed(_fit_tree_paths)(tree, *fit_args, **kwargs)
 
     try:
         results = Parallel(n_jobs=n_jobs, return_as="generator")(tasks())
     except TypeError:  # joblib < 1.3 cannot stream results
         results = iter(Parallel(n_jobs=n_jobs)(tasks()))
     for forest in forests:
-        yield [leaf for _ in range(forest.n_estimators) for leaf in next(results)]
+        if terms is None:
+            yield [leaf for _ in range(forest.n_estimators) for leaf in next(results)]
+            continue
+        paths = []
+        totals = np.zeros((2, len(terms)))
+        counts = np.zeros_like(totals, dtype=np.intp)
+        for _ in range(forest.n_estimators):
+            leaves, statistics = next(results)
+            paths.extend(leaves)
+            supported = ~np.isnan(statistics)
+            totals[supported] += statistics[supported]
+            counts += supported
+        means = np.full_like(totals, np.nan)
+        np.divide(totals, counts, out=means, where=counts > 0)
+        yield paths, means
 
 
 class _WeightedForest:

@@ -10,19 +10,24 @@ its tie-breaking fails here rather than silently changing results.
 """
 
 from collections import Counter
-from itertools import product
+from itertools import combinations, product
 from math import prod
 
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from sklearn.base import clone
 from sklearn.datasets import make_classification
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import IRFClassifier, IRFRegressor
-from imodels.tree.iterative_random_forest import _forest, _rit
+from imodels.tree.iterative_random_forest import _forest, _interactions, _rit
 from imodels.tree.iterative_random_forest import iterative_random_forest as irf_module
 from imodels.tree.iterative_random_forest._forest import _WeightedForest, _WeightedTree
+from imodels.tree.iterative_random_forest._interactions import (
+    _benjamini_hochberg, _interaction_scores, _interaction_terms,
+    _permutation_ranking, _tree_statistics,
+)
 from imodels.tree.iterative_random_forest._rit import _random_intersection_trees
 
 
@@ -69,13 +74,14 @@ def test_regressor_finds_and_interaction():
     assert model.score(X, y) > 0.8
 
 
-def test_serial_and_parallel_fits_match_without_touching_global_rng():
+@pytest.mark.parametrize("signed", [False, True])
+def test_serial_and_parallel_fits_match_without_touching_global_rng(signed):
     rng = np.random.RandomState(9)
     X = rng.normal(size=(60, 4))
     y = (X[:, 0] * X[:, 1] > 0).astype(int)
     np.random.seed(314)
     before = np.random.get_state()
-    serial = _small_model(n_jobs=1).fit(X, y)
+    serial = _small_model(n_jobs=1, signed=signed).fit(X, y)
     parallel = clone(serial).set_params(n_jobs=2).fit(X, y)
     after = np.random.get_state()
     assert before[0] == after[0]
@@ -85,6 +91,12 @@ def test_serial_and_parallel_fits_match_without_touching_global_rng():
     assert_allclose(serial.feature_weights_history_, parallel.feature_weights_history_)
     assert serial.bootstrap_interactions_ == parallel.bootstrap_interactions_
     assert serial.interaction_stability_ == parallel.interaction_stability_
+    if signed:
+        assert serial.interaction_scores_.keys() == parallel.interaction_scores_.keys()
+        for interaction, scores in serial.interaction_scores_.items():
+            assert_allclose(list(scores.values()),
+                            list(parallel.interaction_scores_[interaction].values()),
+                            atol=0, rtol=0, equal_nan=True)
     for first, second in zip(serial.bootstrap_samples_, parallel.bootstrap_samples_):
         assert_array_equal(first, second)
 
@@ -322,3 +334,189 @@ def test_rit_integer_seed_is_repeatable_without_touching_global_rng():
     assert before[0] == after[0]
     assert_array_equal(before[1], after[1])
     assert before[2:] == after[2:]
+
+
+# signed interactions and local importance
+
+def test_signed_grouped_discovery_preserves_predictions_and_candidates(monkeypatch):
+    X = np.tile([[0, 0], [0, 1], [1, 0], [1, 1]], (20, 1))
+    y = ((X[:, 0] == 1) & (X[:, 1] == 0)).astype(int)
+    X = X[:, [0, 0, 1, 1]]
+    model = _small_model(signed=True, feature_groups=[7, 7, 2, 2],
+                         max_features=None).fit(X, y)
+    interaction = ((2, -1), (7, 1))
+    assert model.interactions_ == [interaction]
+    assert model.interaction_stability_ == {interaction: 1.0}
+    unsigned = clone(model).set_params(signed=False).fit(X, y)
+    assert unsigned.interactions_ == [(2, 7)]
+    assert_array_equal(model.predict_proba(X), unsigned.predict_proba(X))
+    assert_array_equal(model.feature_weights_history_, unsigned.feature_weights_history_)
+    for scores in [model.interaction_scores_, *model.bootstrap_interaction_scores_]:
+        assert all(type(value) is float for value in scores[interaction].values())
+    no_bootstrap = clone(model).set_params(n_bootstraps=0).fit(X, y)
+    assert no_bootstrap.interactions_ == [interaction]
+    assert no_bootstrap.interaction_stability_ == no_bootstrap.interaction_scores_ == {}
+    assert_allclose(no_bootstrap.local_stability(X)[:, 0], y)
+    assert list(no_bootstrap.rank_interactions(X, y, n_permutations=9)) == [interaction]
+    with pytest.raises(ValueError):
+        no_bootstrap.select_interactions()
+    # Group before choosing the first direction: one group cannot form a pair.
+    collapsed = clone(no_bootstrap).set_params(feature_groups=[0] * 4).fit(X, y)
+    assert collapsed.interactions_ == []
+    assert_allclose(collapsed.local_stability(X[y == 1], [((0, -1), (0, 1))]), 1)
+    assert_allclose(collapsed.local_stability(
+        X[y == 1], [((0, -1), (0, 1))], first_only=True), 0)
+    # Failed bootstrap searches do not remove full-data candidates or denominator rows.
+    searches = iter([{interaction}, set(), set()])
+    monkeypatch.setattr(IRFClassifier, "_discover_interactions", lambda *args: next(searches))
+    missed = clone(model).set_params(n_bootstraps=2).fit(X, y)
+    assert missed.interaction_stability_ == {interaction: 0.0}
+    assert all(interaction in scores for scores in missed.bootstrap_interaction_scores_)
+
+
+def test_signed_regression_uses_frozen_cutoff_without_binarizing_predictions():
+    X = np.tile([[0, 0], [0, 1], [1, 0], [1, 1]], (8, 1))
+    y = np.r_[X.sum(axis=1) - 1., np.full(33, 999.)]
+    X = np.vstack([X, np.zeros((33, 2))])
+    weights = np.r_[np.ones(32), np.zeros(33)]
+    with pytest.warns(UserWarning, match="bootstrap=False"):
+        model = IRFRegressor(
+            signed=True, n_estimators=3, n_iterations=1, n_bootstraps=2,
+            n_rit=20, rit_depth=2, max_features=None, bootstrap=False,
+            random_state=1).fit(X, y, sample_weight=weights)
+    unsigned = clone(model).set_params(signed=False).fit(X, y, sample_weight=weights)
+    assert model.leaf_threshold is None and model.leaf_threshold_ == 0
+    assert_array_equal(model.predict(X), unsigned.predict(X))
+    assert_allclose(model.predict(X[:32]), y[:32])
+    interaction = ((0, 1), (1, 1))
+    assert model.interactions_ == [interaction]  # predicted zero is excluded
+    for indices, scores in zip(model.bootstrap_samples_, model.bootstrap_interaction_scores_):
+        expected = np.sum(y[indices] > 0) / np.sum(y[indices] >= 0)
+        assert_allclose(scores[interaction]["prevalence"], expected)
+    # Observed zero is included; the evaluation median (50) does not replace the cutoff.
+    result = model.rank_interactions(
+        [[0, 0], [1, 1], [0, 1], [1, 1]], [-1., 0., 100., 101.],
+        n_permutations=9, random_state=0)
+    assert_allclose(result[interaction]["difference"], 2 / 3)
+
+
+@pytest.mark.parametrize("estimator, cutoff, side", [
+    (IRFClassifier, None, "inside"),
+    (IRFRegressor, -5., "inside"), (IRFRegressor, 5., "outside"),
+])
+def test_signed_fit_warns_when_scoring_target_has_only_one_side(estimator, cutoff, side):
+    X = np.arange(8).reshape(4, 2)
+    y = np.ones(4) if estimator is IRFClassifier else [-1., 0., 0., 1.]
+    kwargs = {} if estimator is IRFClassifier else {"leaf_threshold": cutoff}
+    with pytest.warns(UserWarning, match=f"is {side} the signed scoring target"):
+        estimator(signed=True, n_estimators=1, n_iterations=1, n_bootstraps=0,
+                  random_state=0, **kwargs).fit(X, y)
+
+
+def test_local_directions_and_feature_shortcut_include_unused_groups():
+    X = np.repeat([[0, 0], [1, 0], [2, 0]], 8, axis=0)
+    y = (X[:, 0] == 1).astype(int)
+    with pytest.warns(UserWarning, match="bootstrap=False"):
+        model = _small_model(signed=True, feature_groups=[9, 4], max_features=None,
+                             n_estimators=1, n_iterations=1, n_bootstraps=0,
+                             bootstrap=False).fit(X, y)
+    features = [((4, -1),), ((4, 1),), ((9, -1),), ((9, 1),)]
+    assert_allclose(model.local_stability(X, "features"),
+                    np.column_stack([np.zeros((len(X), 2)), X[:, 0] < 2, X[:, 0] > 0]))
+    assert model.local_stability([[1, 0]], "features", first_only=True).sum() == 1
+    result = model.rank_interactions(X, y, "features", first_only=True,
+                                     n_permutations=19, random_state=0)
+    assert sorted(result[term]["difference"] for term in features[2:]) == [-.5, .5]
+    assert all(result[term]["pvalue_bh"] == 1 for term in features[:2])
+    assert all(0 < row["pvalue"] <= row["pvalue_bh"] <= 1 for row in result.values())
+
+
+def test_signed_score_batches_preserve_weights_and_original_row_oob_exclusion(monkeypatch):
+    monkeypatch.setattr(_interactions, "_LEAF_BLOCK_SIZE", 1)
+    monkeypatch.setattr(_interactions, "_TERM_BLOCK_SIZE", 2)
+    a, b, absent = (0, 1), (1, -1), (2, 1)
+    paths = {1: frozenset([a, b]), 3: frozenset([a]),
+             4: frozenset([b]), 6: frozenset()}
+    weights = np.array([1., 3., 2., 2., 4., 1.])
+    kwargs = dict(paths=paths, leaf_ids=np.array([1, 1, 1, 3, 4, 6]),
+                  y=np.array([1, 1, 0, 1, 0, 0]), inbag_indices=np.array([0, 2, 5]),
+                  row_ids=np.array([10, 10, 11, 12, 13, 14]),
+                  terms=[(a,), (b,), (a, b), (absent,)], target_class=1)
+    # Both copies of original row 10 are in-bag, leaving no OOB support for a+b.
+    expected = [[1, 2 / 3, 2 / 3, 0], [1, 0, np.nan, np.nan]]
+    assert_allclose(_tree_statistics(sample_weight=weights, **kwargs), expected)
+    assert_allclose(_tree_statistics(sample_weight=13 * weights, **kwargs), expected)
+
+
+def test_signed_score_formulas_and_unsupported_ratios():
+    a, b, c = (0, 1), (1, -1), (2, 1)
+    candidates = [(a, b), (a, b, c)]
+    terms = _interaction_terms(candidates)
+    values = {(a,): (.5, .5), (b,): (.4, .6), (c,): (.8, .7),
+              (a, b): (.3, .8), (a, c): (.35, .75),
+              (b, c): (.32, .85), (a, b, c): (.25, .9)}
+    scores = _interaction_scores(candidates, terms, np.array([values[t] for t in terms]).T)
+    assert_allclose(scores, [[.3, .8, np.log(1.5), np.log(.8 / .6)],
+                             [.25, .9, np.log(.25 / (.5 * .4 * .8)), np.log(.9 / .85)]])
+    scores = _interaction_scores([(a, b)], [(a,), (b,), (a, b)],
+                                 np.array([[0, .5, 0], [.5, .7, 0]]))[0]
+    assert np.isnan(scores[2]) and np.isneginf(scores[3])  # 0/0 versus 0/positive
+    high_order = tuple((j, 1) for j in range(20))
+    terms = _interaction_terms([high_order])
+    scores = _interaction_scores([high_order], terms, np.full((2, len(terms)), 1e-20))
+    assert_allclose(scores[0, 2], -19 * np.log(1e-20))  # null product underflows
+
+
+@pytest.mark.parametrize("counts,n_trees,difference,pvalues", [
+    ([[2, 0, 1], [2, 0, 1], [0, 2, 1], [0, 2, 1]], 2, [1, -1, 0], [3/7, 3/7, 1]),
+    ([[0], [0], [2], [0], [2], [2]], 3, [-.5], [7/16]),
+])
+def test_permutation_ranking_matches_exhaustive_partitions(
+        monkeypatch, counts, n_trees, difference, pvalues):
+    counts = np.array(counts, dtype=np.int64)
+    partitions = list(combinations(range(len(counts)), 2))
+
+    class AllPartitions:
+        def __init__(self):
+            self.partitions = iter(partitions)
+
+        def permutation(self, labels):
+            return np.isin(np.arange(len(counts)), next(self.partitions))
+
+    monkeypatch.setattr(_interactions, "check_random_state", lambda _: AllPartitions())
+    actual = _permutation_ranking(counts, np.arange(len(counts)) < 2,
+                                  len(partitions), 0, n_trees=n_trees)
+    assert_allclose(actual, [difference, pvalues])
+
+
+def test_permutation_imbalance_overflow_and_bh_ties():
+    counts = np.repeat([0, 1], 500).astype(np.int64)[:, None]
+    for target in (np.arange(1000) == 0, np.arange(1000) != 0):
+        difference, pvalue = _permutation_ranking(counts, target, 99, 0, n_trees=3)
+        assert_allclose(abs(difference[0]), 500 / (999 * 3))
+        assert_array_equal(pvalue, [1])  # every permutation ties, including opposite tails
+    counts = np.array([[0], [0], [2], [2]], dtype=np.int64)
+    expected = _permutation_ranking(counts, [True, True, False, False], 19, 3, n_trees=3)
+    actual = _permutation_ranking(counts * 10**18, [True, True, False, False],
+                                  19, 3, n_trees=3 * 10**18)
+    assert_allclose(actual, expected)
+    assert_allclose(_benjamini_hochberg([.04, .01, .03, .002, 1., .01]),
+                    [.048, .02, .045, .012, 1., .02])
+
+
+def test_selection_requires_all_screens_and_available_scores():
+    X = np.tile([[0, 0], [0, 1], [1, 0], [1, 1]], (20, 1))
+    y = np.all(X == 1, axis=1).astype(int)
+    model = _small_model(signed=True, max_features=None).fit(X, y)
+    interaction = model.interactions_[0]
+    for weak in ("recovery", "fsd", "mip"):
+        model.interaction_stability_[interaction] = .4 if weak == "recovery" else .8
+        for metric in ("fsd", "mip"):
+            model.interaction_scores_[interaction][metric + "_stability"] = .4 if weak == metric else .8
+        assert model.select_interactions(.5) == []
+        assert model.select_interactions(.4) == [interaction]
+    with pytest.warns(UserWarning, match="bootstrap=False"):
+        model.set_params(bootstrap=False).fit(X, y)
+    assert np.isnan(model.interaction_scores_[interaction]["precision"])
+    assert np.isnan(model.interaction_scores_[interaction]["mip"])
+    assert model.select_interactions(0) == []
