@@ -42,7 +42,7 @@ FAMILIES = {
     "GreedyTree": ("Greedy tree (CART)", "scikit-learn's CART tree with imodels' rule extraction and printing.", []),
     "C45Tree": ("C4.5 tree", "A C4.5 decision tree, split by information-gain ratio.", []),
     "TaoTree": ("TAO tree", "Tree alternating optimization: refines the splits of a grown tree, one node at a time.", []),
-    "IRF": ("Iterative random forest", "Random forests refit with feature weights, to find stable feature interactions.", []),
+    "IRF": ("Iterative random forest", "Random forests refit with feature weights, to find stable feature interactions; includes signed (siRF) and local (lo-siRF) interaction analysis.", []),
     "RuleFit": ("RuleFit", "A sparse linear model on rules extracted from a tree ensemble.", []),
     "SkopeRules": ("Skope-rules", "Rules from bagged trees, kept by precision and recall and deduplicated.", []),
     "BoostedRules": ("Boosted rules", "A boosted sum of short rules.", []),
