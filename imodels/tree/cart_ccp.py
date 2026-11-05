@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import List
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
@@ -104,7 +104,7 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
             return NotImplemented
 
 
-class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
+class DecisionTreeCCPRegressor(RuleInspectionMixin, RegressorMixin, BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator = None, desired_complexity: int = 1, complexity_measure='max_rules',
                  *args, **kwargs):

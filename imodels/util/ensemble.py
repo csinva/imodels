@@ -3,7 +3,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 import numpy as np
 
 
-class ResidualBoostingRegressor(BaseEstimator, RegressorMixin):
+class ResidualBoostingRegressor(RegressorMixin, BaseEstimator):
     def __init__(self, estimator, n_estimators=10):
         """
         A meta-estimator that fits a base estimator to the residuals of the
