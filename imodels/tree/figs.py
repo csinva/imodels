@@ -335,6 +335,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
         self.categorical_features_ = categorical_features
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
+        elif hasattr(self, "_encoder"):
+            del self._encoder
 
         sample_weight = self._apply_class_weight(y, sample_weight)
 
