@@ -319,8 +319,7 @@ def _download_imodels_multitask_dataset(dataset_fname, data_path: str):
 
 
 def encode_categories(X, features, encoder=None):
-    columns_to_keep = list(set(X.columns).difference(features))
-    X_encoded = X.loc[:, columns_to_keep]
+    X_encoded = X.loc[:, ~X.columns.isin(features)]
     X_cat = pd.DataFrame({f: X.loc[:, f] for f in features})
     
     if encoder is None:
