@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from imodels.util.arguments import check_fit_arguments
 
 
-class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
+class SlipperBaseEstimator(ClassifierMixin, BaseEstimator):
     """ An estimator that supports building rules as described in
     A Simple, Fast, and Effective Rule Learner (1999). Intended to be used
     as part of the SlipperRulesClassifier.

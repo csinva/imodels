@@ -17,7 +17,7 @@ from imodels.util.arguments import (check_predict_X, decode_labels,
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
-class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
+class BayesianRuleListClassifier(ClassifierMixin, RuleList, BaseEstimator):
     """
     This is a scikit-learn compatible wrapper for the Bayesian Rule List
     classifier developed by Benjamin Letham. It produces a highly

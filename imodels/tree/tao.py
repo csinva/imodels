@@ -420,9 +420,9 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
         # return self.model.score(X, y)
 
 
-class TaoTreeRegressor(TaoTree, RegressorMixin):
+class TaoTreeRegressor(RegressorMixin, TaoTree):
     pass
 
 
-class TaoTreeClassifier(TaoTree, ClassifierMixin):
+class TaoTreeClassifier(ClassifierMixin, TaoTree):
     pass

@@ -90,7 +90,7 @@ def _make_xml_safe_names(feature_names):
     return safe_names
 
 
-class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
+class C45TreeClassifier(RulesMixin, ClassifierMixin, BaseEstimator):
     """A C4.5 tree classifier.
 
     Parameters

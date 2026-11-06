@@ -365,9 +365,9 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         )
 
 
-class TreeGAMRegressor(TreeGAM, RegressorMixin):
+class TreeGAMRegressor(RegressorMixin, TreeGAM):
     ...
 
 
-class TreeGAMClassifier(TreeGAM, ClassifierMixin):
+class TreeGAMClassifier(ClassifierMixin, TreeGAM):
     ...

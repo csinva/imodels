@@ -142,9 +142,10 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
     ] + PARAM_GRID_LINEAR_REGRESSION
 
 
-class AutoInterpretableClassifier(AutoInterpretableModel, ClassifierMixin):
-    ...
+class AutoInterpretableClassifier(ClassifierMixin, AutoInterpretableModel):
+    # Keep the search scorer (ROC AUC), rather than ClassifierMixin accuracy.
+    score = AutoInterpretableModel.score
 
 
-class AutoInterpretableRegressor(AutoInterpretableModel, RegressorMixin):
-    ...
+class AutoInterpretableRegressor(RegressorMixin, AutoInterpretableModel):
+    score = AutoInterpretableModel.score

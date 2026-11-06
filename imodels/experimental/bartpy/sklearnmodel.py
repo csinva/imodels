@@ -143,7 +143,7 @@ def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, consta
     return node
 
 
-class SklearnModel(BaseEstimator, RegressorMixin):
+class SklearnModel(RegressorMixin, BaseEstimator):
     """
     The main access point to building BART models in BartPy
 
