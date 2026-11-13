@@ -8,7 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 from imodels.util.progress import progress_iter
 
 
-class StableClustering(BaseEstimator, ClusterMixin):
+class StableClustering(ClusterMixin, BaseEstimator):
     def __init__(self, k_values, n_repetitions=10, algorithm="k-means", metric="adjusted_rand", random_state=42,
                  verbose=0):
         self.k_values = k_values

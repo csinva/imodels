@@ -95,7 +95,7 @@ INTEGER_TYPES = (numbers.Integral, np.integer)
 BASE_FEATURE_NAME = "feature_"
 
 
-class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
+class SkopeRulesClassifier(ClassifierMixin, RuleSet, BaseEstimator):
     """An easy-interpretable classifier optimizing simple logical rules.
 
     Parameters

@@ -24,7 +24,7 @@ from imodels.util.progress import progress_iter
 from imodels.util.arguments import check_fit_arguments, check_two_classes
 
 
-class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
+class BayesianRuleSetClassifier(RuleSet, ClassifierMixin, BaseEstimator):
     '''Bayesian or-of-and algorithm.
     Generates patterns that satisfy the minimum support and maximum length and then select the Nrules rules that have the highest entropy.
     In function SA_patternbased, each local maximum is stored in maps and the best BOA is returned.

@@ -192,7 +192,7 @@ class MarginalShrinkageLinearModel(TextMixin, BaseEstimator):
 
 
 class MarginalShrinkageLinearRegressor(
-    MarginalShrinkageLinearModel, RegressorMixin
+    RegressorMixin, MarginalShrinkageLinearModel
 ):
     ...
 

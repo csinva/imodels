@@ -15,7 +15,7 @@ from imodels.util.arguments import (check_binary_target, check_fit_arguments,
                                     check_predict_X, check_two_classes, decode_labels)
 
 
-class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
+class GreedyRuleListClassifier(ClassifierMixin, RuleList, BaseEstimator):
     def __init__(self, max_depth: int = 5, class_weight=None,
                  criterion: str = 'gini'):
         '''

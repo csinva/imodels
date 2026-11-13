@@ -25,7 +25,7 @@ from imodels.util.arguments import (check_binary_target, check_fit_arguments, ch
                                     check_predict_X, decode_labels)
 
 
-class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
+class FastFrugalTreeClassifier(ClassifierMixin, RuleList, BaseEstimator):
     """A fast-and-frugal tree: one cue per level, each with an exit.
 
     Parameters

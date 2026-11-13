@@ -59,11 +59,11 @@ class FPLasso(RuleFit):
         return itemsets_to_rules(itemsets)
 
 
-class FPLassoRegressor(FPLasso, RegressorMixin):
+class FPLassoRegressor(RegressorMixin, FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class FPLassoClassifier(FPLasso, ClassifierMixin):
+class FPLassoClassifier(ClassifierMixin, FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
