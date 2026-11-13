@@ -134,6 +134,10 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
 
         self.estimators_marginal = []
         self.estimators_ = []
+        # Post-hoc coefficients belong to the previous fitted trees.
+        # Boosting must start with the learning rate on every fit.
+        if hasattr(self, "cyclic_coef_"):
+            del self.cyclic_coef_
         self.bias_ = np.mean(y)
 
         if self.n_boosting_rounds_marginal > 0:
