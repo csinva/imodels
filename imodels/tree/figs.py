@@ -72,10 +72,10 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        if self.is_root:
-            return f"X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)"
-        elif self.left is None and self.right is None:
+        if self.left is None and self.right is None:
             return f"Val: {' '.join([str(np.round(i, 3)) for i in self.value])} (leaf)"
+        elif self.is_root:
+            return f"X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)"
         else:
             return f"X_{self.feature} <= {self.threshold:0.3f} (split)"
 
@@ -131,6 +131,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             Max total number of rules across all trees
         max_trees: int
             Max total number of trees
+        max_depth: int or None
+            Maximum depth of each tree, with the root at depth zero. None allows unlimited depth.
         min_impurity_decrease: float
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
@@ -176,7 +178,7 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
                 tree_num=potential_split.tree_num,
                 sample_weight=sample_weight,
                 max_features=self.max_features,
-                depth=potential_split.depth + 1,
+                depth=potential_split.depth,
             )
 
         n_jobs = 1 if self.n_jobs is None else self.n_jobs
@@ -406,11 +408,16 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             # get node with max impurity_reduction (since it's sorted)
             split_node = potential_splits.pop()
 
-            # don't split on node.
+            # Reaching the depth limit rules out this candidate only. Shallower
+            # candidates in this or another tree may still be split.
+            at_depth_limit = self.max_depth is not None and split_node.depth >= self.max_depth
+            if at_depth_limit and self.trees_:
+                continue
+
             # impurity_reduction is None when the stump found no valid split,
             # which happens when y is constant over the node -- there is nothing
             # left to fit, so stop rather than compare None to a float
-            if (split_node.impurity_reduction is None
+            if (at_depth_limit or split_node.impurity_reduction is None
                     or split_node.impurity_reduction < self.min_impurity_decrease):
                 # nothing worth splitting on. If that happened before any tree
                 # was grown, keep this node as a single leaf: predictions are a
@@ -428,13 +435,6 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             ):
                 # If the node is the root of a new tree and we have reached self.max_trees,
                 # don't split on it, but allow later splits to continue growing existing trees
-                continue
-            elif (
-                self.max_depth is not None
-                and split_node.depth > self.max_depth
-            ):
-                # If the node is deeper than self.max_depth,
-                # don't split on it, but allow algorithm to continue
                 continue
 
             # split on node
@@ -628,6 +628,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
     def _tree_to_str_with_data(self, X, y, root: Node, prefix=""):
         if root is None:
             return ""
+        elif root.is_root and root.left is None and root.right is None:
+            return prefix + str(root) + "\n"
         elif root.threshold is None:
             return ""
         pprefix = prefix + "\t"
@@ -742,6 +744,9 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
     def feature_importances_(self):
         """Gini impurity-based feature importances"""
         check_is_fitted(self)
+
+        if self.complexity_ == 0:
+            return np.zeros(self.n_features)
 
         avg_feature_importances = np.mean(
             self.importance_data_, axis=0, dtype=np.float64

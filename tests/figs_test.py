@@ -413,3 +413,33 @@ def test_constant_target():
     fitted = FIGSRegressor(max_rules=6).fit(X, y)
     assert len(fitted.trees_) >= 1
     assert 1 - np.var(y - fitted.predict(X)) / np.var(y) > 0.9
+
+
+def test_max_depth_limits_each_tree():
+    X = np.arange(16).reshape(-1, 1)
+    y = X[:, 0]
+
+    def height(node):
+        if node.left is None:
+            return 0
+        return 1 + max(height(node.left), height(node.right))
+
+    for limit, expected in [(0, 0), (1, 1), (2, 2), (4, 4), (None, 4)]:
+        model = FIGSRegressor(max_rules=15, max_trees=1, max_depth=limit).fit(X, y)
+        (root,) = model.trees_
+        assert height(root) == expected
+        if limit == 0:
+            np.testing.assert_allclose(model.predict(X), np.mean(y))
+            np.testing.assert_array_equal(model.feature_importances_, np.zeros(1))
+            assert "leaf" in model.print_tree(X, y)
+            assert "<=" not in model.print_tree(X, y)
+
+
+def test_max_depth_keeps_other_trees_eligible():
+    X = np.arange(16).reshape(-1, 1)
+    model = FIGSRegressor(max_depth=1, max_trees=2, max_rules=15).fit(X, X[:, 0])
+
+    assert len(model.trees_) == 2
+    assert model.complexity_ == 2
+    for root in model.trees_:
+        assert root.left.depth == root.right.depth == 1
