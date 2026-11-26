@@ -1,10 +1,42 @@
-# pip install grayskull # install grayskull
-
-# grayskull pypi imodels # create meta.yaml
-
-# move files into proper places
-mv imodels/meta.yaml .
-rm -rf imodels
-
-# build the package
-conda build . # note currently some dependencies not supported on conda
+# How to publish imodels on conda-forge
+#
+# meta.yaml in this directory is the recipe. It is kept here so it can be
+# reviewed alongside the package; conda-forge itself builds from its own
+# feedstock repository.
+#
+# 1. Refresh the recipe for the current release. grayskull reads the sdist from
+#    PyPI and fills in the version, sha256 and dependencies:
+#
+#      pip install grayskull
+#      grayskull pypi imodels
+#      mv imodels/meta.yaml . && rm -rf imodels
+#
+#    Check the result against pyproject.toml: grayskull maps matplotlib to
+#    matplotlib-base, which is what a library should depend on.
+#
+# 2. Build it locally to confirm it resolves and imports:
+#
+#      conda install -c conda-forge conda-build
+#      conda build . -c conda-forge
+#
+# 3. Submit it. conda-forge packages are added by opening a pull request against
+#    https://github.com/conda-forge/staged-recipes with the recipe in
+#    recipes/imodels/meta.yaml. Once merged, conda-forge creates an
+#    imodels-feedstock repository and later releases are updated there (its bot
+#    opens a PR for each new PyPI release).
+#
+# Every runtime dependency is on conda-forge, so nothing blocks this. The
+# packages that used to (corels, gosdt, irf) were removed from imodels.
+#
+# Verified locally with conda-build 26.5.0: `conda build .` builds
+# imodels-2.0.4-py_0.conda and passes both `pip check` and the import test on
+# python 3.9, 3.10 and 3.13. conda_build_config.yaml supplies python_min so the
+# recipe renders outside conda-forge; conda-forge's own pinning takes over there.
+#
+# Two things to know before submitting:
+#
+# * the mlxtend upper bound is forced by upstream metadata, not by imodels --
+#   see the comment in meta.yaml. Without it `pip check` fails below python 3.11.
+# * the recipe builds the sdist published on PyPI, so cut a release first.
+#   Building 2.0.4 reproduces bugs already fixed on master (fit returning None,
+#   HSTree probabilities slightly below zero), which would ship to conda users.
